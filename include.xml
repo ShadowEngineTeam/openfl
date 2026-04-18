@@ -35,11 +35,11 @@
 
 	</section>
 
-	<define name="openfl-funkin" />
+	<define name="openfl-shadow" />
 
-	<section unless="lime-funkin || setup || create || disable-version-check || display">
+	<section unless="lime-shadow || setup || create || disable-version-check || display">
 
-		<log error="Lime has to be FunkinCrew's Fork to be compiling with OpenFL FunkinCrew's Fork, (got Lime ${lime})"/>
+		<log error="Lime has to be Shadow Engine's Fork to be compiling with OpenFL Shadow Engine's Fork, (got Lime ${lime})"/>
 
 	</section>
 
