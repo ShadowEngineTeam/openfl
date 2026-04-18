@@ -35,6 +35,10 @@ class ShaderMacro
 		var glVertexSource = null;
 		var glVertexSourceRaw = "";
 
+		var hadToProcess = false;
+		var shouldProcessFragHead = false;
+		var shouldProcessVertHead = false;
+	
 		for (field in fields)
 		{
 			for (meta in field.meta)
@@ -60,13 +64,15 @@ class ShaderMacro
 
 			for (meta in field.meta)
 			{
+				var shouldProcess = meta.params.length > 1 && cast(meta.params[1].getValue(), Bool);
+
+				if (shouldProcess) hadToProcess = true;
+
 				/**
 					`@:glFragmentSource`, `@:glVertexSource`, `@:glFragmentHeader`, `@:glFragmentBody`, `@:glVertexHeader`, `@:glVertexBody`
 					all have a second argument which, if true, will use `processGLSLText` to convert the text to be compatible with the current GLSL version.
 					Defaults to false to prevent converting user-defined GLSL.
 				**/
-				var shouldProcess = meta.params.length > 1 && cast(meta.params[1].getValue(), Bool);
-
 				switch (meta.name)
 				{
 					case "glFragmentSource", ":glFragmentSource":
@@ -92,6 +98,7 @@ class ShaderMacro
 					case "glFragmentHeader", ":glFragmentHeader":
 						if (shouldProcess)
 						{
+							shouldProcessFragHead = true;
 							glFragmentHeader += processGLSLText(meta.params[0].getValue(), glVersion, true);
 						}
 						else
@@ -112,6 +119,7 @@ class ShaderMacro
 					case "glVertexHeader", ":glVertexHeader":
 						if (shouldProcess)
 						{
+							shouldProcessVertHead = true;
 							glVertexHeader += processGLSLText(meta.params[0].getValue(), glVersion, false);
 						}
 						else
@@ -207,6 +215,7 @@ class ShaderMacro
 						case "glFragmentHeader", ":glFragmentHeader":
 							if (shouldProcess)
 							{
+								shouldProcessFragHead = true;
 								glFragmentHeader = processGLSLText(meta.params[0].getValue(), glVersion, true) + "\n" + glFragmentHeader;
 							}
 							else
@@ -227,6 +236,7 @@ class ShaderMacro
 						case "glVertexHeader", ":glVertexHeader":
 							if (shouldProcess)
 							{
+								shouldProcessVertHead = true;
 								glVertexHeader = processGLSLText(meta.params[0].getValue(), glVersion, false) + "\n" + glVertexHeader;
 							}
 							else
@@ -257,9 +267,12 @@ class ShaderMacro
 			glVersion = getDefaultGLVersion();
 		}
 
-		glVertexHeader = buildGLSLHeaders(glVersion) + glVertexHeader;
-		glFragmentHeader = buildGLSLHeaders(glVersion) + glFragmentHeader;
+		if (shouldProcessVertHead)
+			glVertexHeader = buildGLSLHeaders(glVersion) + glVertexHeader;
 
+		if (shouldProcessFragHead)
+			glFragmentHeader = buildGLSLHeaders(glVersion) + glFragmentHeader;
+		
 		glVertexExtensions = buildGLSLExtensions(glVertexExtensions, glVersion, false);
 		glFragmentExtensions = buildGLSLExtensions(glFragmentExtensions, glVersion, true);
 
@@ -317,6 +330,7 @@ class ShaderMacro
 				}
 			}
 
+			// #if !display
 			for (field in fields)
 			{
 				switch (field.name)
@@ -431,6 +445,7 @@ class ShaderMacro
 					default:
 				}
 			}
+			// #end
 
 			fields = fields.concat(uniqueFields);
 		}
@@ -442,7 +457,7 @@ class ShaderMacro
 	{
 		// Specify the default glVersion.
 		// We can use compile defines to guess the value that prevents crashes in the majority of cases.
-		return #if (android) "100" #elseif (web) "100" #elseif (mac) "120" #elseif (desktop) "150" #else "100" #end;
+		return "100";
 	}
 
 	/**
@@ -461,6 +476,7 @@ class ShaderMacro
 		var texture2DKeyword:EReg = ~/\btexture2D\b/g;
 		var glFragColorKeyword:EReg = ~/\bgl_FragColor\b/g;
 		var glVersionCleaner:EReg = ~/\b(\d+)\s*(?:core|es|compatibility)\b/g;
+		var outFragColorKeyword:EReg = ~/\bout\s+vec4\s+openfl_FragColor\s*;\s*/g;
 
 		switch (glVersionCleaner.replace(glVersion, '$1'))
 		{
@@ -482,7 +498,10 @@ class ShaderMacro
 
 				return result;
 			default:
-				return source;
+				var result = source;
+
+				result = outFragColorKeyword.replace(result, "");
+				return result;
 		}
 	}
 

@@ -50,7 +50,6 @@ class TextureBase extends EventDispatcher
 	// private var __memoryUsage:Int;
 	@:noCompletion private var __optimizeForRenderToTexture:Bool;
 	// private var __outputTextureMemoryUsage:Bool = false;
-	@:noCompletion private var __premultiplyAlpha:Bool;
 	@:noCompletion private var __samplerState:SamplerState;
 	@:noCompletion private var __streamingLevels:Int;
 	@SuppressWarnings("checkstyle:Dynamic") @:noCompletion private var __textureContext:#if lime RenderContext #else Dynamic #end;
@@ -84,14 +83,7 @@ class TextureBase extends EventDispatcher
 			{
 				__supportsBGRA = true;
 				__textureFormat = bgraExtension.BGRA_EXT;
-
-				// Note: Get rid of this when `ANGLE` is added.
-				#if (lime && !ios && !tvos)
-				if (context.__context.type == OPENGLES)
-				{
-					__textureInternalFormat = bgraExtension.BGRA_EXT;
-				}
-				#end
+				__textureInternalFormat = bgraExtension.BGRA_EXT;
 			}
 			else
 			{
@@ -336,7 +328,14 @@ class TextureBase extends EventDispatcher
 
 			if (__textureTarget == __context.gl.TEXTURE_CUBE_MAP) __context.__bindGLTextureCubeMap(__textureID);
 			else
+			{
 				__context.__bindGLTexture2D(__textureID);
+				if (state.mipfilter != MIPNONE)
+				{
+					gl.generateMipmap(__textureTarget);
+					state.mipmapGenerated = true;
+				}
+			}
 
 			var wrapModeS = 0, wrapModeT = 0;
 
@@ -385,11 +384,12 @@ class TextureBase extends EventDispatcher
 			gl.texParameteri(__textureTarget, gl.TEXTURE_WRAP_S, wrapModeS);
 			gl.texParameteri(__textureTarget, gl.TEXTURE_WRAP_T, wrapModeT);
 
-			if (state.lodBias != 0.0)
+			#if lime
+			if (__context.__context.type == OPENGL)
 			{
-				// TODO
-				// throw new IllegalOperationError("Lod bias setting not supported yet");
+				gl.texParameterf(__textureTarget, 0x8501, state.lodBias); // GL_TEXTURE_LOD_BIAS
 			}
+			#end
 
 			if (__samplerState == null) __samplerState = state.clone();
 			__samplerState.copyFrom(state);

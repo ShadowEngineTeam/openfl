@@ -6,11 +6,12 @@ import openfl.display3D._internal.GLBuffer;
 import openfl.display3D._internal.GLFramebuffer;
 import openfl.display3D._internal.GLTexture;
 import openfl.display._internal.SamplerState;
+import openfl.display3D.textures.ASTCTexture;
+import openfl.display3D.textures.BCTexture;
 import openfl.display3D.textures.CubeTexture;
 import openfl.display3D.textures.RectangleTexture;
 import openfl.display3D.textures.TextureBase;
 import openfl.display3D.textures.Texture;
-import openfl.display3D.textures.ASTCTexture;
 import openfl.display3D.textures.VideoTexture;
 import openfl.display.BitmapData;
 import openfl.display.Stage;
@@ -132,6 +133,7 @@ import lime.math.Vector2;
 #end
 @:access(openfl.display3D._internal.Context3DState)
 @:access(openfl.display3D.textures.ASTCTexture)
+@:access(openfl.display3D.textures.BCTexture)
 @:access(openfl.display3D.textures.CubeTexture)
 @:access(openfl.display3D.textures.RectangleTexture)
 @:access(openfl.display3D.textures.TextureBase)
@@ -949,37 +951,14 @@ import lime.math.Vector2;
 		return new Texture(this, width, height, format, optimizeForRenderToTexture, streamingLevels);
 	}
 
-	/**
-		Checks whether ASTC (Adaptive Scalable Texture Compression) is supported on this Context3D instance.
-
-		@return `true` if ASTC textures can be used on this device, `false` otherwise.
-	**/
-	public function isASTCSupported():Bool
-	{
-		if (ASTCTexture.__astcCompressedTexturesSupported == null)
-		{
-			ASTCTexture.__astcCompressedTexturesSupported = gl.getSupportedExtensions().contains("KHR_texture_compression_astc_ldr");
-		}
-
-		return ASTCTexture.__astcCompressedTexturesSupported == true;
-	}
-
-	/**
-		Creates a new ASTCTexture instance from ASTC-compressed data.
-
-		You must check `isASTCSupported()` before calling this method.
-
-		@param data A ByteArray containing ASTC-compressed texture data.
-		@return An `ASTCTexture` ready for use in rendering.
-
-		@throws IllegalOperationError If ASTC is not supported on this device (missing extension).
-		@throws IllegalOperationError If the ASTC signature in `data` is invalid.
-		@throws IllegalOperationError If the ASTC block format (blockX × blockY) is not supported.
-		@throws IllegalOperationError If the ASTC file is too short for header + blocks.
-	**/
 	public function createASTCTexture(data:ByteArray):ASTCTexture
 	{
 		return new ASTCTexture(this, data);
+	}
+
+	public function createBCTexture(data:ByteArray):BCTexture
+	{
+		return new BCTexture(this, data);
 	}
 
 	/**

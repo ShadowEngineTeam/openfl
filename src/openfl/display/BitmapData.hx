@@ -6,6 +6,8 @@ import openfl.display._internal.PerlinNoise;
 import openfl.display3D._internal.GLFramebuffer;
 import openfl.display3D._internal.GLRenderbuffer;
 import openfl.display3D.textures.TextureBase;
+import openfl.display3D.textures.ASTCTexture;
+import openfl.display3D.textures.BCTexture;
 import openfl.display3D.Context3DClearMask;
 import openfl.display3D.Context3D;
 import openfl.display3D.IndexBuffer3D;
@@ -1310,11 +1312,31 @@ class BitmapData implements IBitmapDrawable
 	public static function fromBytes(bytes:ByteArray, rawAlpha:ByteArray = null):BitmapData
 	{
 		#if (js && html5)
-		return null;
-		#else
 		var bitmapData = new BitmapData(0, 0, true, 0);
-		bitmapData.__fromBytes(bytes, rawAlpha);
+		loadFromBytes(bytes, rawAlpha).onComplete(function(decoded:BitmapData)
+		{
+			if (decoded != null)
+			{
+				bitmapData.__fromImage(decoded.image);
+				bitmapData.width = decoded.width;
+				bitmapData.height = decoded.height;
+				bitmapData.image = decoded.image;
+				bitmapData.readable = true;
+			}
+		});
 		return bitmapData;
+		#else
+		if (ASTCTexture.isBytesASTC(bytes) || BCTexture.isBytesBC(bytes))
+		{
+			var texture = BCTexture.isBytesBC(bytes) ? Lib.current.stage.context3D.createBCTexture(bytes) : Lib.current.stage.context3D.createASTCTexture(bytes);
+			return fromTexture(texture);
+		}
+		else
+		{
+			var bitmapData = new BitmapData(0, 0, true, 0);
+			bitmapData.__fromBytes(bytes, rawAlpha);
+			return bitmapData;
+		}
 		#end
 	}
 	#end
