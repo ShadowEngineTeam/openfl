@@ -496,7 +496,7 @@ class Shader
 		var typeName = (type == __context.gl.VERTEX_SHADER) ? "vertex" : "fragment";
 		if (isError)
 		{
-			#if !macro
+			#if (!macro && USING_SHADOW_ENGINE)
 			backend.CoolUtil.showPopUp('Error compiling $typeName shader $message\n\nSource:\n$source', 'Shader Compile Error!');
 			#else
 			Log.error('Error compiling $typeName shader $message\n\nSource:\n$source');
@@ -505,7 +505,7 @@ class Shader
 		else
 			Log.debug('Info compiling $typeName shader $message');
 
-		#if (sys && !macro)
+		#if (sys && !macro && USING_SHADOW_ENGINE)
 		@:privateAccess // I'm lazy
 		backend.CrashHandler.saveErrorMessage('Error compiling $typeName shader $message\n\nSource:\n$source');
 		#end

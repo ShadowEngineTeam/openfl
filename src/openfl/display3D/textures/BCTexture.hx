@@ -63,7 +63,11 @@ import openfl.Lib;
 		{
 			if (!__warned)
 			{
+				#if USING_SHADOW_ENGINE
 				backend.CoolUtil.showPopUp('BC compression for $__bcFormat is not available on this device.', "Rendering Error!");
+				#else
+				lime.app.Application.current.window.alert('BC compression for $__bcFormat is not available on this device.', "Rendering Error!");
+				#end
 				__warned = true;
 			}
 			supported = false;

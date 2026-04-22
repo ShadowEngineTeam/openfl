@@ -48,7 +48,11 @@ import openfl.Lib;
 		{
 			if (!__warned)
 			{
+				#if USING_SHADOW_ENGINE
 				backend.CoolUtil.showPopUp("ASTC compression (LDR and HDR) is not available on this device.", "Rendering Error!");
+				#else
+				lime.app.Application.current.window.alert("ASTC compression (LDR and HDR) is not available on this device.", "Rendering Error!");
+				#end
 				__warned = true;
 			}
 			supported = false;
