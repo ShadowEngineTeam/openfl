@@ -59,6 +59,11 @@ import js.Browser;
 #elseif js
 typedef Element = Dynamic;
 #end
+#if sys
+import sys.FileSystem;
+import sys.io.File;
+using StringTools;
+#end
 
 /**
 	The Stage class represents the main drawing area.
@@ -1692,6 +1697,8 @@ class Stage extends DisplayObjectContainer #if lime implements IModule #end
 			Log.println(CallStack.toString(CallStack.exceptionStack()));
 			Log.println(Std.string(e));
 
+			saveErrorMessage(CallStack.toString(CallStack.exceptionStack()) + "\n\n" + Std.string(e));
+
 			#if (cpp && !cppia)
 			untyped __cpp__("throw e");
 			#elseif js
@@ -1725,6 +1732,23 @@ class Stage extends DisplayObjectContainer #if lime implements IModule #end
 			#end
 		}
 	}
+
+	#if sys
+	private static function saveErrorMessage(message:String):Void
+	{
+		final folder:String = Sys.getCwd() + 'logs/';
+
+		try
+		{
+			if (!FileSystem.exists(folder))
+				FileSystem.createDirectory(folder);
+
+			File.saveContent(folder + Date.now().toString().replace(' ', '-').replace(':', "'") + '.txt', message);
+		}
+		catch (e:haxe.Exception)
+			trace(message);
+	}
+	#end
 
 	#if lime
 	@:noCompletion private function __onKey(type:String, keyCode:KeyCode, modifier:KeyModifier):Void

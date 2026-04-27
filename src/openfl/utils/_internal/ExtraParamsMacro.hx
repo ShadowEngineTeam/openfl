@@ -21,13 +21,6 @@ class ExtraParamsMacro
 				Compiler.allowPackage("flash");
 				Compiler.define("swf-version", "22.0");
 			}
-
-			#if debug
-			if (!Context.defined("openfl-enable-handle-error"))
-			{
-				Compiler.define("openfl-disable-handle-error");
-			}
-			#end
 		}
 	}
 
