@@ -133,24 +133,25 @@ class Assets
 		}
 
 		#if USING_GPU_TEXTURES
-		final extension:String = backend.Paths.GPU_IMAGE_EXT;
-		final textureName:String = haxe.io.Path.withoutExtension(id) + '.$extension';
-
-		if (Assets.exists('$textureName'))
+		for (ext in backend.Paths.GPU_IMAGE_EXTS)
 		{
-			final texture = switch (extension)
+			final textureName:String = haxe.io.Path.withoutExtension(id) + '.$ext';
+			if (Assets.exists('$textureName'))
 			{
-				case 'astc': openfl.Lib.current.stage.context3D.createASTCTexture(Assets.getBytes(textureName));
-				case 'dds': openfl.Lib.current.stage.context3D.createBCTexture(Assets.getBytes(textureName));
-				default: null;
+				final texture = switch (ext)
+				{
+					case 'dds': openfl.Lib.current.stage.context3D.createBCTexture(Assets.getBytes(textureName));
+					case 'astc': openfl.Lib.current.stage.context3D.createASTCTexture(Assets.getBytes(textureName));
+					default: null;
+				}
+
+				final bitmapData:BitmapData = BitmapData.fromTexture(texture);
+
+				if (useCache && cache.enabled)
+					cache.setBitmapData(id, bitmapData);
+
+				return bitmapData;
 			}
-
-			final bitmapData:BitmapData = BitmapData.fromTexture(texture);
-
-			if (useCache && cache.enabled)
-				cache.setBitmapData(id, bitmapData);
-
-			return bitmapData;
 		}
 		#end
 
