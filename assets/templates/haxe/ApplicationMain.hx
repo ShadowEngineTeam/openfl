@@ -49,7 +49,6 @@ class ApplicationMain
 		ManifestResources.init(config);
 		#end
 
-		#if !flash
 		::foreach windows::
 		var attributes:lime.ui.WindowAttributes = {
 			allowHighDPI: ::allowHighDPI::,
@@ -109,8 +108,6 @@ class ApplicationMain
 
 		app.createWindow(attributes);
 		::end::
-		#elseif air
-		app.window.title = "::meta.title::";
 		#else
 		app.window.context.attributes.background = ::WIN_BACKGROUND::;
 		app.window.frameRate = ::WIN_FPS::;
@@ -151,9 +148,6 @@ class ApplicationMain
 
 	public static function start(stage:openfl.display.Stage):Void
 	{
-		#if flash
-		ApplicationMain.getEntryPoint();
-		#else
 		if (stage.__uncaughtErrorEvents.__enabled)
 		{
 			try
@@ -185,7 +179,6 @@ class ApplicationMain
 				stage.dispatchEvent(new openfl.events.FullScreenEvent(openfl.events.FullScreenEvent.FULL_SCREEN, false, false, true, true));
 			}
 		}
-		#end
 	}
 	#end
 
@@ -310,7 +303,7 @@ class DocumentClass
 
 		while (searchTypes != null)
 		{
-			if (searchTypes.module == "openfl.display.DisplayObject" || searchTypes.module == "flash.display.DisplayObject")
+			if (searchTypes.module == "openfl.display.DisplayObject")
 			{
 				var fields = Context.getBuildFields();
 

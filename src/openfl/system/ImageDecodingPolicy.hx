@@ -1,7 +1,6 @@
 package openfl.system;
 
 #if (!flash && sys && (!flash_doc_gen || air_doc_gen))
-#if !openfljs
 /**
 	The ImageDecodingPolicy class provides values for `imageDecodingPolicy` in
 	the LoaderContext class.
@@ -43,15 +42,4 @@ package openfl.system;
 		}
 	}
 }
-#else
-@SuppressWarnings("checkstyle:FieldDocComment") #if (haxe_ver >= 4.0) enum #else @:enum #end abstract ImageDecodingPolicy(String) from String to String
-{
-	public var ON_DEMAND = "onDemand";
-	public var ON_LOAD = "onLoad";
-}
-#end
-#else
-#if air
-typedef ImageDecodingPolicy = flash.system.ImageDecodingPolicy;
-#end
 #end
