@@ -951,9 +951,9 @@ import lime.math.Vector2;
 		return new Texture(this, width, height, format, optimizeForRenderToTexture, streamingLevels);
 	}
 
-	public function createASTCTexture(data:ByteArray):ASTCTexture
+	public function createASTCTexture(data:ByteArray, isSRGB:Bool = false, isHDR:Bool = false):ASTCTexture
 	{
-		return new ASTCTexture(this, data);
+		return new ASTCTexture(this, data, isSRGB, isHDR);
 	}
 
 	public function createBCTexture(data:ByteArray):BCTexture

@@ -29,7 +29,8 @@ import openfl.Lib;
 	public var supported:Bool = true;
 	public var imageSize(default, null):Int = 0;
 
-	private var __isSRGB:Bool = false;
+	private var __isSRGB:Bool = false; // sRGB colorspace (BC1/BC2/BC3/BC7)
+	private var __isSigned:Bool = false; // SNORM/SF16 signed data (BC4/BC5/BC6H)
 	private var __bcFormat:String = "BC7";
 	private var __isDX10:Bool = true;
 
@@ -41,16 +42,25 @@ import openfl.Lib;
 
 		__detectBCFormat(data);
 
-		var dxt1Extension = gl.getExtension("EXT_texture_compression_dxt1");
-		var s3tcExtension = gl.getExtension("EXT_texture_compression_s3tc");
-		var s3tcSRGBExtension = gl.getExtension("EXT_texture_compression_s3tc_srgb");
-		var rgtcExtension = gl.getExtension("EXT_texture_compression_rgtc");
-		var bptcExtension = gl.getExtension("EXT_texture_compression_bptc");
+		var dxt1Extension = __getExtension(gl, ["EXT_texture_compression_dxt1", "WEBGL_compressed_texture_s3tc",
+			"MOZ_WEBGL_compressed_texture_s3tc", "WEBKIT_WEBGL_compressed_texture_s3tc"]);
+		var dxt3Extension = __getExtension(gl, ["ANGLE_texture_compression_dxt3", "EXT_texture_compression_s3tc",
+			"WEBGL_compressed_texture_s3tc", "MOZ_WEBGL_compressed_texture_s3tc", "WEBKIT_WEBGL_compressed_texture_s3tc"]);
+		var dxt5Extension = __getExtension(gl, ["ANGLE_texture_compression_dxt5", "EXT_texture_compression_s3tc",
+			"WEBGL_compressed_texture_s3tc", "MOZ_WEBGL_compressed_texture_s3tc", "WEBKIT_WEBGL_compressed_texture_s3tc"]);
+		var s3tcSRGBExtension = __getExtension(gl, ["EXT_texture_compression_s3tc_srgb", "WEBGL_compressed_texture_s3tc_srgb",
+			"MOZ_WEBGL_compressed_texture_s3tc_srgb", "WEBKIT_WEBGL_compressed_texture_s3tc_srgb"]);
+		var rgtcExtension = __getExtension(gl, ["EXT_texture_compression_rgtc", "GL_EXT_texture_compression_rgtc"]);
+		var bptcExtension = __getExtension(gl, ["EXT_texture_compression_bptc", "GL_EXT_texture_compression_bptc"]);
 
 		var extensionSupported = switch (__bcFormat)
 		{
-			case "BC1", "BC2", "BC3":
-				dxt1Extension != null && s3tcExtension != null && s3tcSRGBExtension != null;
+			case "BC1":
+				dxt1Extension != null && (!__isSRGB || s3tcSRGBExtension != null);
+			case "BC2":
+				dxt3Extension != null && (!__isSRGB || s3tcSRGBExtension != null);
+			case "BC3":
+				dxt5Extension != null && (!__isSRGB || s3tcSRGBExtension != null);
 			case "BC4", "BC5":
 				rgtcExtension != null;
 			case "BC6H", "BC7":
@@ -80,17 +90,17 @@ import openfl.Lib;
 		__format = switch (__bcFormat)
 		{
 			case "BC1":
-				__isSRGB ? s3tcSRGBExtension.COMPRESSED_SRGB_ALPHA_S3TC_DXT1_EXT : dxt1Extension.COMPRESSED_RGBA_S3TC_DXT1_EXT;
+				__isSRGB ? 0x8C4D /* COMPRESSED_SRGB_ALPHA_S3TC_DXT1_EXT */ : 0x83F1 /* COMPRESSED_RGBA_S3TC_DXT1_EXT */;
 			case "BC2":
-				__isSRGB ? s3tcSRGBExtension.COMPRESSED_SRGB_ALPHA_S3TC_DXT3_EXT : s3tcExtension.COMPRESSED_RGBA_S3TC_DXT3_EXT;
+				__isSRGB ? 0x8C4E /* COMPRESSED_SRGB_ALPHA_S3TC_DXT3_EXT */ : 0x83F2 /* COMPRESSED_RGBA_S3TC_DXT3_EXT/ANGLE */;
 			case "BC3":
-				__isSRGB ? s3tcSRGBExtension.COMPRESSED_SRGB_ALPHA_S3TC_DXT5_EXT : s3tcExtension.COMPRESSED_RGBA_S3TC_DXT5_EXT;
+				__isSRGB ? 0x8C4F /* COMPRESSED_SRGB_ALPHA_S3TC_DXT5_EXT */ : 0x83F3 /* COMPRESSED_RGBA_S3TC_DXT5_EXT/ANGLE */;
 			case "BC4":
-				__isSRGB ? rgtcExtension.COMPRESSED_RED_RGTC1_EXT : rgtcExtension.COMPRESSED_SIGNED_RED_RGTC1_EXT;
+				__isSigned ? rgtcExtension.COMPRESSED_SIGNED_RED_RGTC1_EXT : rgtcExtension.COMPRESSED_RED_RGTC1_EXT;
 			case "BC5":
-				__isSRGB ? rgtcExtension.COMPRESSED_RED_GREEN_RGTC2_EXT : rgtcExtension.COMPRESSED_SIGNED_RED_GREEN_RGTC2_EXT;
+				__isSigned ? rgtcExtension.COMPRESSED_SIGNED_RED_GREEN_RGTC2_EXT : rgtcExtension.COMPRESSED_RED_GREEN_RGTC2_EXT;
 			case "BC6H":
-				__isSRGB ? bptcExtension.COMPRESSED_RGB_BPTC_SIGNED_FLOAT_EXT : bptcExtension.COMPRESSED_RGB_BPTC_UNSIGNED_FLOAT_EXT;
+				__isSigned ? bptcExtension.COMPRESSED_RGB_BPTC_SIGNED_FLOAT_EXT : bptcExtension.COMPRESSED_RGB_BPTC_UNSIGNED_FLOAT_EXT;
 			case "BC7":
 				__isSRGB ? bptcExtension.COMPRESSED_SRGB_ALPHA_BPTC_UNORM_EXT : bptcExtension.COMPRESSED_RGBA_BPTC_UNORM_EXT;
 			default:
@@ -102,6 +112,16 @@ import openfl.Lib;
 		__streamingLevels = 0;
 
 		__uploadBCTextureFromByteArray(data);
+	}
+
+	@:noCompletion private static function __getExtension(gl:Dynamic, names:Array<String>):Dynamic
+	{
+		for (name in names)
+		{
+			var ext = gl.getExtension(name);
+			if (ext != null) return ext;
+		}
+		return null;
 	}
 
 	private function __uploadBCTextureFromByteArray(data:ByteArray):Void
@@ -160,46 +180,46 @@ import openfl.Lib;
 
 			switch (dxgiFormat)
 			{
-				case 71:
+				case 70, 71: // BC1_TYPELESS, BC1_UNORM
 					__bcFormat = "BC1";
 					__isSRGB = false;
-				case 72:
+				case 72: // BC1_UNORM_SRGB
 					__bcFormat = "BC1";
 					__isSRGB = true;
-				case 74:
+				case 73, 74: // BC2_TYPELESS, BC2_UNORM
 					__bcFormat = "BC2";
 					__isSRGB = false;
-				case 75:
+				case 75: // BC2_UNORM_SRGB
 					__bcFormat = "BC2";
 					__isSRGB = true;
-				case 77:
+				case 76, 77: // BC3_TYPELESS, BC3_UNORM
 					__bcFormat = "BC3";
 					__isSRGB = false;
-				case 78:
+				case 78: // BC3_UNORM_SRGB
 					__bcFormat = "BC3";
 					__isSRGB = true;
-				case 80:
+				case 79, 80: // BC4_TYPELESS, BC4_UNORM
 					__bcFormat = "BC4";
-					__isSRGB = false; // UNORM
-				case 81:
+					__isSigned = false;
+				case 81: // BC4_SNORM
 					__bcFormat = "BC4";
-					__isSRGB = true; // SNORM (signed)
-				case 83:
+					__isSigned = true;
+				case 82, 83: // BC5_TYPELESS, BC5_UNORM
 					__bcFormat = "BC5";
-					__isSRGB = false; // UNORM
-				case 84:
+					__isSigned = false;
+				case 84: // BC5_SNORM
 					__bcFormat = "BC5";
-					__isSRGB = true; // SNORM
-				case 95:
+					__isSigned = true;
+				case 94, 95: // BC6H_TYPELESS, BC6H_UF16 (unsigned float)
 					__bcFormat = "BC6H";
-					__isSRGB = false; // UF16
-				case 96:
+					__isSigned = false;
+				case 96: // BC6H_SF16 (signed float)
 					__bcFormat = "BC6H";
-					__isSRGB = true; // SF16
-				case 98:
+					__isSigned = true;
+				case 97, 98: // BC7_TYPELESS, BC7_UNORM
 					__bcFormat = "BC7";
 					__isSRGB = false;
-				case 99:
+				case 99: // BC7_UNORM_SRGB
 					__bcFormat = "BC7";
 					__isSRGB = true;
 				default:
@@ -209,30 +229,32 @@ import openfl.Lib;
 		else
 		{
 			__isDX10 = false;
-			// legacy DDS fourCC
+			// legacy DDS fourCC. DXT2/DXT4 are premultiplied-alpha variants that share the
+			// exact block layout of DXT3/DXT5 (BC2/BC3); GL has no separate premultiplied
+			// format, so they decode through the same internal format.
 			switch (fourCC)
 			{
 				case "DXT1":
 					__bcFormat = "BC1";
 					__isSRGB = false;
-				case "DXT3":
+				case "DXT2", "DXT3":
 					__bcFormat = "BC2";
 					__isSRGB = false;
-				case "DXT5":
+				case "DXT4", "DXT5":
 					__bcFormat = "BC3";
 					__isSRGB = false;
-				case "BC4U":
+				case "BC4U", "ATI1":
 					__bcFormat = "BC4";
-					__isSRGB = false;
+					__isSigned = false; // UNORM
 				case "BC4S":
 					__bcFormat = "BC4";
-					__isSRGB = true;
-				case "BC5U":
+					__isSigned = true; // SNORM (signed)
+				case "BC5U", "ATI2":
 					__bcFormat = "BC5";
-					__isSRGB = false;
+					__isSigned = false; // UNORM
 				case "BC5S":
 					__bcFormat = "BC5";
-					__isSRGB = true;
+					__isSigned = true; // SNORM (signed)
 				default:
 					__bcFormat = "BC7"; // assuming DX10 if not legacy
 			}
