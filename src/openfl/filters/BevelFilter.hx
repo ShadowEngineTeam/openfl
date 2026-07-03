@@ -1,7 +1,6 @@
 package openfl.filters;
 
 import haxe.Timer;
-#if !flash
 import openfl.display.BitmapData;
 import openfl.display.DisplayObjectRenderer;
 import openfl.display.Shader;
@@ -17,10 +16,6 @@ import lime._internal.graphics.ImageDataUtil;
 	@see `openfl.display.DisplayObject.filters`
 	@see `openfl.display.BitmapData.applyFilter`
 **/
-#if !openfl_debug
-@:fileXml('tags="haxe,release"')
-@:noDebug
-#end
 @:access(openfl.geom.Point)
 @:access(openfl.geom.Rectangle)
 @:access(openfl.filters.BlurFilter)
@@ -396,10 +391,6 @@ import lime._internal.graphics.ImageDataUtil;
 	}
 }
 
-#if !openfl_debug
-@:fileXml('tags="haxe,release"')
-@:noDebug
-#end
 private class BevelShader extends BitmapFilterShader
 {
 	@:glFragmentSource("uniform sampler2D openfl_Texture;
@@ -512,6 +503,3 @@ private class BevelShader extends BitmapFilterShader
 		super.__update();
 	}
 }
-#else
-typedef BevelFilter = flash.filters.BevelFilter;
-#end

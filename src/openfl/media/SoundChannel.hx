@@ -1,6 +1,5 @@
 package openfl.media;
 
-#if !flash
 import openfl.events.Event;
 import openfl.events.EventDispatcher;
 #if lime
@@ -34,10 +33,6 @@ import lime.utils.Int16Array;
 	@see [Playing sounds](https://books.openfl.org/openfl-developers-guide/working-with-sound/playing-sounds.html)
 	@see `openfl.media.Sound`
 **/
-#if !openfl_debug
-@:fileXml('tags="haxe,release"')
-@:noDebug
-#end
 @:access(openfl.events.Event)
 @:access(openfl.events.SampleDataEvent)
 @:access(openfl.media.Sound)
@@ -211,11 +206,7 @@ import lime.utils.Int16Array;
 				__processor = webAudioContext.createScriptProcessor(bufferSize, 0, 2);
 				__processor.connect(webAudioContext.destination);
 				__processor.onaudioprocess = onSample;
-				#if (haxe_ver >= 4.2)
 				webAudioContext.resume();
-				#else
-				Reflect.callMethod(webAudioContext, Reflect.field(webAudioContext, "resume"), []);
-				#end
 			}
 		}
 		#end
@@ -479,6 +470,3 @@ import lime.utils.Int16Array;
 	}
 	#end
 }
-#else
-typedef SoundChannel = flash.media.SoundChannel;
-#end

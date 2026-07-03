@@ -1,12 +1,7 @@
 package openfl.text._internal;
 
-#if !flash
 import openfl.text.TextFormat;
 
-#if !openfl_debug
-@:fileXml('tags="haxe,release"')
-@:noDebug
-#end
 class TextFormatRange
 {
 	public var end:Int;
@@ -20,4 +15,3 @@ class TextFormatRange
 		this.end = end;
 	}
 }
-#end

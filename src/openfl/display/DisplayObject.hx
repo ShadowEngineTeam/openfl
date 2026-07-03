@@ -1,6 +1,5 @@
 package openfl.display;
 
-#if !flash
 import openfl.display._internal.IBitmapDrawableType;
 import openfl.utils.ObjectPool;
 import openfl.utils._internal.Lib;
@@ -175,10 +174,6 @@ import js.html.CSSStyleDeclaration;
 	@see [Animating objects](https://books.openfl.org/openfl-developers-guide/display-programming/animating-objects.html)
 	@see [Loading display content dynamically](https://books.openfl.org/openfl-developers-guide/display-programming/loading-display-content-dynamically/)
 **/
-#if !openfl_debug
-@:fileXml('tags="haxe,release"')
-@:noDebug
-#end
 @:access(lime.graphics.Image)
 @:access(lime.graphics.ImageBuffer)
 @:access(openfl.display3D._internal.Context3DState)
@@ -196,7 +191,7 @@ import js.html.CSSStyleDeclaration;
 @:access(openfl.geom.Matrix)
 @:access(openfl.geom.Rectangle)
 @:access(openfl.geom.Transform)
-class DisplayObject extends EventDispatcher implements IBitmapDrawable #if (openfl_dynamic && haxe_ver < "4.0.0") implements Dynamic<DisplayObject> #end
+class DisplayObject extends EventDispatcher implements IBitmapDrawable
 {
 	#if (openfl_enable_experimental_update_queue && !dom)
 	@:noCompletion private static var updateQueue:Array<DisplayObject> = [];
@@ -2448,6 +2443,3 @@ class DisplayObject extends EventDispatcher implements IBitmapDrawable #if (open
 		return __transform.ty = value;
 	}
 }
-#else
-typedef DisplayObject = flash.display.DisplayObject;
-#end

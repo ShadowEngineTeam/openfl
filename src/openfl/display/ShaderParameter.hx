@@ -1,6 +1,5 @@
 package openfl.display;
 
-#if !flash
 import openfl.utils._internal.Float32Array;
 import openfl.display3D.Context3D;
 
@@ -85,10 +84,6 @@ import openfl.display3D.Context3D;
 	directly. A ShaderParameter instance is created for each of a shader's
 	parameters when the Shader instance is created.
 **/
-#if !openfl_debug
-@:fileXml('tags="haxe,release"')
-@:noDebug
-#end
 @:access(openfl.display3D.Context3D)
 #if (!js && !display)
 @:generic
@@ -593,6 +588,3 @@ import openfl.display3D.Context3D;
 		return this.name = value;
 	}
 }
-#else
-typedef ShaderParameter<T> = flash.display.ShaderParameter<T>;
-#end

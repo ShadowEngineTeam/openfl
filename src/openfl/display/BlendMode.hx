@@ -1,6 +1,5 @@
 package openfl.display;
 
-#if !flash
 /**
 	A class that provides constant values for visual blend mode effects. These
 	constants are used in the following:
@@ -14,7 +13,7 @@ package openfl.display;
 	@see `flash.display.DisplayObject.blendMode`
 	@see `flash.display.BitmapData.draw()`
 **/
-#if (haxe_ver >= 4.0) enum #else @:enum #end abstract BlendMode(Null<Int>)
+enum abstract BlendMode(Null<Int>)
 {
 	/**
 		Adds the values of the constituent colors of the display object to the
@@ -297,6 +296,3 @@ package openfl.display;
 		}
 	}
 }
-#else
-typedef BlendMode = flash.display.BlendMode;
-#end

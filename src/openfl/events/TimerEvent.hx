@@ -1,15 +1,11 @@
 package openfl.events;
 
-#if !flash
 // import openfl.utils.ObjectPool;
+
 /**
 	A Timer object dispatches a TimerEvent objects whenever the Timer object
 	reaches the interval specified by the `Timer.delay` property.
 **/
-#if !openfl_debug
-@:fileXml('tags="haxe,release"')
-@:noDebug
-#end
 class TimerEvent extends Event
 {
 	/**
@@ -88,6 +84,3 @@ class TimerEvent extends Event
 		__updateAfterEventFlag = true;
 	}
 }
-#else
-typedef TimerEvent = flash.events.TimerEvent;
-#end

@@ -1,6 +1,5 @@
 package openfl.events;
 
-#if !flash
 // import openfl.utils.ObjectPool;
 import openfl.events.TextEvent;
 
@@ -22,10 +21,6 @@ import openfl.events.TextEvent;
 	event to appear when content is running in the debugger version of Flash
 	Player or the AIR Debug Launcher (ADL) application.
 **/
-#if !openfl_debug
-@:fileXml('tags="haxe,release"')
-@:noDebug
-#end
 class ErrorEvent extends TextEvent
 {
 	/**
@@ -98,6 +93,3 @@ class ErrorEvent extends TextEvent
 		errorID = 0;
 	}
 }
-#else
-typedef ErrorEvent = flash.events.ErrorEvent;
-#end

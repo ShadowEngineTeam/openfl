@@ -1,12 +1,7 @@
 package openfl.ui;
 
-#if !flash
 import openfl.events.EventDispatcher;
 
-#if !openfl_debug
-@:fileXml('tags="haxe,release"')
-@:noDebug
-#end
 class GameInputControl extends EventDispatcher
 {
 	/**
@@ -45,6 +40,3 @@ class GameInputControl extends EventDispatcher
 		this.value = value;
 	}
 }
-#else
-typedef GameInputControl = flash.ui.GameInputControl;
-#end

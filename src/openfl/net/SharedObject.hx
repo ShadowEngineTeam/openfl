@@ -1,6 +1,5 @@
 package openfl.net;
 
-#if !flash
 import haxe.io.Bytes;
 import haxe.io.Path;
 import haxe.Serializer;
@@ -157,10 +156,6 @@ import sys.FileSystem;
 	@event sync       Dispatched when a remote shared object has been updated
 					  by the server.
 **/
-#if !openfl_debug
-@:fileXml('tags="haxe,release"')
-@:noDebug
-#end
 class SharedObject extends EventDispatcher
 {
 	/**
@@ -1013,6 +1008,3 @@ class SharedObject extends EventDispatcher
 		}
 	}
 }
-#else
-typedef SharedObject = flash.net.SharedObject;
-#end

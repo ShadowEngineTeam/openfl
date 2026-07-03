@@ -1,6 +1,6 @@
 package openfl.text.engine;
 
-#if (!flash && sys && (!flash_doc_gen || air_doc_gen))
+#if sys
 /**
 	The FontPosture class is an enumeration of constant values used with
 	`FontDescription.fontPosture` and `StageText.fontPostures` to set text to
@@ -8,7 +8,7 @@ package openfl.text.engine;
 
 	@see `openfl.text.StageText.fontPosture`
 **/
-#if (haxe_ver >= 4.0) enum #else @:enum #end abstract FontPosture(Null<Int>)
+enum abstract FontPosture(Null<Int>)
 {
 	/**
 		Used to indicate italic font posture.

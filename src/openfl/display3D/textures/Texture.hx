@@ -1,6 +1,5 @@
 package openfl.display3D.textures;
 
-#if !flash
 import haxe.io.Bytes;
 import haxe.Timer;
 import openfl.utils._internal.ArrayBufferView;
@@ -19,10 +18,6 @@ import openfl.utils.ByteArray;
 	Texture cannot be instantiated directly. Create instances by using Context3D
 	`createTexture()` method.
 **/
-#if !openfl_debug
-@:fileXml('tags="haxe,release"')
-@:noDebug
-#end
 @:access(openfl.display3D.Context3D)
 @:access(openfl.display.Stage)
 @:access(openfl.events.Event)
@@ -353,6 +348,3 @@ import openfl.utils.ByteArray;
 		__context.__bindGLTexture2D(null);
 	}
 }
-#else
-typedef Texture = flash.display3D.textures.Texture;
-#end

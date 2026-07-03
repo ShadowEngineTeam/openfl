@@ -1,13 +1,13 @@
 package openfl.text;
 
-#if (!flash && sys && (!flash_doc_gen || air_doc_gen))
+#if sys
 /**
 	The AutoCapitalize class defines constants for the `autoCapitalize` property
 	of the StageText class.
 
 	@see `openfl.text.StageText.autoCapitalize`
 **/
-#if (haxe_ver >= 4.0) enum #else @:enum #end abstract AutoCapitalize(Null<Int>)
+enum abstract AutoCapitalize(Null<Int>)
 {
 	/**
 		Capitalize every character.

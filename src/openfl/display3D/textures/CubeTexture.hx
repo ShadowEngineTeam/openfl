@@ -1,6 +1,5 @@
 package openfl.display3D.textures;
 
-#if !flash
 import haxe.Timer;
 import openfl.display3D._internal.GLFramebuffer;
 import openfl.display3D._internal.ATFReader;
@@ -22,10 +21,6 @@ import openfl.utils.ByteArray;
 	You cannot create a CubeTexture object directly; use the Context3D
 	`createCubeTexture()` instead.
 **/
-#if !openfl_debug
-@:fileXml('tags="haxe,release"')
-@:noDebug
-#end
 @:access(openfl.display3D.Context3D)
 @:access(openfl.display.Stage)
 @:access(openfl.events.Event)
@@ -397,6 +392,3 @@ import openfl.utils.ByteArray;
 		__context.__bindGLTextureCubeMap(null);
 	}
 }
-#else
-typedef CubeTexture = flash.display3D.textures.CubeTexture;
-#end

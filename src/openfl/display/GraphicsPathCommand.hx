@@ -1,6 +1,5 @@
 package openfl.display;
 
-#if !flash
 /**
 	Defines the values to use for specifying path-drawing commands.
 
@@ -8,7 +7,7 @@ package openfl.display;
 	`Graphics.drawPath()` method, or stored in the
 	`commands` vector of a GraphicsPath object.
 **/
-#if (haxe_ver >= 4.0) enum #else @:enum #end abstract GraphicsPathCommand(Int) from Int to Int from UInt to UInt
+enum abstract GraphicsPathCommand(Int) from Int to Int from UInt to UInt
 {
 	/**
 		Specifies a drawing command that draws a curve from the current drawing position
@@ -68,6 +67,3 @@ package openfl.display;
 	**/
 	public var WIDE_MOVE_TO = 4;
 }
-#else
-typedef GraphicsPathCommand = flash.display.GraphicsPathCommand;
-#end

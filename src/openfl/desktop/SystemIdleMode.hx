@@ -1,6 +1,6 @@
 package openfl.desktop;
 
-#if (!flash && sys && (!flash_doc_gen || air_doc_gen))
+#if sys
 /**
 	The SystemIdleMode class provides constant values for system idle behaviors.
 	These constants are used in the `systemIdleMode` property of the
@@ -8,7 +8,7 @@ package openfl.desktop;
 
 	@see `openfl.desktop.NativeApplication.systemIdleMode`
 **/
-#if (haxe_ver >= 4.0) enum #else @:enum #end abstract SystemIdleMode(Null<Int>)
+enum abstract SystemIdleMode(Null<Int>)
 {
 	/**
 		Prevents the system from dropping into an idle mode.

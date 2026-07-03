@@ -35,10 +35,6 @@ import lime.utils.Assets as LimeAssets;
 	@see [Working with font assets](https://books.openfl.org/openfl-developers-guide/using-the-textfield-class/working-with-font-assets.html)
 	@see [Working with sound assets](https://books.openfl.org/openfl-developers-guide/working-with-sound/working-with-sound-assets.html)
 **/
-#if !openfl_debug
-@:fileXml('tags="haxe,release"')
-@:noDebug
-#end
 @:access(openfl.display.BitmapData)
 @:access(openfl.display.Sprite)
 @:access(openfl.events.Event)
@@ -153,18 +149,14 @@ class Assets
 				return bitmapData;
 			}
 		}
-		#end
 
 		var image = LimeAssets.getImage(id, false);
 
 		if (image != null)
 		{
-			#if flash
-			var bitmapData = image.src;
-			#else
 			var bitmapData = BitmapData.fromImage(image);
+
 			bitmapData.__asset = true;
-			#end
 
 			if (useCache && cache.enabled)
 			{
@@ -224,12 +216,9 @@ class Assets
 
 		if (limeFont != null)
 		{
-			#if flash
-			var font = limeFont.src;
-			#else
 			var font = new Font();
+
 			font.__fromLimeFont(limeFont);
-			#end
 
 			if (useCache && cache.enabled)
 			{
@@ -355,11 +344,7 @@ class Assets
 
 		if (buffer != null)
 		{
-			#if flash
-			var sound = buffer.src;
-			#else
 			var sound = Sound.fromAudioBuffer(buffer);
-			#end
 
 			if (useCache && cache.enabled)
 			{
@@ -421,7 +406,7 @@ class Assets
 		if (libraryBindings.exists(className))
 		{
 			var library = libraryBindings.get(className);
-			#if !flash
+
 			if (instance == null)
 			{
 				Sprite.__constructor = function(instance:Sprite)
@@ -434,10 +419,6 @@ class Assets
 				Sprite.__constructor = null;
 				instance.__bind(library, className);
 			}
-			#else
-			// TODO: Consolidate behavior
-			library.bind(className);
-			#end
 		}
 		else
 		{
@@ -489,20 +470,8 @@ class Assets
 	@:analyzer(ignore) private static function isValidBitmapData(bitmapData:BitmapData):Bool
 	{
 		#if (lime && tools && !display)
-		#if flash
-		try
-		{
-			bitmapData.width;
-			return true;
-		}
-		catch (e:Dynamic)
-		{
-			return false;
-		}
-		#else
 		return (bitmapData != null
 			&& #if !lime_hybrid (bitmapData.image != null || bitmapData.__texture != null) #else bitmapData.__handle != null #end);
-		#end
 		#else
 		return true;
 		#end
@@ -567,12 +536,9 @@ class Assets
 		{
 			if (image != null)
 			{
-				#if flash
-				var bitmapData = image.src;
-				#else
 				var bitmapData = BitmapData.fromImage(image);
+
 				bitmapData.__asset = true;
-				#end
 
 				if (useCache && cache.enabled)
 				{
@@ -650,12 +616,9 @@ class Assets
 		LimeAssets.loadFont(id)
 			.onComplete(function(limeFont)
 			{
-				#if flash
-				var font = limeFont.src;
-				#else
 				var font = new Font();
+
 				font.__fromLimeFont(limeFont);
-				#end
 
 				if (useCache && cache.enabled)
 				{
@@ -738,11 +701,7 @@ class Assets
 			{
 				if (buffer != null)
 				{
-					#if flash
-					var sound = buffer.src;
-					#else
 					var sound = Sound.fromAudioBuffer(buffer);
-					#end
 
 					if (useCache && cache.enabled)
 					{
@@ -839,11 +798,7 @@ class Assets
 			{
 				if (buffer != null)
 				{
-					#if flash
-					var sound = buffer.src;
-					#else
 					var sound = Sound.fromAudioBuffer(buffer);
-					#end
 
 					if (useCache && cache.enabled)
 					{
@@ -920,16 +875,7 @@ class Assets
 
 	@:noCompletion private static function resolveEnum(name:String):Enum<Dynamic>
 	{
-		var value = Type.resolveEnum(name);
-
-		#if flash
-		if (value == null)
-		{
-			return cast Type.resolveClass(name);
-		}
-		#end
-
-		return value;
+		return Type.resolveEnum(name);
 	}
 
 	public static function unloadLibrary(name:String):Void
@@ -955,7 +901,7 @@ class Assets
 	// Event Handlers
 	@:noCompletion private static function LimeAssets_onChange():Void
 	{
-		#if (openfl_pool_events && !flash)
+		#if openfl_pool_events
 		var changeEvent = Event.__pool.get();
 		changeEvent.type = Event.CHANGE;
 		#else
@@ -964,7 +910,7 @@ class Assets
 
 		dispatchEvent(changeEvent);
 
-		#if (openfl_pool_events && !flash)
+		#if openfl_pool_events
 		Event.__pool.release(changeEvent);
 		#end
 	}

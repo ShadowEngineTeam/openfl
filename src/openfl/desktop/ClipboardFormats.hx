@@ -1,12 +1,11 @@
 package openfl.desktop;
 
-#if !flash
 /**
 	The ClipboardFormats class defines constants for the names of the standard
 	data formats used with the Clipboard class. Flash Player 10 only supports
 	TEXT_FORMAT, RICH_TEXT_FORMAT, and HTML_FORMAT.
 **/
-#if (haxe_ver >= 4.0) enum #else @:enum #end abstract ClipboardFormats(Null<Int>)
+enum abstract ClipboardFormats(Null<Int>)
 {
 	/**
 		HTML data.
@@ -49,6 +48,3 @@ package openfl.desktop;
 		}
 	}
 }
-#else
-typedef ClipboardFormats = flash.desktop.ClipboardFormats;
-#end

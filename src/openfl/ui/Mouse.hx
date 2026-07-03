@@ -1,6 +1,5 @@
 package openfl.ui;
 
-#if !flash
 #if lime
 import lime.app.Application;
 import lime.ui.MouseCursor as LimeMouseCursor;
@@ -13,10 +12,6 @@ import lime.ui.MouseCursor as LimeMouseCursor;
 	constructor. The pointer is visible by default,
 	but you can hide it and implement a custom pointer.
 **/
-#if !openfl_debug
-@:fileXml('tags="haxe,release"')
-@:noDebug
-#end
 @:access(openfl.display.Stage)
 @:final class Mouse
 {
@@ -179,6 +174,3 @@ import lime.ui.MouseCursor as LimeMouseCursor;
 		return __cursor = value;
 	}
 }
-#else
-typedef Mouse = flash.ui.Mouse;
-#end

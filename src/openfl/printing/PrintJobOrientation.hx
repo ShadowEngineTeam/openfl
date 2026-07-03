@@ -1,11 +1,10 @@
 package openfl.printing;
 
-#if !flash
 /**
 	This class provides values that are used by the `PrintJob.orientation`
 	property for the image position of a printed page.
 **/
-#if (haxe_ver >= 4.0) enum #else @:enum #end abstract PrintJobOrientation(Null<Int>)
+enum abstract PrintJobOrientation(Null<Int>)
 {
 	/**
 		The landscape (horizontal) image orientation for printing. This
@@ -41,6 +40,3 @@ package openfl.printing;
 		}
 	}
 }
-#else
-typedef PrintJobOrientation = flash.printing.PrintJobOrientation;
-#end

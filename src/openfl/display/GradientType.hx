@@ -1,6 +1,5 @@
 package openfl.display;
 
-#if !flash
 /**
 	The GradientType class provides values for the `type` parameter
 	in the `beginGradientFill()` and
@@ -9,7 +8,7 @@ package openfl.display;
 
 	@see [Creating gradient lines and fills](https://books.openfl.org/openfl-developers-guide/using-the-drawing-api/creating-gradient-lines-and-fills.html)
 **/
-#if (haxe_ver >= 4.0) enum #else @:enum #end abstract GradientType(Null<Int>)
+enum abstract GradientType(Null<Int>)
 {
 	/**
 		Value used to specify a linear gradient fill.
@@ -51,6 +50,3 @@ package openfl.display;
 		}
 	}
 }
-#else
-typedef GradientType = flash.display.GradientType;
-#end

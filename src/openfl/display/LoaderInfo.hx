@@ -1,7 +1,6 @@
 package openfl.display;
 
 import openfl.utils.AssetLibrary;
-#if !flash
 import openfl.events.EventDispatcher;
 import openfl.events.Event;
 import openfl.events.ProgressEvent;
@@ -108,10 +107,6 @@ import js.Browser;
 
 	@see `openfl.display.Loader`
 **/
-#if !openfl_debug
-@:fileXml('tags="haxe,release"')
-@:noDebug
-#end
 @:access(openfl.events.Event)
 class LoaderInfo extends EventDispatcher
 {
@@ -469,6 +464,3 @@ class LoaderInfo extends EventDispatcher
 		#end
 	}
 }
-#else
-typedef LoaderInfo = flash.display.LoaderInfo;
-#end

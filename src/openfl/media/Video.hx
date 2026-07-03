@@ -1,6 +1,5 @@
 package openfl.media;
 
-#if !flash
 import openfl.display3D._internal.GLBuffer;
 import openfl.display3D.textures.RectangleTexture;
 import openfl.display3D.Context3D;
@@ -75,10 +74,6 @@ import lime.graphics.RenderContext;
 	`addEventListener()` method on the display object container that contains
 	the Video object.
 **/
-#if !openfl_debug
-@:fileXml('tags="haxe,release"')
-@:noDebug
-#end
 @:access(openfl.display3D.textures.TextureBase)
 @:access(openfl.display3D.Context3D)
 @:access(openfl.geom.ColorTransform)
@@ -488,6 +483,3 @@ class Video extends DisplayObject
 		return __width = value;
 	}
 }
-#else
-typedef Video = flash.media.Video;
-#end

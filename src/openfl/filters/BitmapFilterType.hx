@@ -1,11 +1,10 @@
 package openfl.filters;
 
-#if !flash
 /**
 	The BitmapFilterType class contains values to set the type of a
 	BitmapFilter.
 **/
-#if (haxe_ver >= 4.0) enum #else @:enum #end abstract BitmapFilterType(Null<Int>)
+enum abstract BitmapFilterType(Null<Int>)
 {
 	/**
 		Defines the setting that applies a filter to the entire area of an object.
@@ -44,6 +43,3 @@ package openfl.filters;
 		}
 	}
 }
-#else
-typedef BitmapFilterType = flash.filters.BitmapFilterType;
-#end

@@ -1,6 +1,5 @@
 package openfl.utils;
 
-#if !flash
 import haxe.Timer as HaxeTimer;
 import openfl.errors.Error;
 import openfl.events.EventDispatcher;
@@ -30,10 +29,6 @@ import js.Browser;
 	@event timerComplete Dispatched whenever it has completed the number of
 						 requests set by `Timer.repeatCount`.
 **/
-#if !openfl_debug
-@:fileXml('tags="haxe,release"')
-@:noDebug
-#end
 @:access(openfl.display.Stage)
 @:access(openfl.events.TimerEvent)
 class Timer extends EventDispatcher
@@ -248,6 +243,3 @@ class Timer extends EventDispatcher
 		}
 	}
 }
-#else
-typedef Timer = flash.utils.Timer;
-#end

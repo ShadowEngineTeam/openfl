@@ -1,6 +1,5 @@
 package openfl.display._internal;
 
-#if !flash
 import openfl.display.Bitmap;
 import openfl.display.CairoRenderer;
 #if lime
@@ -8,10 +7,6 @@ import lime.graphics.cairo.CairoFilter;
 import lime.graphics.cairo.CairoPattern;
 #end
 
-#if !openfl_debug
-@:fileXml('tags="haxe,release"')
-@:noDebug
-#end
 @:access(lime.graphics.ImageBuffer)
 @:access(openfl.display.Bitmap)
 @:access(openfl.display.BitmapData)
@@ -96,4 +91,3 @@ class CairoBitmap
 		renderer.cairo.rectangle(0, 0, bitmap.width, bitmap.height);
 	}
 }
-#end

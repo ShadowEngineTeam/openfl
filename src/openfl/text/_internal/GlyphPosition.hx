@@ -1,15 +1,10 @@
 package openfl.text._internal;
 
-#if !flash
 #if lime
 import lime.math.Vector2;
 import lime.text.Glyph;
 #end
 
-#if !openfl_debug
-@:fileXml('tags="haxe,release"')
-@:noDebug
-#end
 @SuppressWarnings(["checkstyle:FieldDocComment", "checkstyle:Dynamic"])
 class GlyphPosition
 {
@@ -32,4 +27,3 @@ class GlyphPosition
 		}
 	}
 }
-#end

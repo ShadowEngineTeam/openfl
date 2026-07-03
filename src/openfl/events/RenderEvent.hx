@@ -21,10 +21,6 @@ import openfl.geom.Matrix;
 	whether an off-screen render (such as DisplayObject `cacheAsBitmap` or BitmapData
 	`draw`) is being used.
 **/
-#if !openfl_debug
-@:fileXml('tags="haxe,release"')
-@:noDebug
-#end
 @:access(openfl.geom.ColorTransform)
 @:beta class RenderEvent extends Event
 {
@@ -161,16 +157,13 @@ import openfl.geom.Matrix;
 
 	public override function clone():RenderEvent
 	{
-		var event = new RenderEvent(type, bubbles, cancelable, objectMatrix.clone(), #if flash null #else objectColorTransform.__clone() #end, allowSmoothing);
-		#if !flash
+		var event = new RenderEvent(type, bubbles, cancelable, objectMatrix.clone(), objectColorTransform.__clone(), allowSmoothing);
 		event.target = target;
 		event.currentTarget = currentTarget;
 		event.eventPhase = eventPhase;
-		#end
 		return event;
 	}
 
-	#if !flash
 	public override function toString():String
 	{
 		return __formatToString("RenderEvent", ["type", "bubbles", "cancelable"]);
@@ -184,5 +177,4 @@ import openfl.geom.Matrix;
 		allowSmoothing = false;
 		renderer = null;
 	}
-	#end
 }

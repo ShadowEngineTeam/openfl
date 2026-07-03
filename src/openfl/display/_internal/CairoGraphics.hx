@@ -1,6 +1,5 @@
 package openfl.display._internal;
 
-#if !flash
 import openfl.display._internal.DrawCommandBuffer;
 import openfl.display._internal.DrawCommandReader;
 import openfl.display.BitmapData;
@@ -23,10 +22,6 @@ import lime.math.Matrix3;
 import lime.math.Vector2;
 #end
 
-#if !openfl_debug
-@:fileXml('tags="haxe,release"')
-@:noDebug
-#end
 @:access(openfl.display.DisplayObject)
 @:access(openfl.display.BitmapData)
 @:access(openfl.display.Graphics)
@@ -2399,4 +2394,3 @@ private class Scale9GridBounds
 		}
 	}
 }
-#end

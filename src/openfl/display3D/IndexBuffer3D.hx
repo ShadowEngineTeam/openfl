@@ -1,6 +1,5 @@
 package openfl.display3D;
 
-#if !flash
 import openfl.display3D._internal.GLBuffer;
 import openfl.utils._internal.ArrayBufferView;
 import openfl.utils._internal.UInt16Array;
@@ -20,10 +19,6 @@ import openfl.Vector;
 	IndexBuffer3D cannot be instantiated directly. Create instances by using
 	`context3D.createIndexBuffer()`
 **/
-#if !openfl_debug
-@:fileXml('tags="haxe,release"')
-@:noDebug
-#end
 @:access(openfl.display3D.Context3D)
 @:access(openfl.display.Stage)
 @:final class IndexBuffer3D
@@ -96,8 +91,7 @@ import openfl.Vector;
 		if (data == null) return;
 		var gl = __context.gl;
 		__context.__bindGLElementArrayBuffer(__id);
-		if (__memoryUsage == data.byteLength)
-			gl.bufferSubData(gl.ELEMENT_ARRAY_BUFFER, 0, data);
+		if (__memoryUsage == data.byteLength) gl.bufferSubData(gl.ELEMENT_ARRAY_BUFFER, 0, data);
 		else
 			gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, data, __usage);
 		__memoryUsage = data.byteLength;
@@ -193,6 +187,3 @@ import openfl.Vector;
 		#end
 	}
 }
-#else
-typedef IndexBuffer3D = flash.display3D.IndexBuffer3D;
-#end

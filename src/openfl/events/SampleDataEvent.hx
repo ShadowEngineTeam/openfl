@@ -1,6 +1,5 @@
 package openfl.events;
 
-#if !flash
 // import openfl.utils.ObjectPool;
 import openfl.utils.ByteArray;
 import openfl.utils.Endian;
@@ -85,10 +84,6 @@ import haxe.io.Bytes;
 	}
 	```
 **/
-#if !openfl_debug
-@:fileXml('tags="haxe,release"')
-@:noDebug
-#end
 class SampleDataEvent extends Event
 {
 	/**
@@ -135,8 +130,8 @@ class SampleDataEvent extends Event
 	**/
 	#if (js && html5)
 	private var tempBuffer:Float32Array;
-	private var leftChannel:#if haxe4 js.lib.Float32Array #else js.html.Float32Array #end;
-	private var rightChannel:#if haxe4 js.lib.Float32Array #else js.html.Float32Array #end;
+	private var leftChannel:js.lib.Float32Array;
+	private var rightChannel:js.lib.Float32Array;
 	#end
 	#if lime_openal
 	private var leftChannel:Int;
@@ -249,6 +244,3 @@ class SampleDataEvent extends Event
 	}
 	#end
 }
-#else
-typedef SampleDataEvent = flash.events.SampleDataEvent;
-#end

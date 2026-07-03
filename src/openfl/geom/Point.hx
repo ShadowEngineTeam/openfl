@@ -1,6 +1,5 @@
 package openfl.geom;
 
-#if !flash
 import openfl.utils.ObjectPool;
 #if lime
 import lime.math.Vector2;
@@ -31,10 +30,6 @@ import lime.math.Vector2;
 	@see [Working with geometry](https://books.openfl.org/openfl-developers-guide/working-with-geometry/)
 	@see [Using Point objects](https://books.openfl.org/openfl-developers-guide/working-with-geometry/using-point-objects.html)
 **/
-#if !openfl_debug
-@:fileXml('tags="haxe,release"')
-@:noDebug
-#end
 class Point
 {
 	@:noCompletion private static var __pool:ObjectPool<Point> = new ObjectPool<Point>(function() return new Point(), function(p) p.setTo(0, 0));
@@ -350,6 +345,3 @@ class Point
 		return Math.sqrt(x * x + y * y);
 	}
 }
-#else
-typedef Point = flash.geom.Point;
-#end

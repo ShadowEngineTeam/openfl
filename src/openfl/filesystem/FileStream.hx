@@ -1,6 +1,6 @@
 package openfl.filesystem;
 
-#if (haxe4 && !flash && sys && (!flash_doc_gen || air_doc_gen))
+#if sys
 import haxe.Json;
 import haxe.Serializer;
 import haxe.Timer;
@@ -78,9 +78,6 @@ import lime.system.BackgroundWorker;
 @:access(openfl.utils.ByteArray)
 @:access(openfl.utils.ByteArrayData)
 @:access(openfl.filesystem.File)
-#if !openfl_debug
-@:fileXml('tags="haxe,release"') @:noDebug
-#end
 class FileStream extends EventDispatcher implements IDataInput implements IDataOutput
 {
 	/**

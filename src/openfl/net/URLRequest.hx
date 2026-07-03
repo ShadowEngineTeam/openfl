@@ -1,6 +1,5 @@
 package openfl.net;
 
-#if !flash
 import haxe.macro.Compiler;
 
 /**
@@ -44,10 +43,6 @@ import haxe.macro.Compiler;
 	@see `openfl.net.URLStream`
 	@see `openfl.net.FileReference`
 **/
-#if !openfl_debug
-@:fileXml('tags="haxe,release"')
-@:noDebug
-#end
 @:final class URLRequest
 {
 	/**
@@ -397,6 +392,3 @@ import haxe.macro.Compiler;
 
 	// @:noCompletion @:dox(hide) public function useRedirectedURL (sourceRequest:URLRequest, wholeURL:Bool = false, pattern:Dynamic = null, replace:String = null):Void;
 }
-#else
-typedef URLRequest = flash.net.URLRequest;
-#end

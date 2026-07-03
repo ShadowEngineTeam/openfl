@@ -1,15 +1,10 @@
 package openfl.text._internal;
 
-#if !flash
 import openfl.utils._internal.Log;
 import openfl.text.StyleSheet;
 import openfl.text.TextFormat;
 import openfl.Vector;
 
-#if !openfl_debug
-@:fileXml('tags="haxe,release"')
-@:noDebug
-#end
 @:access(openfl.text.StyleSheet)
 @SuppressWarnings("checkstyle:FieldDocComment")
 class HTMLParser
@@ -318,4 +313,3 @@ class HTMLParser
 		return StringTools.htmlUnescape(s);
 	}
 }
-#end

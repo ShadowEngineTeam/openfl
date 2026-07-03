@@ -1,6 +1,6 @@
 package openfl.filesystem;
 
-#if (!flash && sys && (!flash_doc_gen || air_doc_gen))
+#if sys
 import haxe.io.Path;
 import lime.system.System;
 import openfl.desktop.Icon;
@@ -92,10 +92,6 @@ import lime.system.BackgroundWorker;
 	@see [Working with files](https://books.openfl.org/openfl-developers-guide/working-with-the-file-system/working-with-files.html)
 	@see `openfl.filesystem.FileStream`
 **/
-#if !openfl_debug
-@:fileXml('tags="haxe,release"')
-@:noDebug
-#end
 @:access(openfl.events.Event)
 class File extends FileReference
 {
@@ -1990,7 +1986,7 @@ class File extends FileReference
 	{
 		if (hasEventListener(IOErrorEvent.IO_ERROR))
 		{
-			if (#if (haxe_ver >= 4.2) Std.isOfType #else Std.is #end (e, Error))
+			if (Std.isOfType(e, Error))
 			{
 				var error = (e : Error);
 				return new IOErrorEvent(IOErrorEvent.IO_ERROR, false, false, error.message, error.errorID);

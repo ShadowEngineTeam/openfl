@@ -1,6 +1,5 @@
 package openfl.events;
 
-#if !flash
 // import openfl.utils.ObjectPool;
 import openfl.net.URLRequestHeader;
 
@@ -22,10 +21,6 @@ import openfl.net.URLRequestHeader;
 	properties. These properties are undefined in a `httpStatus`
 	event.
 **/
-#if !openfl_debug
-@:fileXml('tags="haxe,release"')
-@:noDebug
-#end
 class HTTPStatusEvent extends Event
 {
 	/**
@@ -151,6 +146,3 @@ class HTTPStatusEvent extends Event
 		redirected = false;
 	}
 }
-#else
-typedef HTTPStatusEvent = flash.events.HTTPStatusEvent;
-#end

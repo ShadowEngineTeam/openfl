@@ -1,6 +1,5 @@
 package openfl.display3D;
 
-#if !flash
 import openfl.display3D._internal.GLProgram;
 import openfl.display3D._internal.GLShader;
 import openfl.display3D._internal.GLUniformLocation;
@@ -43,10 +42,6 @@ import lime.utils.BytePointer;
 	You cannot create a Program3D object directly; use the Context3D `createProgram()`
 	method instead.
 **/
-#if !openfl_debug
-@:fileXml('tags="haxe,release"')
-@:noDebug
-#end
 @:access(openfl.display3D.Context3D)
 @:access(openfl.display.ShaderInput)
 @:access(openfl.display.ShaderParameter)
@@ -924,10 +919,6 @@ import lime.utils.BytePointer;
 	}
 }
 
-#if !openfl_debug
-@:fileXml('tags="haxe,release"')
-@:noDebug
-#end
 @:access(openfl.display3D.Context3D)
 @SuppressWarnings("checkstyle:FieldDocComment")
 @:dox(hide) @:noCompletion class Uniform
@@ -1022,10 +1013,6 @@ import lime.utils.BytePointer;
 	#end
 }
 
-#if !openfl_debug
-@:fileXml('tags="haxe,release"')
-@:noDebug
-#end
 @SuppressWarnings("checkstyle:FieldDocComment")
 @:dox(hide) @:noCompletion class UniformMap
 {
@@ -1055,9 +1042,8 @@ import lime.utils.BytePointer;
 		}
 
 		__registerLookup = [];
-		#if haxe4
+
 		__registerLookup.resize(total);
-		#end
 
 		for (uniform in __uniforms)
 		{
@@ -1127,6 +1113,3 @@ import lime.utils.BytePointer;
 		}
 	}
 }
-#else
-typedef Program3D = flash.display3D.Program3D;
-#end

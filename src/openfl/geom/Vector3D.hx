@@ -1,6 +1,5 @@
 package openfl.geom;
 
-#if !flash
 /**
 	The Vector3D class represents a point or a location in the three-dimensional space using
 	the Cartesian coordinates x, y, and z. As in a two-dimensional space, the `x` property
@@ -28,10 +27,6 @@ package openfl.geom;
 
 	![Vector3D elements](/images/Vector3Delements.jpg)
 **/
-#if !openfl_debug
-@:fileXml('tags="haxe,release"')
-@:noDebug
-#end
 class Vector3D
 {
 	/**
@@ -558,6 +553,3 @@ class Vector3D
 		return new Vector3D(0, 0, 1);
 	}
 }
-#else
-typedef Vector3D = flash.geom.Vector3D;
-#end

@@ -1,17 +1,13 @@
 package openfl.events;
 
-#if !flash
 // import openfl.utils.ObjectPool;
+
 /**
 	A Camera or Microphone object dispatches an ActivityEvent object whenever
 	a camera or microphone reports that it has become active or inactive.
 	There is only one type of activity event: `ActivityEvent.ACTIVITY`.
 
 **/
-#if !openfl_debug
-@:fileXml('tags="haxe,release"')
-@:noDebug
-#end
 class ActivityEvent extends Event
 {
 	/**
@@ -85,6 +81,3 @@ class ActivityEvent extends Event
 		activating = false;
 	}
 }
-#else
-typedef ActivityEvent = flash.events.ActivityEvent;
-#end

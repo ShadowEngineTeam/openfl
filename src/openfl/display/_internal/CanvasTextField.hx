@@ -1,6 +1,5 @@
 package openfl.display._internal;
 
-#if !flash
 import openfl.text._internal.HTMLParser;
 import openfl.text._internal.TextEngine;
 import openfl.display.BitmapData;
@@ -154,7 +153,7 @@ class CanvasTextField
 
 				if (clearRect == null)
 				{
-					clearRect = untyped #if haxe4 js.Syntax.code #else __js__ #end ("(typeof navigator !== 'undefined' && typeof navigator['isCocoonJS'] !== 'undefined')");
+					clearRect = untyped js.Syntax.code("(typeof navigator !== 'undefined' && typeof navigator['isCocoonJS'] !== 'undefined')");
 				}
 
 				if (clearRect)
@@ -497,4 +496,3 @@ class CanvasTextField
 		CanvasDisplayObject.renderDrawableMask(textField, renderer);
 	}
 }
-#end

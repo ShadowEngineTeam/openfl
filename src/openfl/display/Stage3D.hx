@@ -1,6 +1,5 @@
 package openfl.display;
 
-#if !flash
 import haxe.Timer;
 import openfl.display3D.Context3D;
 import openfl.display3D.Context3DProfile;
@@ -56,10 +55,6 @@ import js.Browser;
 	@see `openfl.display.Stage`
 	@see `openfl.display3D.Context3D`
 **/
-#if !openfl_debug
-@:fileXml('tags="haxe,release"')
-@:noDebug
-#end
 @:access(lime.graphics.opengl.GL)
 @:access(openfl.display3D.Context3D)
 @:access(openfl.display3D.Program3D)
@@ -502,6 +497,3 @@ class Stage3D extends EventDispatcher
 		return value;
 	}
 }
-#else
-typedef Stage3D = flash.display.Stage3D;
-#end

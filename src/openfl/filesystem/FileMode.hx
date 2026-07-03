@@ -1,6 +1,6 @@
 package openfl.filesystem;
 
-#if (!flash && sys && (!flash_doc_gen || air_doc_gen))
+#if sys
 /**
 	The FileMode enum defines string constants used in the `fileMode` parameter
 	of the `open()` and `openAsync()` methods of the FileStream class. The
@@ -19,7 +19,7 @@ package openfl.filesystem;
 	@see `openfl.filesystem.FileStream.open()`
 	@see `openfl.filesystem.FileStream.openAsync()`
 **/
-#if (haxe_ver >= 4.0) enum #else @:enum #end abstract FileMode(String) from String to String
+enum abstract FileMode(String) from String to String
 {
 	/**
 		Used for a file to be opened in write mode, with all written data

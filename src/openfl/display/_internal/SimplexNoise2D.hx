@@ -1,6 +1,5 @@
 package openfl.display._internal;
 
-#if !flash
 /**
 
 	Inspired by Stefan Gustavson, Linköping University, Sweden
@@ -10,10 +9,6 @@ package openfl.display._internal;
 import openfl.display.BitmapDataChannel;
 import openfl.display.BitmapData;
 
-#if !openfl_debug
-@:fileXml('tags="haxe,release"')
-@:noDebug
-#end
 @SuppressWarnings("checkstyle:FieldDocComment")
 class SimplexNoise2D extends AbstractNoise
 {
@@ -270,4 +265,3 @@ class SimplexNoise2D extends AbstractNoise
 		return 70.0 * (n0 + n1 + n2);
 	}
 }
-#end

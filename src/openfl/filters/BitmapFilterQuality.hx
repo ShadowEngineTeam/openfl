@@ -1,11 +1,10 @@
 package openfl.filters;
 
-#if !flash
 /**
 	The BitmapFilterQuality class contains values to set the rendering quality
 	of a BitmapFilter object.
 **/
-#if (haxe_ver >= 4.0) enum #else @:enum #end abstract BitmapFilterQuality(Int) from Int to Int from UInt to UInt
+enum abstract BitmapFilterQuality(Int) from Int to Int from UInt to UInt
 {
 	/**
 		Defines the high quality filter setting.
@@ -22,6 +21,3 @@ package openfl.filters;
 	**/
 	public var LOW = 1;
 }
-#else
-typedef BitmapFilterQuality = flash.filters.BitmapFilterQuality;
-#end

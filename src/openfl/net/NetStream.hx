@@ -1,6 +1,5 @@
 package openfl.net;
 
-#if !flash
 import haxe.Timer;
 import openfl.events.EventDispatcher;
 import openfl.events.NetStatusEvent;
@@ -508,9 +507,6 @@ import js.Browser;
 							`"DRM.encryptedFLV"`.
 **/
 @:access(openfl.media.SoundMixer)
-#if !openfl_debug
-@:fileXml('tags="haxe,release"') @:noDebug
-#end
 class NetStream extends EventDispatcher
 {
 	#if false
@@ -2238,6 +2234,3 @@ class NetStream extends EventDispatcher
 		#end
 	}
 }
-#else
-typedef NetStream = flash.net.NetStream;
-#end

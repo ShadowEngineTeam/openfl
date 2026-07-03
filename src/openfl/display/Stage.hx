@@ -1,6 +1,5 @@
 package openfl.display;
 
-#if !flash
 import haxe.CallStack;
 import haxe.ds.ArraySort;
 import openfl.utils._internal.Log;
@@ -46,9 +45,6 @@ import lime.ui.Window;
 #if (lime >= "8.3.0")
 import lime.system.Orientation;
 #end
-#end
-#if hxtelemetry
-import openfl.profiler.Telemetry;
 #end
 #if gl_stats
 import openfl.display._internal.stats.Context3DStats;
@@ -181,10 +177,6 @@ using StringTools;
 	@event stageVideoAvailability Dispatched by the Stage object when the state
 								  of the stageVideos property changes.
 **/
-#if !openfl_debug
-@:fileXml('tags="haxe,release"')
-@:noDebug
-#end
 @:access(openfl.display3D.Context3D)
 @:access(openfl.display.DisplayObjectRenderer)
 @:access(openfl.display.LoaderInfo)
@@ -918,7 +910,7 @@ class Stage extends DisplayObjectContainer #if lime implements IModule #end
 	**/
 	public var window(default, null):Window;
 
-	#if (sys && (!flash_doc_gen || air_doc_gen))
+	#if sys
 	/**
 
 	**/
@@ -1042,10 +1034,6 @@ class Stage extends DisplayObjectContainer #if lime implements IModule #end
 	public function new(#if commonjs width:Dynamic = 0, height:Dynamic = 0, color:Null<Int> = null, documentClass:Class<Dynamic> = null,
 		windowAttributes:Dynamic = null #else window:Window, color:Null<Int> = null #end)
 	{
-		#if hxtelemetry
-		Telemetry.__initialize();
-		#end
-
 		super();
 
 		__drawableType = STAGE;
@@ -1089,7 +1077,7 @@ class Stage extends DisplayObjectContainer #if lime implements IModule #end
 		#if mac
 		__macKeyboard = true;
 		#elseif (js && html5)
-		__macKeyboard = untyped #if haxe4 js.Syntax.code #else __js__ #end ("/AppleWebKit/.test (navigator.userAgent) && /Mobile\\/\\w+/.test (navigator.userAgent) || /Mac/.test (navigator.platform)");
+		__macKeyboard = untyped js.Syntax.code("/AppleWebKit/.test (navigator.userAgent) && /Mobile\\/\\w+/.test (navigator.userAgent) || /Mac/.test (navigator.platform)");
 		#end
 
 		__clearBeforeRender = true;
@@ -1653,7 +1641,7 @@ class Stage extends DisplayObjectContainer #if lime implements IModule #end
 			saveErrorMessage(CallStack.toString(CallStack.exceptionStack()) + "\n\n" + Std.string(e));
 			#end
 
-			#if (cpp && !cppia)
+			#if cpp
 			untyped __cpp__("throw e");
 			#elseif js
 			try
@@ -1665,20 +1653,17 @@ class Stage extends DisplayObjectContainer #if lime implements IModule #end
 				#end
 				if (exc != null && Reflect.hasField(exc, "stack") && exc.stack != null && exc.stack != "")
 				{
-					untyped #if haxe4 js.Syntax.code #else __js__ #end ("console.log")(exc.stack);
+					untyped js.Syntax.code("console.log")(exc.stack);
 					e.stack = exc.stack;
 				}
 				else
 				{
 					var msg = CallStack.toString(CallStack.callStack());
-					untyped #if haxe4 js.Syntax.code #else __js__ #end ("console.log")(msg);
+					untyped js.Syntax.code("console.log")(msg);
 				}
 			}
 			catch (e2:Dynamic) {}
-			untyped #if haxe4 js.Syntax.code #else __js__ #end ("throw e");
-			#elseif cs
-			throw e;
-			// cs.Lib.rethrow (e);
+			untyped js.Syntax.code("throw e");
 			#elseif hl
 			hl.Api.rethrow(e);
 			#else
@@ -1942,9 +1927,7 @@ class Stage extends DisplayObjectContainer #if lime implements IModule #end
 						// TODO: handle border around focus
 					}
 				}
-				else if (type == KeyboardEvent.KEY_DOWN
-					&& focus != null
-					&& !#if (haxe_ver >= 4.2) Std.isOfType #else Std.is #end (focus, TextField))
+				else if (type == KeyboardEvent.KEY_DOWN && focus != null && !Std.isOfType(focus, TextField))
 				{
 					var ctrlKey = (__macKeyboard ? (modifier.ctrlKey || modifier.metaKey) : modifier.ctrlKey);
 					if (ctrlKey && !modifier.altKey && !modifier.shiftKey)
@@ -2336,11 +2319,6 @@ class Stage extends DisplayObjectContainer #if lime implements IModule #end
 			#end
 		}
 
-		#if hxtelemetry
-		var stack = Telemetry.__unwindStack();
-		Telemetry.__startTiming(TelemetryCommandName.RENDER);
-		#end
-
 		#if (openfl_enable_experimental_update_queue && !dom)
 		__updateQueue(false, true);
 		#else
@@ -2405,26 +2383,14 @@ class Stage extends DisplayObjectContainer #if lime implements IModule #end
 		}
 		#end
 
-		#if hxtelemetry
-		Telemetry.__endTiming(TelemetryCommandName.RENDER);
-		Telemetry.__rewindStack(stack);
-		#end
-
-		#if HXCPP_TRACY
-		cpp.vm.tracy.TracyProfiler.frameMark();
-		#end
-
 		return cancelled;
 	}
 
 	@:noCompletion private function __onLimeRender(context:RenderContext):Void
 	{
 		if (__rendering) return;
-		__rendering = true;
 
-		#if hxtelemetry
-		Telemetry.__advanceFrame();
-		#end
+		__rendering = true;
 
 		#if gl_stats
 		Context3DStats.resetDrawCalls();
@@ -4212,6 +4178,3 @@ class Stage extends DisplayObjectContainer #if lime implements IModule #end
 		return 0;
 	}
 }
-#else
-typedef Stage = flash.display.Stage;
-#end

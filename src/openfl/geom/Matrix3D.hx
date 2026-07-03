@@ -1,6 +1,5 @@
 package openfl.geom;
 
-#if !flash
 import openfl.Vector;
 
 /**
@@ -47,10 +46,6 @@ import openfl.Vector;
 	Matrix3D object is called to transform a display object, the rotation cache of the
 	object is invalidated.
 **/
-#if !openfl_debug
-@:fileXml('tags="haxe,release"')
-@:noDebug
-#end
 class Matrix3D
 {
 	/**
@@ -1966,6 +1961,3 @@ class Matrix3D
 		return val;
 	}
 }
-#else
-typedef Matrix3D = flash.geom.Matrix3D;
-#end

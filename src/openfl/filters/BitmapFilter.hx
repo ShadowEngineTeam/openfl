@@ -1,6 +1,5 @@
 package openfl.filters;
 
-#if !flash
 import openfl.display.BitmapData;
 import openfl.display.BlendMode;
 import openfl.display.DisplayObjectRenderer;
@@ -18,10 +17,6 @@ import openfl.geom.Rectangle;
 
 	You can neither directly instantiate nor extend BitmapFilter.
 **/
-#if !openfl_debug
-@:fileXml('tags="haxe,release"')
-@:noDebug
-#end
 class BitmapFilter
 {
 	@:noCompletion private var __bottomExtension:Int;
@@ -70,6 +65,3 @@ class BitmapFilter
 		return null;
 	}
 }
-#else
-typedef BitmapFilter = flash.filters.BitmapFilter;
-#end

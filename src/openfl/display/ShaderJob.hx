@@ -1,6 +1,5 @@
 package openfl.display;
 
-#if !flash
 import openfl.events.EventDispatcher;
 
 /**
@@ -49,10 +48,6 @@ import openfl.events.EventDispatcher;
 					is called with a `false` value for the `waitForCompletion`
 					parameter.
 **/
-#if !openfl_debug
-@:fileXml('tags="haxe,release"')
-@:noDebug
-#end
 class ShaderJob extends EventDispatcher
 {
 	/**
@@ -196,6 +191,3 @@ class ShaderJob extends EventDispatcher
 	**/
 	public function start(waitForCompletion:Bool = false):Void {}
 }
-#else
-typedef ShaderJob = flash.display.ShaderJob;
-#end

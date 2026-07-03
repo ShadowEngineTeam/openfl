@@ -1,14 +1,9 @@
 package openfl.display3D;
 
-#if !flash
-#if cs
-import openfl.utils._internal.NullUtils;
-#end
-
 /**
 	Defines the values to use for specifying vertex buffers.
 **/
-@SuppressWarnings("checkstyle:FieldDocComment") #if (haxe_ver >= 4.0) enum #else @:enum #end abstract Context3DVertexBufferFormat(Null<Int>)
+@SuppressWarnings("checkstyle:FieldDocComment") enum abstract Context3DVertexBufferFormat(Null<Int>)
 {
 	public var BYTES_4 = 0;
 	public var FLOAT_1 = 1;
@@ -41,21 +36,4 @@ import openfl.utils._internal.NullUtils;
 			default: null;
 		}
 	}
-
-	#if cs
-	@:noCompletion @:op(A == B) private static function equals(a:Context3DVertexBufferFormat, b:Context3DVertexBufferFormat):Bool
-	{
-		return NullUtils.valueEquals(a, b, Int);
-	}
-	#end
-
-	#if cs
-	@:noCompletion @:op(A != B) private static function notEquals(a:Context3DVertexBufferFormat, b:Context3DVertexBufferFormat):Bool
-	{
-		return !equals(a, b);
-	}
-	#end
 }
-#else
-typedef Context3DVertexBufferFormat = flash.display3D.Context3DVertexBufferFormat;
-#end

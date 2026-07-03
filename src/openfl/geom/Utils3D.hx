@@ -1,16 +1,11 @@
 package openfl.geom;
 
-#if !flash
 import openfl.Vector;
 
 /**
 	The Utils3D class contains static methods that simplify the implementation of
 	certain three-dimensional matrix operations.
 **/
-#if !openfl_debug
-@:fileXml('tags="haxe,release"')
-@:noDebug
-#end
 class Utils3D
 {
 	#if false
@@ -188,6 +183,3 @@ class Utils3D
 		}
 	}
 }
-#else
-typedef Utils3D = flash.geom.Utils3D;
-#end

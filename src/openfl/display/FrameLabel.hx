@@ -1,6 +1,5 @@
 package openfl.display;
 
-#if !flash
 import openfl.events.EventDispatcher;
 
 /**
@@ -8,10 +7,6 @@ import openfl.events.EventDispatcher;
 	the corresponding label name. The Scene class includes a `labels`
 	property, which is an array of FrameLabel objects for the scene.
 **/
-#if !openfl_debug
-@:fileXml('tags="haxe,release"')
-@:noDebug
-#end
 @:final class FrameLabel extends EventDispatcher
 {
 	/**
@@ -32,6 +27,3 @@ import openfl.events.EventDispatcher;
 		this.frame = frame;
 	}
 }
-#else
-typedef FrameLabel = flash.display.FrameLabel;
-#end

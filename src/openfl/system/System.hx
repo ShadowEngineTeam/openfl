@@ -1,6 +1,5 @@
 package openfl.system;
 
-#if !flash
 #if lime
 import lime.system.Clipboard;
 import lime.system.System as LimeSystem;
@@ -23,10 +22,6 @@ import hl.Gc;
 	This class contains only static methods and properties. You cannot
 	create new instances of the System class.
 **/
-#if !openfl_debug
-@:fileXml('tags="haxe,release"')
-@:noDebug
-#end
 @:final class System
 {
 	#if false
@@ -257,8 +252,7 @@ import hl.Gc;
 		#if cpp
 		return untyped __global__.__hxcpp_gc_used_bytes();
 		#elseif (js && html5)
-		return
-			untyped #if haxe4 js.Syntax.code #else __js__ #end ("(window.performance && window.performance.memory) ? window.performance.memory.usedJSHeapSize : 0");
+		return untyped js.Syntax.code("(window.performance && window.performance.memory) ? window.performance.memory.usedJSHeapSize : 0");
 		#elseif hl
 		return Std.int(Gc.stats().currentMemory);
 		#else
@@ -282,6 +276,3 @@ import hl.Gc;
 		return "1.0.0";
 	}
 }
-#else
-typedef System = flash.system.System;
-#end

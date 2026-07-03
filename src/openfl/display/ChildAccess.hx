@@ -631,11 +631,7 @@ abstract ChildAccess<T:DisplayObject>(T) from T to T
 	**/
 	public function attachTimeline(timeline:Timeline):Void
 	{
-		#if flash
-		cast(this, openfl.display.MovieClip.MovieClip2).attachTimeline(timeline);
-		#else
 		cast(this, MovieClip).attachTimeline(timeline);
-		#end
 	}
 
 	/**
@@ -651,7 +647,7 @@ abstract ChildAccess<T:DisplayObject>(T) from T to T
 	**/
 	public function contains(child:Dynamic):Bool
 	{
-		if (#if (haxe_ver >= 4.2) Std.isOfType #else Std.is #end (this, Tilemap))
+		if (Std.isOfType(this, Tilemap))
 		{
 			return cast(this, Tilemap).contains(child);
 		}
@@ -840,7 +836,7 @@ abstract ChildAccess<T:DisplayObject>(T) from T to T
 	/**
 		Accesses the `gotoAndPlay` method (for MovieClip instances only).
 	**/
-	public function gotoAndPlay(frame:#if (haxe_ver >= "3.4.2") Any #else Dynamic #end, scene:String = null):Void
+	public function gotoAndPlay(frame:Any, scene:String = null):Void
 	{
 		cast(this, MovieClip).gotoAndPlay(frame, scene);
 	}
@@ -848,7 +844,7 @@ abstract ChildAccess<T:DisplayObject>(T) from T to T
 	/**
 		Accesses the `gotoAndStop` method (for MovieClip instances only).
 	**/
-	public function gotoAndStop(frame:#if (haxe_ver >= "3.4.2") Any #else Dynamic #end, scene:String = null):Void
+	public function gotoAndStop(frame:Any, scene:String = null):Void
 	{
 		cast(this, MovieClip).gotoAndStop(frame, scene);
 	}
@@ -1025,21 +1021,12 @@ abstract ChildAccess<T:DisplayObject>(T) from T to T
 	@:arrayAccess
 	private function __resolve(childName:String):ChildAccess<DisplayObject>
 	{
-		#if flash
-		if (this != null && #if (haxe_ver >= 4.2) Std.isOfType #else Std.is #end (this, DisplayObjectContainer))
-		{
-			var container:DisplayObjectContainer = cast this;
-			return container.getChildByName(childName);
-		}
-		return null;
-		#else
 		if (this == null || this.__children == null) return null;
 		for (child in this.__children)
 		{
 			if (child.name == childName) return child;
 		}
 		return null;
-		#end
 	}
 
 	/**
@@ -1173,7 +1160,7 @@ abstract ChildAccess<T:DisplayObject>(T) from T to T
 
 	@:to private static inline function __toMovieClip(value:ChildAccess<Dynamic>):MovieClip
 	{
-		if (value != null && !#if (haxe_ver >= 4.2) Std.isOfType #else Std.is #end (value, MovieClip))
+		if (value != null && !Std.isOfType(value, MovieClip))
 		{
 			throw new TypeError("Cannot cast object reference to MovieClip");
 		}
@@ -1183,7 +1170,7 @@ abstract ChildAccess<T:DisplayObject>(T) from T to T
 
 	@:to private static inline function __toTilemap(value:ChildAccess<Dynamic>):Tilemap
 	{
-		if (value != null && !#if (haxe_ver >= 4.2) Std.isOfType #else Std.is #end (value, Tilemap))
+		if (value != null && !Std.isOfType(value, Tilemap))
 		{
 			throw new TypeError("Cannot cast object reference to Tilemap");
 		}
@@ -1193,7 +1180,7 @@ abstract ChildAccess<T:DisplayObject>(T) from T to T
 
 	@:to private static inline function __toVideo(value:ChildAccess<Dynamic>):Video
 	{
-		if (value != null && !#if (haxe_ver >= 4.2) Std.isOfType #else Std.is #end (value, Video))
+		if (value != null && !Std.isOfType(value, Video))
 		{
 			throw new TypeError("Cannot cast object reference to Video");
 		}
@@ -1203,7 +1190,7 @@ abstract ChildAccess<T:DisplayObject>(T) from T to T
 
 	@:to private static inline function __toTextField(value:ChildAccess<Dynamic>):TextField
 	{
-		if (value != null && !#if (haxe_ver >= 4.2) Std.isOfType #else Std.is #end (value, TextField))
+		if (value != null && !Std.isOfType(value, TextField))
 		{
 			throw new TypeError("Cannot cast object reference to TextField");
 		}
@@ -1213,7 +1200,7 @@ abstract ChildAccess<T:DisplayObject>(T) from T to T
 
 	@:to private static inline function __toStaticText(value:ChildAccess<Dynamic>):StaticText
 	{
-		if (value != null && !#if (haxe_ver >= 4.2) Std.isOfType #else Std.is #end (value, StaticText))
+		if (value != null && !Std.isOfType(value, StaticText))
 		{
 			throw new TypeError("Cannot cast object reference to StaticText");
 		}
@@ -1223,7 +1210,7 @@ abstract ChildAccess<T:DisplayObject>(T) from T to T
 
 	@:to private static inline function __toShape(value:ChildAccess<Dynamic>):Shape
 	{
-		if (value != null && !#if (haxe_ver >= 4.2) Std.isOfType #else Std.is #end (value, Shape))
+		if (value != null && !Std.isOfType(value, Shape))
 		{
 			throw new TypeError("Cannot cast object reference to Shape");
 		}
@@ -1233,7 +1220,7 @@ abstract ChildAccess<T:DisplayObject>(T) from T to T
 
 	@:to private static inline function __toSprite(value:ChildAccess<Dynamic>):Sprite
 	{
-		if (value != null && !#if (haxe_ver >= 4.2) Std.isOfType #else Std.is #end (value, Sprite))
+		if (value != null && !Std.isOfType(value, Sprite))
 		{
 			throw new TypeError("Cannot cast object reference to Sprite");
 		}
@@ -1243,7 +1230,7 @@ abstract ChildAccess<T:DisplayObject>(T) from T to T
 
 	@:to private static inline function __toBitmap(value:ChildAccess<Dynamic>):Bitmap
 	{
-		if (value != null && !#if (haxe_ver >= 4.2) Std.isOfType #else Std.is #end (value, Bitmap))
+		if (value != null && !Std.isOfType(value, Bitmap))
 		{
 			throw new TypeError("Cannot cast object reference to Bitmap");
 		}
@@ -1253,7 +1240,7 @@ abstract ChildAccess<T:DisplayObject>(T) from T to T
 
 	@:to private static inline function __toDisplayObjectContainer(value:ChildAccess<Dynamic>):DisplayObjectContainer
 	{
-		if (value != null && !#if (haxe_ver >= 4.2) Std.isOfType #else Std.is #end (value, DisplayObjectContainer))
+		if (value != null && !Std.isOfType(value, DisplayObjectContainer))
 		{
 			throw new TypeError("Cannot cast object reference to DisplayObjectContainer");
 		}
@@ -1520,7 +1507,7 @@ abstract ChildAccess<T:DisplayObject>(T) from T to T
 
 	private inline function get_graphics():Graphics
 	{
-		if (#if (haxe_ver >= 4.2) Std.isOfType #else Std.is #end (this, Sprite))
+		if (Std.isOfType(this, Sprite))
 		{
 			return cast(this, Sprite).graphics;
 		}
@@ -1857,7 +1844,7 @@ abstract ChildAccess<T:DisplayObject>(T) from T to T
 
 	private inline function get_smoothing():Bool
 	{
-		if (#if (haxe_ver >= 4.2) Std.isOfType #else Std.is #end (this, Bitmap))
+		if (Std.isOfType(this, Bitmap))
 		{
 			return cast(this, Bitmap).smoothing;
 		}
@@ -1869,7 +1856,7 @@ abstract ChildAccess<T:DisplayObject>(T) from T to T
 
 	private inline function set_smoothing(value:Bool):Bool
 	{
-		if (#if (haxe_ver >= 4.2) Std.isOfType #else Std.is #end (this, Bitmap))
+		if (Std.isOfType(this, Bitmap))
 		{
 			return cast(this, Bitmap).smoothing = value;
 		}
@@ -1936,7 +1923,7 @@ abstract ChildAccess<T:DisplayObject>(T) from T to T
 
 	private inline function get_text():UTF8String
 	{
-		if (#if (haxe_ver >= 4.2) Std.isOfType #else Std.is #end (this, TextField))
+		if (Std.isOfType(this, TextField))
 		{
 			return cast(this, TextField).text;
 		}

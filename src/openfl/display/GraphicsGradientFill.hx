@@ -1,6 +1,5 @@
 package openfl.display;
 
-#if !flash
 import openfl.display._internal.GraphicsDataType;
 import openfl.display._internal.GraphicsFillType;
 import openfl.geom.Matrix;
@@ -13,10 +12,6 @@ import openfl.geom.Matrix;
 
 	@see [Using graphics data classes](https://books.openfl.org/openfl-developers-guide/using-the-drawing-api/advanced-use-of-the-drawing-api/using-graphics-data-classes.html)
 **/
-#if !openfl_debug
-@:fileXml('tags="haxe,release"')
-@:noDebug
-#end
 @:final class GraphicsGradientFill implements IGraphicsData implements IGraphicsFill
 {
 	/**
@@ -206,6 +201,3 @@ import openfl.geom.Matrix;
 		this.__graphicsFillType = GRADIENT_FILL;
 	}
 }
-#else
-typedef GraphicsGradientFill = flash.display.GraphicsGradientFill;
-#end

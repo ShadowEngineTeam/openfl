@@ -1,6 +1,5 @@
 package openfl.display3D;
 
-#if !flash
 import openfl.display3D._internal.Context3DState;
 import openfl.display3D._internal.GLBuffer;
 import openfl.display3D._internal.GLFramebuffer;
@@ -127,10 +126,6 @@ import lime.math.Vector2;
 	can be used on both desktop and mobile platforms, both when running in Flash Player
 	and AIR.
 **/
-#if !openfl_debug
-@:fileXml('tags="haxe,release"')
-@:noDebug
-#end
 @:access(openfl.display3D._internal.Context3DState)
 @:access(openfl.display3D.textures.ASTCTexture)
 @:access(openfl.display3D.textures.BCTexture)
@@ -2858,6 +2853,3 @@ import lime.math.Vector2;
 		return 0;
 	}
 }
-#else
-typedef Context3D = flash.display3D.Context3D;
-#end

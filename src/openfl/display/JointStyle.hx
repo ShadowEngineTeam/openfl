@@ -1,6 +1,5 @@
 package openfl.display;
 
-#if !flash
 /**
 	The JointStyle class is an enumeration of constant values that specify the
 	joint style to use in drawing lines. These constants are provided for use
@@ -9,7 +8,7 @@ package openfl.display;
 	three types of joints: miter, round, and bevel, as the following example
 	shows:
 **/
-#if (haxe_ver >= 4.0) enum #else @:enum #end abstract JointStyle(Null<Int>)
+enum abstract JointStyle(Null<Int>)
 {
 	/**
 		Specifies beveled joints in the `joints` parameter of the
@@ -61,6 +60,3 @@ package openfl.display;
 		}
 	}
 }
-#else
-typedef JointStyle = flash.display.JointStyle;
-#end

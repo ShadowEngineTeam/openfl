@@ -1,6 +1,5 @@
 package openfl.events;
 
-#if !flash
 import openfl.permissions.PermissionStatus;
 
 /**
@@ -9,10 +8,6 @@ import openfl.permissions.PermissionStatus;
 
 	_OpenFL target support:_ Not currently supported, except when targeting AIR.
 **/
-#if !openfl_debug
-@:fileXml('tags="haxe,release"')
-@:noDebug
-#end
 class PermissionEvent extends Event
 {
 	public static inline var PERMISSION_STATUS:EventType<PermissionEvent> = "permissionStatus";
@@ -69,4 +64,3 @@ class PermissionEvent extends Event
 		status = DENIED;
 	}
 }
-#end

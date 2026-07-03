@@ -1,6 +1,5 @@
 package openfl.events;
 
-#if !flash
 /**
 	The EventDispatcher class is the base class for all classes that dispatch
 	events. The EventDispatcher class implements the IEventDispatcher interface
@@ -48,10 +47,6 @@ package openfl.events;
 	@see [Event listeners](https://books.openfl.org/openfl-developers-guide/handling-events/event-listeners.html)
 	@see [Handling events for display objects](https://books.openfl.org/openfl-developers-guide/display-programming/working-with-display-objects/handling-events-for-display-objects.html)
 **/
-#if !openfl_debug
-@:fileXml('tags="haxe,release"')
-@:noDebug
-#end
 @:access(openfl.display.Stage)
 @:access(openfl.events.Event)
 @:access(openfl.events.UncaughtErrorEvents)
@@ -518,10 +513,6 @@ class EventDispatcher implements IEventDispatcher
 	}
 }
 
-#if !openfl_debug
-@:fileXml('tags="haxe,release"')
-@:noDebug
-#end
 @SuppressWarnings("checkstyle:FieldDocComment")
 @:dox(hide) private class DispatchIterator
 {
@@ -600,10 +591,6 @@ class EventDispatcher implements IEventDispatcher
 	}
 }
 
-#if !openfl_debug
-@:fileXml('tags="haxe,release"')
-@:noDebug
-#end
 @SuppressWarnings("checkstyle:FieldDocComment")
 private class Listener
 {
@@ -623,11 +610,7 @@ private class Listener
 		#if (js && html5)
 		if (useWeakReference && supportsWeakReference)
 		{
-			#if haxe4
 			this.weakRefCallback = untyped js.Syntax.code("new WeakRef({0})", callback);
-			#else
-			this.weakRefCallback = untyped __js__("new WeakRef")(callback);
-			#end
 		}
 		else
 		{
@@ -662,6 +645,3 @@ private class Listener
 		#end
 	}
 }
-#else
-typedef EventDispatcher = flash.events.EventDispatcher;
-#end

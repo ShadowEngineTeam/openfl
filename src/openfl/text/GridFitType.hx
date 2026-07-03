@@ -1,11 +1,10 @@
 package openfl.text;
 
-#if !flash
 /**
 	The GridFitType class defines values for grid fitting in the TextField
 	class.
 **/
-#if (haxe_ver >= 4.0) enum #else @:enum #end abstract GridFitType(Null<Int>)
+enum abstract GridFitType(Null<Int>)
 {
 	/**
 		Doesn't set grid fitting. Horizontal and vertical lines in the glyphs
@@ -59,6 +58,3 @@ package openfl.text;
 		}
 	}
 }
-#else
-typedef GridFitType = flash.text.GridFitType;
-#end

@@ -1,16 +1,11 @@
 package openfl.display3D;
 
-#if !flash
-#if cs
-import openfl.utils._internal.NullUtils;
-#end
-
 /**
 	Defines the values to use for specifying stencil actions.
 
 	A stencil action specifies how the values in the stencil buffer should be changed.
 **/
-#if (haxe_ver >= 4.0) enum #else @:enum #end abstract Context3DStencilAction(Null<Int>)
+enum abstract Context3DStencilAction(Null<Int>)
 {
 	/**
 		Decrement the stencil buffer value, clamping at 0, the minimum value.
@@ -88,21 +83,4 @@ import openfl.utils._internal.NullUtils;
 			default: null;
 		}
 	}
-
-	#if cs
-	@:noCompletion @:op(A == B) private static function equals(a:Context3DStencilAction, b:Context3DStencilAction):Bool
-	{
-		return NullUtils.valueEquals(a, b, Int);
-	}
-	#end
-
-	#if cs
-	@:noCompletion @:op(A != B) private static function notEquals(a:Context3DStencilAction, b:Context3DStencilAction):Bool
-	{
-		return !equals(a, b);
-	}
-	#end
 }
-#else
-typedef Context3DStencilAction = flash.display3D.Context3DStencilAction;
-#end

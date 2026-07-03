@@ -1,6 +1,5 @@
 package openfl.net;
 
-#if !flash
 import openfl.events.EventDispatcher;
 import openfl.events.NetStatusEvent;
 
@@ -44,10 +43,6 @@ import openfl.events.NetStatusEvent;
 						 to connect to a server outside the caller's security
 						 sandbox.
 **/
-#if !openfl_debug
-@:fileXml('tags="haxe,release"')
-@:noDebug
-#end
 class NetConnection extends EventDispatcher
 {
 	@SuppressWarnings("checkstyle:FieldDocComment")
@@ -518,6 +513,3 @@ class NetConnection extends EventDispatcher
 		this.dispatchEvent(new NetStatusEvent(NetStatusEvent.NET_STATUS, false, true, {code: NetConnection.CONNECT_SUCCESS}));
 	}
 }
-#else
-typedef NetConnection = flash.net.NetConnection;
-#end

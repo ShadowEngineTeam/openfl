@@ -1,6 +1,5 @@
 package openfl.display;
 
-#if !flash
 import openfl.display._internal.GraphicsDataType;
 import openfl.Vector;
 
@@ -22,10 +21,6 @@ import openfl.Vector;
 
 	@see [Using graphics data classes](https://books.openfl.org/openfl-developers-guide/using-the-drawing-api/advanced-use-of-the-drawing-api/using-graphics-data-classes.html)
 **/
-#if !openfl_debug
-@:fileXml('tags="haxe,release"')
-@:noDebug
-#end
 @:final class GraphicsPath implements IGraphicsData implements IGraphicsPath
 {
 	private static inline var SIN45:Float = 0.70710678118654752440084436210485;
@@ -242,6 +237,3 @@ import openfl.Vector;
 		lineTo(xe, ye - ellipseHeight);
 	}
 }
-#else
-typedef GraphicsPath = flash.display.GraphicsPath;
-#end

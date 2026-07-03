@@ -1,10 +1,6 @@
 package openfl.text._internal;
 
-#if !flash
 import haxe.io.Bytes;
-#if cppia
-import haxe.io.UInt16Array;
-#end
 #if lime
 import lime.math.Vector2;
 import lime.text.harfbuzz.HBBuffer;
@@ -22,10 +18,6 @@ import lime.text.Glyph;
 import openfl.text.Font;
 #end
 
-#if !openfl_debug
-@:fileXml('tags="haxe,release"')
-@:noDebug
-#end
 @SuppressWarnings("checkstyle:FieldDocComment")
 class TextLayout
 {
@@ -91,33 +83,6 @@ class TextLayout
 
 		__create(__direction, __script, __language);
 	}
-
-	#if cppia
-	/**
-	 *   Why this is necessary for `cppia`:
-	 *   In cppia, Haxe String can be stored as UTF-16, but its memory layout is not actually guaranteed
-	 *   to be directly compatible with native APIs.
-	 *   Unlike cpp, we cannot just use wc_str() to get a direct UTF-16 pointer.
-	 *   Instead, we manually create a correctly aligned UTF-16 Bytes to ensure
-	 *   the expected layout.
-	 *   UInt16Array.fromBytes() efficiently maps the buffer as 16-bit words, ensuring correct
-	 *   memory layout and endianness in this case.
-	 */
-	@:noCompletion private inline function stringToUTF16LEBytes(s:String):Bytes
-	{
-		var len = s.length;
-		var buffer = Bytes.alloc(len << 1);
-
-		var view = UInt16Array.fromBytes(buffer, 0, len); // Wrap buffer in a UInt16 view
-
-		for (i in 0...len)
-		{
-			view[i] = s.charCodeAt(i);
-		}
-
-		return buffer;
-	}
-	#end
 
 	private function __create(direction:TextDirection, script:TextScript, language:String):Void
 	{
@@ -185,25 +150,14 @@ class TextLayout
 			__hbBuffer.language = new HBLanguage(language);
 			__hbBuffer.clusterLevel = HBBufferClusterLevel.CHARACTERS;
 
-			#if haxe4
 			#if (lime >= "8.3.0")
 			__hbBuffer.addString(text, 0, -1);
 			#elseif (cpp && disable_unicode_strings)
 			__hbBuffer.addUTF8(text, 0, -1);
 			#elseif hl
 			__hbBuffer.addUTF16(text, text.length, 0, -1);
-			#elseif cppia
-			__hbBuffer.addUTF16(stringToUTF16LEBytes(text), text.length, 0, -1);
 			#elseif cpp
 			__hbBuffer.addUTF16(untyped __cpp__('(uintptr_t){0}', text.wc_str()), text.length, 0, -1);
-			#end
-			#else
-			// if haxe3
-			#if hl
-			__hbBuffer.addUTF16(text, text.length, 0, -1);
-			#else
-			__hbBuffer.addUTF8(text, 0, -1);
-			#end
 			#end
 
 			HB.shape(__hbFont, __hbBuffer);
@@ -339,7 +293,7 @@ class TextLayout
 	}
 }
 
-@SuppressWarnings("checkstyle:FieldDocComment") #if (haxe_ver >= 4.0) enum #else @:enum #end abstract TextDirection(Int) to Int
+@SuppressWarnings("checkstyle:FieldDocComment") enum abstract TextDirection(Int) to Int
 {
 	public var INVALID = 0;
 	public var LEFT_TO_RIGHT = 4;
@@ -403,7 +357,7 @@ class TextLayout
 	}
 }
 
-@SuppressWarnings("checkstyle:FieldDocComment") #if (haxe_ver >= 4.0) enum #else @:enum #end abstract TextScript(String) to (String)
+@SuppressWarnings("checkstyle:FieldDocComment") enum abstract TextScript(String) to (String)
 {
 	public var COMMON = "Zyyy";
 	public var INHERITED = "Zinh";
@@ -555,4 +509,3 @@ class TextLayout
 		}
 	}
 }
-#end

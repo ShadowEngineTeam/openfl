@@ -1,6 +1,5 @@
 package openfl.events;
 
-#if !flash
 import openfl.events.UncaughtErrorEvent;
 
 /**
@@ -33,10 +32,6 @@ import openfl.events.UncaughtErrorEvent;
 	@event uncaughtError Dispatched when an error occurs and developer code
 						 doesn't detect and handle the error.
 **/
-#if !openfl_debug
-@:fileXml('tags="haxe,release"')
-@:noDebug
-#end
 class UncaughtErrorEvents extends EventDispatcher
 {
 	@:noCompletion private var __enabled:Bool = #if (openfl_enable_handle_error || !openfl_disable_handle_error) true #else false #end;
@@ -78,6 +73,3 @@ class UncaughtErrorEvents extends EventDispatcher
 		}
 	}
 }
-#else
-typedef UncaughtErrorEvents = flash.events.UncaughtErrorEvents;
-#end

@@ -1,6 +1,5 @@
 package openfl.geom;
 
-#if !flash
 import openfl.utils.ObjectPool;
 #if lime
 import openfl.utils._internal.Float32Array;
@@ -51,10 +50,6 @@ import lime.math.ColorMatrix;
 	@see `openfl.geom.Transform.colorTransform`
 	@see `openfl.display.DisplayObject.transform`
 **/
-#if !openfl_debug
-@:fileXml('tags="haxe,release"')
-@:noDebug
-#end
 class ColorTransform
 {
 	#if lime
@@ -342,6 +337,3 @@ class ColorTransform
 	}
 	#end
 }
-#else
-typedef ColorTransform = flash.geom.ColorTransform;
-#end

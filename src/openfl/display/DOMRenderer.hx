@@ -1,6 +1,5 @@
 package openfl.display;
 
-#if !flash
 import openfl.display._internal.DOMBitmap;
 // import openfl.display._internal.DOMBitmapData;
 import openfl.display._internal.DOMDisplayObject;
@@ -24,10 +23,6 @@ import js.html.Element;
 	The DOMRenderer API exposes support for HTML5 DOM render instructions within the
 	`RenderEvent.RENDER_DOM` event
 **/
-#if !openfl_debug
-@:fileXml('tags="haxe,release"')
-@:noDebug
-#end
 @:access(openfl.display.DisplayObject)
 @:access(openfl.display.IBitmapDrawable)
 @:access(openfl.display.Stage3D)
@@ -62,7 +57,7 @@ class DOMRenderer extends DisplayObjectRenderer
 		#if (js && html5)
 		DisplayObject.__supportDOM = true;
 
-		var prefix = untyped #if haxe4 js.Syntax.code #else __js__ #end ("(function () {
+		var prefix = untyped js.Syntax.code("(function () {
 		  var styles = window.getComputedStyle(document.documentElement, ''),
 			pre = (Array.prototype.slice
 			  .call(styles)
@@ -492,6 +487,3 @@ class DOMRenderer extends DisplayObjectRenderer
 		}
 	}
 }
-#else
-typedef DOMRenderer = Dynamic;
-#end

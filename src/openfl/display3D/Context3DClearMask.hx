@@ -1,10 +1,9 @@
 package openfl.display3D;
 
-#if !flash
 /**
 	Defines the values to use for specifying Context3D clear masks.
 **/
-#if (haxe_ver >= 4.0) enum #else @:enum #end abstract Context3DClearMask(UInt) from UInt to UInt from Int to Int
+enum abstract Context3DClearMask(UInt) from UInt to UInt from Int to Int
 {
 	/**
 		Clear all buffers.
@@ -26,6 +25,3 @@ package openfl.display3D;
 	**/
 	public var STENCIL = 0x04;
 }
-#else
-typedef Context3DClearMask = flash.display3D.Context3DClearMask;
-#end

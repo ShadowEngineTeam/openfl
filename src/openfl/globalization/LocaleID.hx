@@ -1,6 +1,5 @@
 package openfl.globalization;
 
-#if !flash
 /**
 	The LocaleID class provides methods for parsing and using locale ID names.
 	This class supports locale ID names that use the syntax defined by the
@@ -154,7 +153,7 @@ package openfl.globalization;
 			try
 			{
 				#if html5
-				var intlLocale = untyped #if haxe4 js.Syntax.code #else __js__ #end ('new Intl.Locale')(name).maximize();
+				var intlLocale = untyped js.Syntax.code('new Intl.Locale')(name).maximize();
 				this.name = Reflect.field(intlLocale, "baseName");
 				language = Reflect.field(intlLocale, "language");
 				region = Reflect.field(intlLocale, "region");
@@ -348,6 +347,3 @@ package openfl.globalization;
 		return rtl;
 	}
 }
-#else
-typedef LocaleID = flash.globalization.LocaleID;
-#end

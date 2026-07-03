@@ -1,6 +1,5 @@
 package openfl.geom;
 
-#if !flash
 /**
 	The `PerspectiveProjection` class provides an easy way to assign or modify the perspective
 	transformations of a display object and all of its children. For more complex or custom
@@ -34,10 +33,6 @@ package openfl.geom;
 	object using the `DisplayObject.transform` property. The specified projection matrix and transformation
 	will then apply to all the display object's three-dimensional children.
 **/
-#if !openfl_debug
-@:fileXml('tags="haxe,release"')
-@:noDebug
-#end
 class PerspectiveProjection
 {
 	@SuppressWarnings("checkstyle:FieldDocComment")
@@ -161,6 +156,3 @@ class PerspectiveProjection
 		return __fieldOfView;
 	}
 }
-#else
-typedef PerspectiveProjection = flash.geom.PerspectiveProjection;
-#end

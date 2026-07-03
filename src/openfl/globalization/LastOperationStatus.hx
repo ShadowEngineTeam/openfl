@@ -1,13 +1,12 @@
 package openfl.globalization;
 
-#if !flash
 /**
 	The LastOperationStatus class enumerates constant values that represent the
 	status of the most recent globalization service operation. These values can
 	be retrieved through the read-only property `lastOperationStatus` available
 	in most globalization classes.
 **/
-#if (haxe_ver >= 4.0) enum #else @:enum #end abstract LastOperationStatus(Null<Int>)
+enum abstract LastOperationStatus(Null<Int>)
 {
 	/**
 		Indicates that given buffer is not enough to hold the result.
@@ -173,6 +172,3 @@ package openfl.globalization;
 		}
 	}
 }
-#else
-typedef LastOperationStatus = flash.globalization.LastOperationStatus;
-#end

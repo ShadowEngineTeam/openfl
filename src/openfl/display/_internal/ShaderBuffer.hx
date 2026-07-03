@@ -1,6 +1,5 @@
 package openfl.display._internal;
 
-#if !flash
 import openfl.display3D._internal.GLBuffer;
 import openfl.utils._internal.Float32Array;
 import openfl.display3D.Context3DMipFilter;
@@ -11,10 +10,6 @@ import openfl.display.GraphicsShader;
 import openfl.display.ShaderInput;
 import openfl.display.ShaderParameter;
 
-#if !openfl_debug
-@:fileXml('tags="haxe,release"')
-@:noDebug
-#end
 @:access(openfl.display.Shader)
 @SuppressWarnings("checkstyle:FieldDocComment")
 class ShaderBuffer
@@ -260,4 +255,3 @@ class ShaderBuffer
 		#end
 	}
 }
-#end

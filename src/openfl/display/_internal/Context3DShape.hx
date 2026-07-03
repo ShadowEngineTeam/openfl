@@ -1,6 +1,5 @@
 package openfl.display._internal;
 
-#if !flash
 import openfl.display.DisplayObject;
 import openfl.display.OpenGLRenderer;
 #if gl_stats
@@ -9,10 +8,6 @@ import openfl.display._internal.stats.DrawCallContext;
 #end
 import openfl.geom.Matrix;
 
-#if !openfl_debug
-@:fileXml('tags="haxe,release"')
-@:noDebug
-#end
 @:access(openfl.display3D.Context3D)
 @:access(openfl.display.DisplayObject)
 @:access(openfl.display.BitmapData)
@@ -112,4 +107,3 @@ class Context3DShape
 		}
 	}
 }
-#end

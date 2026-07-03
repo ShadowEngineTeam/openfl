@@ -1,6 +1,5 @@
 package openfl.errors;
 
-#if !flash
 /**
 	The IllegalOperationError exception is thrown when a method is not
 	implemented or the implementation doesn't cover the current usage.
@@ -21,10 +20,6 @@ package openfl.errors;
 	* An attempt is made to set the name of a Timeline-placed
 	object
 **/
-#if !openfl_debug
-@:fileXml('tags="haxe,release"')
-@:noDebug
-#end
 class IllegalOperationError extends Error
 {
 	/**
@@ -39,6 +34,3 @@ class IllegalOperationError extends Error
 		name = "IllegalOperationError";
 	}
 }
-#else
-typedef IllegalOperationError = flash.errors.IllegalOperationError;
-#end

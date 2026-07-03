@@ -1,6 +1,5 @@
 package openfl.display;
 
-#if !flash
 import openfl.geom.Point;
 import openfl.geom.Rectangle;
 import openfl.ui.MouseCursor;
@@ -28,10 +27,6 @@ import openfl.utils.AssetLibrary;
 	@see [Working with display objects](https://books.openfl.org/openfl-developers-guide/display-programming/working-with-display-objects/)
 	@see [Choosing a display object subclass](https://books.openfl.org/openfl-developers-guide/display-programming/working-with-display-objects/choosing-a-displayobject-subclass.html)
 **/
-#if !openfl_debug
-@:fileXml('tags="haxe,release"')
-@:noDebug
-#end
 @:access(openfl.display.Graphics)
 @:access(openfl.display.Stage)
 @:access(openfl.geom.Matrix)
@@ -392,6 +387,3 @@ class Sprite extends DisplayObjectContainer
 		return __buttonMode = value;
 	}
 }
-#else
-typedef Sprite = flash.display.Sprite;
-#end

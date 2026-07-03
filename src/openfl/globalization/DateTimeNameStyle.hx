@@ -1,6 +1,5 @@
 package openfl.globalization;
 
-#if !flash
 /**
 	The DateTimeNameStyle class enumerates constants that control the length of
 	the month names and weekday names that are used when formatting dates. Use
@@ -10,7 +9,7 @@ package openfl.globalization;
 	The `LONG_ABBREVIATION` and `SHORT_ABBREVIATION` may be the same or
 	different depending on the operating system and browser settings.
 **/
-#if (haxe_ver >= 4.0) enum #else @:enum #end abstract DateTimeNameStyle(Null<Int>)
+enum abstract DateTimeNameStyle(Null<Int>)
 {
 	/**
 		Specifies the full form or full name style for month names and weekday
@@ -62,6 +61,3 @@ package openfl.globalization;
 		}
 	}
 }
-#else
-typedef DateTimeNameStyle = flash.globalization.DateTimeNameStyle;
-#end

@@ -1,6 +1,5 @@
 package openfl.sensors;
 
-#if !flash
 import haxe.Timer;
 import openfl.errors.ArgumentError;
 import openfl.events.AccelerometerEvent;
@@ -64,10 +63,6 @@ import lime.system.SensorType;
 
 	@see [Accelerometer input](https://books.openfl.org/openfl-developers-guide/accelerometer-input/)
 **/
-#if !openfl_debug
-@:fileXml('tags="haxe,release"')
-@:noDebug
-#end
 class Accelerometer extends EventDispatcher
 {
 	/**
@@ -218,6 +213,3 @@ class Accelerometer extends EventDispatcher
 		return value;
 	}
 }
-#else
-typedef Accelerometer = flash.sensors.Accelerometer;
-#end

@@ -1,14 +1,9 @@
 package openfl.display3D;
 
-#if !flash
-#if cs
-import openfl.utils._internal.NullUtils;
-#end
-
 /**
 	Defines the values to use for specifying a texture format.
 **/
-#if (haxe_ver >= 4.0) enum #else @:enum #end abstract Context3DTextureFormat(Null<Int>)
+enum abstract Context3DTextureFormat(Null<Int>)
 {
 	/**
 		16 bit, bgr packed as 5:6:5
@@ -67,21 +62,4 @@ import openfl.utils._internal.NullUtils;
 			default: null;
 		}
 	}
-
-	#if cs
-	@:noCompletion @:op(A == B) private static function equals(a:Context3DTextureFormat, b:Context3DTextureFormat):Bool
-	{
-		return NullUtils.valueEquals(a, b, Int);
-	}
-	#end
-
-	#if cs
-	@:noCompletion @:op(A != B) private static function notEquals(a:Context3DTextureFormat, b:Context3DTextureFormat):Bool
-	{
-		return !equals(a, b);
-	}
-	#end
 }
-#else
-typedef Context3DTextureFormat = flash.display3D.Context3DTextureFormat;
-#end

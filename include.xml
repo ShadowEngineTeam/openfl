@@ -33,9 +33,6 @@
 
 	<template path="assets/templates" />
 
-	<dependency path="dist/openfl.min.js" if="html5 openfl-html5-extern" unless="debug" embed="true" />
-	<dependency path="dist/openfl.js" if="html5 openfl-html5-extern debug" embed="true" />
-
 	<define name="openfl-disable-handle-error" if="debug" />
 
 	<section if="native">
@@ -43,16 +40,6 @@
 		<set name="openfl-native" />
 		<haxedef name="openfl-native" />
 		<haxeflag name="--remap" value="flash:openfl" />
-
-		<section if="telemetry || advanced-telemetry || openfl-telemetry">
-
-			<haxelib name="hxtelemetry" />
-			<config:hxtelemetry allocations="true" host="localhost" />
-
-		</section>
-
-		<haxedef name="openfl-debug" if="openfl-telemetry" />
-		<haxedef name="lime-debug" if="openfl-telemetry" />
 
 	</section>
 

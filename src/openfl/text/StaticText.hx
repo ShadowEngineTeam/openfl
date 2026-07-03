@@ -1,6 +1,5 @@
 package openfl.text;
 
-#if !flash
 import openfl.display.DisplayObject;
 import openfl.display.Graphics;
 
@@ -28,10 +27,6 @@ import openfl.display.Graphics;
 	@see [Working with static text](https://books.openfl.org/openfl-developers-guide/using-the-textfield-class/working-with-static-text.html)
 	@see `openfl.text.TextField`
 **/
-#if !openfl_debug
-@:fileXml('tags="haxe,release"')
-@:noDebug
-#end
 @:access(openfl.display.Graphics)
 class StaticText extends DisplayObject
 {
@@ -51,7 +46,3 @@ class StaticText extends DisplayObject
 		__graphics = new Graphics(this);
 	}
 }
-#else
-typedef StaticText = flash.text.StaticText;
-typedef StaticText2 = flash.text.StaticText.StaticText2;
-#end

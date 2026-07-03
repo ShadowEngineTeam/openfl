@@ -1,6 +1,6 @@
 package openfl.net;
 
-#if (!flash && !html5)
+#if !html5
 import haxe.io.Bytes;
 import haxe.io.Error;
 import openfl.errors.ArgumentError;
@@ -55,10 +55,6 @@ import sys.net.UdpSocket;
 
 	@event data Dispatched when this socket receives a packet of data.
  */
-#if !openfl_debug
-@:fileXml('tags="haxe,release"')
-@:noDebug
-#end
 @:access(openfl.events.Event)
 class DatagramSocket extends EventDispatcher
 {

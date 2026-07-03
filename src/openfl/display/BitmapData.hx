@@ -1,6 +1,5 @@
 package openfl.display;
 
-#if !flash
 import openfl.display._internal.IBitmapDrawableType;
 import openfl.display._internal.PerlinNoise;
 import openfl.display3D._internal.GLFramebuffer;
@@ -114,10 +113,6 @@ import openfl.display._internal.stats.DrawCallContext;
 	@see `openfl.display.Graphics.beginBitmapFill()`
 	@see `openfl.display.Graphics.lineBitmapStyle()`
 **/
-#if !openfl_debug
-@:fileXml('tags="haxe,release"')
-@:noDebug
-#end
 @:access(lime.graphics.opengl.GL)
 @:access(lime.graphics.Image)
 @:access(lime.graphics.ImageBuffer)
@@ -920,7 +915,7 @@ class BitmapData implements IBitmapDrawable
 
 		var wasVisible = true;
 		var sourceAsDisplayObject:DisplayObject = null;
-		if (#if (haxe_ver >= 4.2) Std.isOfType #else Std.is #end (source, DisplayObject))
+		if (Std.isOfType(source, DisplayObject))
 		{
 			sourceAsDisplayObject = cast(source, DisplayObject);
 			if (!sourceAsDisplayObject.visible)
@@ -3511,6 +3506,3 @@ class BitmapData implements IBitmapDrawable
 		__renderTransform.copyFrom(__worldTransform);
 	}
 }
-#else
-typedef BitmapData = flash.display.BitmapData;
-#end

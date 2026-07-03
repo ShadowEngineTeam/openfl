@@ -1,7 +1,7 @@
 package openfl.events;
 
-#if !flash
 // import openfl.utils.ObjectPool;
+
 /**
 	An IOErrorEvent object is dispatched when an error causes input or output
 	operations to fail.
@@ -11,10 +11,6 @@ package openfl.events;
 	string defined by the `text` parameter of the IOErrorEvent
 	constructor is displayed.
 **/
-#if !openfl_debug
-@:fileXml('tags="haxe,release"')
-@:noDebug
-#end
 class IOErrorEvent extends ErrorEvent
 {
 	// @:noCompletion @:dox(hide) public static var DISK_ERROR:String;
@@ -35,7 +31,7 @@ class IOErrorEvent extends ErrorEvent
 	**/
 	public static inline var IO_ERROR:EventType<IOErrorEvent> = "ioError";
 
-	#if (haxe4 && sys)
+	#if sys
 	/**
 		The `standardOutputIoError` event is dispatched when an error occurs
 		while reading data from the `standardOutput` stream of a NativeProcess
@@ -119,6 +115,3 @@ class IOErrorEvent extends ErrorEvent
 		return __formatToString("IOErrorEvent", ["type", "bubbles", "cancelable", "text", "errorID"]);
 	}
 }
-#else
-typedef IOErrorEvent = flash.events.IOErrorEvent;
-#end

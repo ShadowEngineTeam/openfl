@@ -1,8 +1,6 @@
 package openfl.display;
 
-#if !flash
 import openfl.display._internal.GraphicsDataType;
-#end
 import openfl.Vector;
 
 /**
@@ -19,10 +17,6 @@ import openfl.Vector;
 
 	@see [Using graphics data classes](https://books.openfl.org/openfl-developers-guide/using-the-drawing-api/advanced-use-of-the-drawing-api/using-graphics-data-classes.html)
 **/
-#if !openfl_debug
-@:fileXml('tags="haxe,release"')
-@:noDebug
-#end
 @:final class GraphicsQuadPath implements IGraphicsData implements IGraphicsPath
 {
 	/**
@@ -49,9 +43,7 @@ import openfl.Vector;
 	**/
 	public var transforms:Vector<Float>;
 
-	#if !flash
 	@:noCompletion private var __graphicsDataType(default, null):GraphicsDataType;
-	#end
 
 	/**
 		Creates a new GraphicsTrianglePath object.
@@ -69,8 +61,6 @@ import openfl.Vector;
 		this.indices = indices;
 		this.transforms = transforms;
 
-		#if !flash
 		__graphicsDataType = QUAD_PATH;
-		#end
 	}
 }

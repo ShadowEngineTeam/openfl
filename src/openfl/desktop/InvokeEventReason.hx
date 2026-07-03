@@ -1,13 +1,13 @@
 package openfl.desktop;
 
-#if (!flash && sys && (!flash_doc_gen || air_doc_gen))
+#if sys
 /**
 	The InvokeEventReason class enumerates values returned by the `reason`
 	property of an InvokeEvent object.
 
 	@see `openfl.events.InvokeEvent.reason`
 **/
-#if (haxe_ver >= 4.0) enum #else @:enum #end abstract InvokeEventReason(Null<Int>)
+enum abstract InvokeEventReason(Null<Int>)
 {
 	/**
 		Desktop only; indicates that the InvokeEvent event occurred due to the

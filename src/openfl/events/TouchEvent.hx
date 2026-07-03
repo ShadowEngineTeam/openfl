@@ -1,6 +1,5 @@
 package openfl.events;
 
-#if !flash
 // import openfl.utils.ObjectPool;
 import openfl.display.InteractiveObject;
 import openfl.geom.Point;
@@ -35,10 +34,6 @@ import openfl.utils.ByteArray;
 	@see [Touch, multitouch, and gesture input](https://books.openfl.org/openfl-developers-guide/touch-multitouch-and-gesture-input/)
 	@see [Touch event handling](https://books.openfl.org/openfl-developers-guide/touch-multitouch-and-gesture-input/touch-event-handling.html)
 **/
-#if !openfl_debug
-@:fileXml('tags="haxe,release"')
-@:noDebug
-#end
 class TouchEvent extends Event
 {
 	// @:noCompletion @:dox(hide) public static var PROXIMITY_BEGIN:String;
@@ -554,6 +549,3 @@ class TouchEvent extends Event
 		__updateAfterEventFlag = false;
 	}
 }
-#else
-typedef TouchEvent = flash.events.TouchEvent;
-#end

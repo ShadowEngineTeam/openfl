@@ -1,6 +1,6 @@
 package openfl.events;
 
-#if (haxe4 && !flash && sys)
+#if (sys)
 /**
 	This event is dispatched by the NativeProcess object when the process exits.
 	It is possible that this event will never be dispatched. For example, if the
@@ -9,10 +9,6 @@ package openfl.events;
 
 	@see `openfl.desktop.NativeProcess`
 **/
-#if !openfl_debug
-@:fileXml('tags="haxe,release"')
-@:noDebug
-#end
 class NativeProcessExitEvent extends Event
 {
 	/**

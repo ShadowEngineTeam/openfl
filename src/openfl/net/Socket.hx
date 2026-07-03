@@ -1,6 +1,5 @@
 package openfl.net;
 
-#if !flash
 import haxe.io.Bytes;
 import haxe.io.BytesBuffer;
 import haxe.io.Eof;
@@ -20,11 +19,7 @@ import openfl.utils.Endian;
 import openfl.utils.IDataInput;
 import openfl.utils.IDataOutput;
 #if (js && html5)
-#if haxe4
 import js.lib.ArrayBuffer;
-#else
-import js.html.ArrayBuffer;
-#end
 import js.html.WebSocket;
 import js.Browser;
 #end
@@ -123,10 +118,6 @@ import sys.net.Socket as SysSocket;
 						 Events of type `socketData` do not use the
 						 `ProgressEvent.bytesTotal` property.
 **/
-#if !openfl_debug
-@:fileXml('tags="haxe,release"')
-@:noDebug
-#end
 @:access(openfl.events.Event)
 class Socket extends EventDispatcher implements IDataInput implements IDataOutput
 {
@@ -158,7 +149,7 @@ class Socket extends EventDispatcher implements IDataInput implements IDataOutpu
 	**/
 	public var connected(get, never):Bool;
 
-	#if (sys && (!flash_doc_gen || air_doc_gen))
+	#if sys
 	/**
 	 * The IP address this socket is bound to on the local machine.
 	**/
@@ -184,7 +175,7 @@ class Socket extends EventDispatcher implements IDataInput implements IDataOutpu
 	**/
 	public var objectEncoding:ObjectEncoding;
 
-	#if (sys && (!flash_doc_gen || air_doc_gen))
+	#if sys
 	/**
 		The IP address of the remote machine to which this socket is connected.
 
@@ -1385,6 +1376,3 @@ class Socket extends EventDispatcher implements IDataInput implements IDataOutpu
 	}
 	#end
 }
-#else
-typedef Socket = flash.net.Socket;
-#end

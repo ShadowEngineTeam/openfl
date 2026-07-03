@@ -1,6 +1,5 @@
 package openfl.events;
 
-#if !flash
 // import openfl.utils.ObjectPool;
 import openfl.display.InteractiveObject;
 
@@ -16,10 +15,6 @@ import openfl.display.InteractiveObject;
 
 	@see `InteractiveObject.contextMenu`
 **/
-#if !openfl_debug
-@:fileXml('tags="haxe,release"')
-@:noDebug
-#end
 class ContextMenuEvent extends Event
 {
 	/**
@@ -146,6 +141,3 @@ class ContextMenuEvent extends Event
 		contextMenuOwner = null;
 	}
 }
-#else
-typedef ContextMenuEvent = flash.events.ContextMenuEvent;
-#end

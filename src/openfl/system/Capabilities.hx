@@ -1,6 +1,5 @@
 package openfl.system;
 
-#if !flash
 import haxe.macro.Compiler;
 import openfl.utils._internal.Lib;
 #if lime
@@ -88,10 +87,6 @@ import sys.io.Process;
 
 	All properties of the Capabilities class are read-only.
 **/
-#if !openfl_debug
-@:fileXml('tags="haxe,release"')
-@:noDebug
-#end
 @:final class Capabilities
 {
 	/**
@@ -759,6 +754,3 @@ import sys.io.Process;
 		return value;
 	}
 }
-#else
-typedef Capabilities = flash.system.Capabilities;
-#end

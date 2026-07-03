@@ -1,6 +1,5 @@
 package openfl.display3D.textures;
 
-#if !flash
 import haxe.Timer;
 import openfl.display3D._internal.GLTexture;
 import openfl.events.Event;
@@ -24,10 +23,6 @@ import openfl.net.NetStream;
 	the same texture is used several times, some of the instances may be from different
 	timestamps.
 **/
-#if !openfl_debug
-@:fileXml('tags="haxe,release"')
-@:noDebug
-#end
 @:access(openfl.display3D.Context3D)
 @:access(openfl.display.Stage)
 @:access(openfl.net.NetStream)
@@ -185,6 +180,3 @@ import openfl.net.NetStream;
 		#end
 	}
 }
-#else
-typedef VideoTexture = flash.display3D.textures.VideoTexture;
-#end

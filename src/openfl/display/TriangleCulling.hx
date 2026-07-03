@@ -1,6 +1,5 @@
 package openfl.display;
 
-#if !flash
 /**
 	Defines codes for culling algorithms that determine which triangles not to
 	render when drawing triangle paths.
@@ -22,7 +21,7 @@ package openfl.display;
 	`TriangleCulling.NEGATIVE` algorithm is used, triangles with
 	negative normals will not be rendered.
 **/
-#if (haxe_ver >= 4.0) enum #else @:enum #end abstract TriangleCulling(Null<Int>)
+enum abstract TriangleCulling(Null<Int>)
 {
 	/**
 		Specifies culling of all triangles facing toward the current view point.
@@ -62,6 +61,3 @@ package openfl.display;
 		}
 	}
 }
-#else
-typedef TriangleCulling = flash.display.TriangleCulling;
-#end

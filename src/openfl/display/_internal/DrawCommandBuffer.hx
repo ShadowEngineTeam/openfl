@@ -1,6 +1,5 @@
 package openfl.display._internal;
 
-#if !flash
 import openfl.display.BitmapData;
 import openfl.display.BlendMode;
 import openfl.display.CapsStyle;
@@ -13,10 +12,6 @@ import openfl.display.TriangleCulling;
 import openfl.geom.Matrix;
 import openfl.Vector;
 
-#if !openfl_debug
-@:fileXml('tags="haxe,release"')
-@:noDebug
-#end
 @:allow(openfl.display._internal.DrawCommandReader)
 @SuppressWarnings("checkstyle:FieldDocComment")
 class DrawCommandBuffer
@@ -194,7 +189,6 @@ class DrawCommandBuffer
 
 	public function clear():Void
 	{
-		#if haxe4
 		if (!copyOnWrite)
 		{
 			// if these arrays have already been copied, then we should be able
@@ -212,7 +206,6 @@ class DrawCommandBuffer
 
 			return;
 		}
-		#end
 
 		types = empty.types;
 
@@ -457,4 +450,3 @@ class DrawCommandBuffer
 		return types.length;
 	}
 }
-#end

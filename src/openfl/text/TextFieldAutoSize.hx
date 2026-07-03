@@ -1,11 +1,10 @@
 package openfl.text;
 
-#if !flash
 /**
 	The TextFieldAutoSize class is an enumeration of constant values used in
 	setting the `autoSize` property of the TextField class.
 **/
-#if (haxe_ver >= 4.0) enum #else @:enum #end abstract TextFieldAutoSize(Null<Int>)
+enum abstract TextFieldAutoSize(Null<Int>)
 {
 	/**
 		Specifies that the text is to be treated as center-justified text. Any
@@ -57,6 +56,3 @@ package openfl.text;
 		}
 	}
 }
-#else
-typedef TextFieldAutoSize = flash.text.TextFieldAutoSize;
-#end

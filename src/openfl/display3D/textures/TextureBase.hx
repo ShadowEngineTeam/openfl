@@ -1,6 +1,5 @@
 package openfl.display3D.textures;
 
-#if !flash
 import openfl.display3D._internal.GLFramebuffer;
 import openfl.display3D._internal.GLRenderbuffer;
 import openfl.display3D._internal.GLTexture;
@@ -22,10 +21,6 @@ import lime.graphics.RenderContext;
 	**Note:** You cannot create your own texture classes using TextureBase. To add
 	functionality to a texture class, extend either Texture or CubeTexture instead.
 **/
-#if !openfl_debug
-@:fileXml('tags="haxe,release"')
-@:noDebug
-#end
 @:access(openfl.display._internal.SamplerState)
 @:access(openfl.display3D.Context3D)
 @:access(openfl.display.BitmapData)
@@ -451,6 +446,3 @@ class TextureBase extends EventDispatcher
 	}
 	#end
 }
-#else
-typedef TextureBase = flash.display3D.textures.TextureBase;
-#end

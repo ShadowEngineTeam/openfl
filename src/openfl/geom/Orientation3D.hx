@@ -1,6 +1,5 @@
 package openfl.geom;
 
-#if !flash
 /**
 	The Orientation3D class is an enumeration of constant
 	values for representing the orientation style of a Matrix3D object.
@@ -8,7 +7,7 @@ package openfl.geom;
 	The `decompose` and `recompose` methods of the Matrix3D object take one of these
 	enumerated types to identify the rotational components of the Matrix.
 **/
-#if (haxe_ver >= 4.0) enum #else @:enum #end abstract Orientation3D(Null<Int>)
+enum abstract Orientation3D(Null<Int>)
 {
 	/**
 		The axis angle orientation uses a combination of an axis and an angle to determine
@@ -78,6 +77,3 @@ package openfl.geom;
 		}
 	}
 }
-#else
-typedef Orientation3D = flash.geom.Orientation3D;
-#end

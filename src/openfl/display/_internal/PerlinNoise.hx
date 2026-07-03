@@ -1,6 +1,5 @@
 package openfl.display._internal;
 
-#if !flash
 /**
 	Title:      Perlin noise
 	Version:    1.3
@@ -14,10 +13,6 @@ package openfl.display._internal;
 import openfl.display.BitmapDataChannel;
 import openfl.display.BitmapData;
 
-#if !openfl_debug
-@:fileXml('tags="haxe,release"')
-@:noDebug
-#end
 @SuppressWarnings("checkstyle:FieldDocComment")
 class PerlinNoise extends AbstractNoise
 {
@@ -265,4 +260,3 @@ class PerlinNoise extends AbstractNoise
 		this.z_offset = seed = Std.int((seed * 16807.0) % 2147483647);
 	}
 }
-#end

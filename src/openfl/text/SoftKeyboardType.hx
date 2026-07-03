@@ -1,6 +1,6 @@
 package openfl.text;
 
-#if (!flash && sys && (!flash_doc_gen || air_doc_gen))
+#if sys
 /**
 	The SoftKeyboardType class defines the types of soft keyboards for mobile
 	applications. You select the keyboard type with the `softKeyboardType`
@@ -8,7 +8,7 @@ package openfl.text;
 
 	@see `openfl.text.StageText.softKeyboardType`
 **/
-#if (haxe_ver >= 4.0) enum #else @:enum #end abstract SoftKeyboardType(Null<Int>)
+enum abstract SoftKeyboardType(Null<Int>)
 {
 	/**
 		A keypad designed for entering a person's name or phone number. This

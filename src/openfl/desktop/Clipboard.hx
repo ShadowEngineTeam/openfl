@@ -1,6 +1,5 @@
 package openfl.desktop;
 
-#if !flash
 import openfl.utils.Object;
 #if lime
 import lime.system.Clipboard as LimeClipboard;
@@ -71,10 +70,6 @@ import lime.system.Clipboard as LimeClipboard;
 
 	@see [Copy and paste](https://books.openfl.org/openfl-developers-guide/copy-and-paste/)
 **/
-#if !openfl_debug
-@:fileXml('tags="haxe,release"')
-@:noDebug
-#end
 class Clipboard
 {
 	/**
@@ -522,6 +517,3 @@ class Clipboard
 		return __generalClipboard;
 	}
 }
-#else
-typedef Clipboard = flash.desktop.Clipboard;
-#end

@@ -1,12 +1,7 @@
 package openfl.text._internal;
 
-#if !flash
 import openfl.text.TextFormat;
 
-#if !openfl_debug
-@:fileXml('tags="haxe,release"')
-@:noDebug
-#end
 @SuppressWarnings("checkstyle:FieldDocComment")
 // TODO: Need to measure all characters (including whitespace) but include a value for non-whitespace characters separately (for sake of alignment and wrapping)
 class TextLayoutGroup
@@ -44,4 +39,3 @@ class TextLayoutGroup
 		#end
 	}
 }
-#end

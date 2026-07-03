@@ -1,6 +1,5 @@
 package openfl.events;
 
-#if !flash
 /**
 	The DeviceRotation class dispatches DeviceRotationEvent and returns roll,
 	yaw, pitch and quaternion data when DeviceRotation updates are obtained from
@@ -9,10 +8,6 @@ package openfl.events;
 
 	@see `openfl.sensors.DeviceRotation`
 **/
-#if !openfl_debug
-@:fileXml('tags="haxe,release"')
-@:noDebug
-#end
 class DeviceRotationEvent extends Event
 {
 	/**
@@ -69,4 +64,3 @@ class DeviceRotationEvent extends Event
 		return new DeviceRotationEvent(type, bubbles, cancelable, timestamp, roll, pitch, yaw, quaternion);
 	}
 }
-#end

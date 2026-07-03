@@ -1,11 +1,11 @@
 package openfl.net;
 
-#if (!flash && sys && (!flash_doc_gen || air_doc_gen))
+#if sys
 /**
 	The IPVersion class defines constants representing the different families of
 	IP addresses.
 **/
-#if (haxe_ver >= 4.0) enum #else @:enum #end abstract IPVersion(Null<Int>)
+enum abstract IPVersion(Null<Int>)
 {
 	/**
 		An Internet Protocol version 4 (IPv4) address.

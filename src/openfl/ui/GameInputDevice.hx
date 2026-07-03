@@ -1,15 +1,10 @@
 package openfl.ui;
 
-#if !flash
 import openfl.utils.ByteArray;
 #if lime
 import lime.ui.Gamepad;
 #end
 
-#if !openfl_debug
-@:fileXml('tags="haxe,release"')
-@:noDebug
-#end
 @:access(openfl.ui.GameInputControl)
 @:final class GameInputDevice
 {
@@ -146,6 +141,3 @@ import lime.ui.Gamepad;
 		return __controls.length;
 	}
 }
-#else
-typedef GameInputDevice = flash.ui.GameInputDevice;
-#end

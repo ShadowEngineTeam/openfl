@@ -8,10 +8,6 @@ import openfl.Lib;
 	The Preloader class is a Lime Preloader instance that uses an OpenFL
 	display object to display loading progress.
 **/
-#if !openfl_debug
-@:fileXml('tags="haxe,release"')
-@:noDebug
-#end
 @:access(openfl.display.LoaderInfo)
 @SuppressWarnings("checkstyle:FieldDocComment")
 class Preloader
@@ -38,9 +34,7 @@ class Preloader
 	{
 		ready = true;
 
-		#if !flash
 		Lib.current.loaderInfo.__complete();
-		#end
 
 		if (display != null)
 		{
@@ -66,9 +60,7 @@ class Preloader
 
 	@:noCompletion private function update(loaded:Int, total:Int):Void
 	{
-		#if !flash
 		Lib.current.loaderInfo.__update(loaded, total);
-		#end
 
 		if (display != null)
 		{

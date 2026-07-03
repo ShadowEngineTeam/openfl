@@ -1,6 +1,5 @@
 package openfl.display;
 
-#if !flash
 import openfl.display3D.Context3DMipFilter;
 import openfl.display3D.Context3DTextureFilter;
 import openfl.display3D.Context3DWrapMode;
@@ -50,9 +49,6 @@ import openfl.display3D.Context3D;
 	Shader instance is created.
 **/
 @:access(openfl.display3D.Context3D)
-#if !openfl_debug
-@:fileXml('tags="haxe,release"') @:noDebug
-#end
 #if (!js && !display)
 @:generic
 #end
@@ -178,6 +174,3 @@ import openfl.display3D.Context3D;
 		}
 	}
 }
-#else
-typedef ShaderInput<T> = flash.display.ShaderInput<T>;
-#end

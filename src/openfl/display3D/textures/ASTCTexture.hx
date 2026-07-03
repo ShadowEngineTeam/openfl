@@ -1,6 +1,5 @@
 package openfl.display3D.textures;
 
-#if !flash
 import haxe.io.Bytes;
 import openfl.utils._internal.UInt8Array;
 import openfl.display.BlendMode;
@@ -15,10 +14,6 @@ import openfl.Lib;
 	ASTCTexture cannot be instantiated directly. Create instances by using Context3D
 	`createASTCTexture()` method.
 **/
-#if !openfl_debug
-@:fileXml('tags="haxe,release"')
-@:noDebug
-#end
 @:access(openfl.display3D.Context3D)
 @:final class ASTCTexture extends TextureBase
 {
@@ -177,4 +172,3 @@ import openfl.Lib;
 		return magic == ASTC_MAGIC_NUMBER;
 	}
 }
-#end

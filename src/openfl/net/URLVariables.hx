@@ -1,6 +1,5 @@
 package openfl.net;
 
-#if !flash
 /**
 	The URLVariables class allows you to transfer variables between an
 	application and a server. Use URLVariables objects with methods of the
@@ -11,10 +10,6 @@ package openfl.net;
 	@see `openfl.net.URLRequest`
 	@see `openfl.net.URLLoader`
 **/
-#if !openfl_debug
-@:fileXml('tags="haxe,release"')
-@:noDebug
-#end
 @:forward
 abstract URLVariables(Dynamic) from Dynamic to Dynamic
 {
@@ -118,6 +113,3 @@ abstract URLVariables(Dynamic) from Dynamic to Dynamic
 		Reflect.setField(this, key, value);
 	}
 }
-#else
-typedef URLVariables = flash.net.URLVariables;
-#end

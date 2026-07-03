@@ -1,12 +1,7 @@
 package openfl.text._internal;
 
-#if !flash
 import haxe.ds.IntMap;
 
-#if !openfl_debug
-@:fileXml('tags="haxe,release"')
-@:noDebug
-#end
 @SuppressWarnings("checkstyle:FieldDocComment")
 class CacheMeasurement
 {
@@ -57,4 +52,3 @@ class CacheMeasurement
 		return __collisions.indexOf(wordKey) > -1;
 	}
 }
-#end

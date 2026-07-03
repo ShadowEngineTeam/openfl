@@ -1,6 +1,5 @@
 package openfl.filters;
 
-#if !flash
 import openfl.display.BitmapData;
 import openfl.display.BlendMode;
 import openfl.display.DisplayObjectRenderer;
@@ -53,10 +52,6 @@ import openfl.display.Shader;
 	@see `openfl.display.DisplayObject.filters`
 	@see `openfl.display.BitmapData.applyFilter`
 **/
-#if !openfl_debug
-@:fileXml('tags="haxe,release"')
-@:noDebug
-#end
 class ShaderFilter extends BitmapFilter
 {
 	@:dox(hide) @:noCompletion @:beta @SuppressWarnings("checkstyle:FieldDocComment")
@@ -215,6 +210,3 @@ class ShaderFilter extends BitmapFilter
 		return shader;
 	}
 }
-#else
-typedef ShaderFilter = flash.filters.ShaderFilter;
-#end

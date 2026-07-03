@@ -1,6 +1,5 @@
 package openfl.system;
 
-#if !flash
 /**
 	The ApplicationDomain class is a container for discrete groups of class
 	definitions. Application domains are used to partition classes that are in
@@ -31,10 +30,6 @@ package openfl.system;
 	The `ApplicationDomain()` constructor function allows you to create an
 	ApplicationDomain object.
 **/
-#if !openfl_debug
-@:fileXml('tags="haxe,release"')
-@:noDebug
-#end
 @:final class ApplicationDomain
 {
 	#if false
@@ -111,6 +106,3 @@ package openfl.system;
 		return (Type.resolveClass(name) != null);
 	}
 }
-#else
-typedef ApplicationDomain = flash.system.ApplicationDomain;
-#end

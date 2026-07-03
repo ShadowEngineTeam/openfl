@@ -1,14 +1,9 @@
 package openfl.display;
 
-#if !flash
 /**
 	The JPEGEncoderOptions class defines a compression algorithm for the
 	`openfl.display.BitmapData.encode()` method.
 **/
-#if !openfl_debug
-@:fileXml('tags="haxe,release"')
-@:noDebug
-#end
 @:final class JPEGEncoderOptions
 {
 	/**
@@ -28,6 +23,3 @@ package openfl.display;
 		this.quality = quality;
 	}
 }
-#else
-typedef JPEGEncoderOptions = flash.display.JPEGEncoderOptions;
-#end

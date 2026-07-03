@@ -1,6 +1,5 @@
 package openfl.net;
 
-#if !flash
 /**
 	The ObjectEncoding class is used in defining serialization settings in
 	classes that serialize objects (such as FileStream, NetStream,
@@ -42,7 +41,7 @@ package openfl.net;
 	`objectEncoding` property description explains the behavior more
 	thoroughly.
 **/
-#if (haxe_ver >= 4.0) enum #else @:enum #end abstract ObjectEncoding(Int) from Int to Int from UInt to UInt
+enum abstract ObjectEncoding(Int) from Int to Int from UInt to UInt
 {
 	/**
 		Allows greater control over the serialization of dynamic properties of
@@ -76,8 +75,8 @@ package openfl.net;
 
 	/**
 		Specifies that objects are serialized using the
-		Haxe Serialization Format (HXSF). Serialized objects 
-		in this format are prefixed with a 16-bit length 
+		Haxe Serialization Format (HXSF). Serialized objects
+		in this format are prefixed with a 16-bit length
 		header, which limits the maximum data size to 65,535 bytes.
 	**/
 	public var HXSF = 10;
@@ -91,18 +90,18 @@ package openfl.net;
 
 	/**
 		Specifies that objects are serialized using
-		JavaScript Object Notation (JSON). Serialized objects 
-		in this format are prefixed with a 16-bit length 
+		JavaScript Object Notation (JSON). Serialized objects
+		in this format are prefixed with a 16-bit length
 		header, which limits the maximum data size to 65,535 bytes.
-	**/ 
+	**/
 	public var JSON = 12;
 
 	/**
 		Specifies that objects are serialized using
-		JavaScript Object Notation (JSON). Serialized objects 
-		in this format are prefixed with a 32-bit length 
+		JavaScript Object Notation (JSON). Serialized objects
+		in this format are prefixed with a 32-bit length
 		header.
-	**/ 
+	**/
 	public var LARGE_JSON = 13;
 
 	/**
@@ -114,8 +113,5 @@ package openfl.net;
 		format, this may change. You can use this constant only if you're
 		not concerned about interoperability with previous versions.
 	**/
-	public var DEFAULT = #if flash 3 #else 10 #end;
+	public var DEFAULT = 10;
 }
-#else
-typedef ObjectEncoding = flash.net.ObjectEncoding;
-#end

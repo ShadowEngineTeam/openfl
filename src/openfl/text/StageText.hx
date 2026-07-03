@@ -1,6 +1,6 @@
 package openfl.text;
 
-#if (!flash && sys && (!flash_doc_gen || air_doc_gen))
+#if sys
 import openfl.display.BitmapData;
 import openfl.display.Stage;
 import openfl.events.Event;
@@ -70,10 +70,6 @@ import openfl.text.engine.FontWeight;
 	display object use `stage.focus`.
 	- To assign focus to StageText, use `stageText.assignFocus()`.
 **/
-#if !openfl_debug
-@:fileXml('tags="haxe,release"')
-@:noDebug
-#end
 @:access(openfl.events.Event)
 class StageText extends EventDispatcher
 {

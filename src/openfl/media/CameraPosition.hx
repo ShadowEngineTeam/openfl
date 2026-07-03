@@ -1,13 +1,13 @@
 package openfl.media;
 
-#if (!flash && sys && (!flash_doc_gen || air_doc_gen))
+#if sys
 /**
 	The CameraPosition class defines constants for the `position` property of
 	the Camera class.
 
 	@see `openfl.media.Camera`
 **/
-#if (haxe_ver >= 4.0) enum #else @:enum #end abstract CameraPosition(Null<Int>)
+enum abstract CameraPosition(Null<Int>)
 {
 	/**
 		The `Camera.position` property returns this value for a back camera.

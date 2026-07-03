@@ -1,13 +1,12 @@
 package openfl.system;
 
-#if !flash
 /**
 	The TouchscreenType class is an enumeration class that provides values for
 	the different types of touch screens.
 	Use the values defined by the TouchscreenType class with the
 	`Capabilities.touchscreenType` property.
 **/
-#if (haxe_ver >= 4.0) enum #else @:enum #end abstract TouchscreenType(Null<Int>)
+enum abstract TouchscreenType(Null<Int>)
 {
 	/**
 		A touchscreen designed to respond to finger touches.
@@ -46,6 +45,3 @@ package openfl.system;
 		}
 	}
 }
-#else
-typedef TouchscreenType = flash.system.TouchscreenType;
-#end

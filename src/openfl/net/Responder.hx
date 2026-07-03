@@ -2,7 +2,6 @@ package openfl.net;
 
 import haxe.Constraints.Function;
 
-#if !flash
 /**
 	The Responder class provides an object that is used in
 	`NetConnection.call()` to handle return values from the server related to
@@ -12,10 +11,6 @@ import haxe.Constraints.Function;
 	status. Operation errors target the Responder object instead of the
 	NetConnection object for easier error handling.
 **/
-#if !openfl_debug
-@:fileXml('tags="haxe,release"')
-@:noDebug
-#end
 class Responder
 {
 	// the result and status functions are not exposed publicly by the flash
@@ -34,6 +29,3 @@ class Responder
 		__status = status;
 	}
 }
-#else
-typedef Responder = flash.net.Responder;
-#end

@@ -1,6 +1,5 @@
 package openfl.display;
 
-#if !flash
 /**
 	The Scene class includes properties for identifying the name, labels, and
 	number of frames in a scene. A Scene object instance is created in Adobe
@@ -17,10 +16,6 @@ package openfl.display;
 	@see `openfl.display.MovieClip.gotoAndPlay()`
 	@see `openfl.display.MovieClip.gotoAndStop()`
 **/
-#if !openfl_debug
-@:fileXml('tags="haxe,release"')
-@:noDebug
-#end
 @:final class Scene
 {
 	/**
@@ -49,6 +44,3 @@ package openfl.display;
 		this.numFrames = numFrames;
 	}
 }
-#else
-typedef Scene = flash.display.Scene;
-#end

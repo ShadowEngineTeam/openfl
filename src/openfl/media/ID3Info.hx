@@ -1,16 +1,11 @@
 package openfl.media;
 
-#if !flash
 /**
 	The ID3Info class contains properties that reflect ID3 metadata. You can get
 	additional metadata for MP3 files by accessing the `id3` property of the Sound
 	class; for example, `mySound.id3.TIME`. For more information, see the entry for
 	`Sound.id3` and the ID3 tag definitions at http://www.id3.org.
 **/
-#if !openfl_debug
-@:fileXml('tags="haxe,release"')
-@:noDebug
-#end
 @:final class ID3Info
 {
 	/**
@@ -50,6 +45,3 @@ package openfl.media;
 
 	public function new():Void {}
 }
-#else
-typedef ID3Info = flash.media.ID3Info;
-#end

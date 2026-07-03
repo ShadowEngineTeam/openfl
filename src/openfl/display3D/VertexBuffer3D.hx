@@ -1,6 +1,5 @@
 package openfl.display3D;
 
-#if !flash
 import openfl.display3D._internal.GLBuffer;
 import openfl.utils._internal.ArrayBufferView;
 import openfl.utils._internal.Float32Array;
@@ -43,10 +42,6 @@ import openfl.Vector;
 	To free the render context resources associated with a vertex buffer, call the object's
 	`dispose()` method.
 **/
-#if !openfl_debug
-@:fileXml('tags="haxe,release"')
-@:noDebug
-#end
 @:access(openfl.display3D.Context3D)
 @:access(openfl.display.Stage)
 class VertexBuffer3D
@@ -128,8 +123,7 @@ class VertexBuffer3D
 		var gl = __context.gl;
 
 		__context.__bindGLArrayBuffer(__id);
-		if (__memoryUsage == data.byteLength)
-			gl.bufferSubData(gl.ARRAY_BUFFER, 0, data);
+		if (__memoryUsage == data.byteLength) gl.bufferSubData(gl.ARRAY_BUFFER, 0, data);
 		else
 			gl.bufferData(gl.ARRAY_BUFFER, data, __usage);
 		__memoryUsage = data.byteLength;
@@ -235,6 +229,3 @@ class VertexBuffer3D
 		#end
 	}
 }
-#else
-typedef VertexBuffer3D = flash.display3D.VertexBuffer3D;
-#end

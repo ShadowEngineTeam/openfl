@@ -1,6 +1,5 @@
 package openfl.geom;
 
-#if !flash
 import openfl.utils.ObjectPool;
 #if lime
 import lime.math.Rectangle as LimeRectangle;
@@ -53,10 +52,6 @@ import lime.math.Rectangle as LimeRectangle;
 	@see [Working with geometry](https://books.openfl.org/openfl-developers-guide/working-with-geometry/)
 	@see [Using Rectangle objects](https://books.openfl.org/openfl-developers-guide/working-with-geometry/using-rectangle-objects.html)
 **/
-#if !openfl_debug
-@:fileXml('tags="haxe,release"')
-@:noDebug
-#end
 class Rectangle
 {
 	#if lime
@@ -790,6 +785,3 @@ class Rectangle
 		return p.clone();
 	}
 }
-#else
-typedef Rectangle = flash.geom.Rectangle;
-#end

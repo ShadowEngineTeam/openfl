@@ -1,6 +1,5 @@
 package openfl.net;
 
-#if !flash
 import openfl.events.DataEvent;
 import openfl.events.Event;
 import openfl.events.IOErrorEvent;
@@ -83,10 +82,6 @@ import openfl.utils.ByteArray;
 						 the caller's security sandbox or to a port lower than
 						 1024.
 **/
-#if !openfl_debug
-@:fileXml('tags="haxe,release"')
-@:noDebug
-#end
 @:access(openfl.events.Event)
 class XMLSocket extends EventDispatcher
 {
@@ -328,6 +323,3 @@ class XMLSocket extends EventDispatcher
 		#end
 	}
 }
-#else
-typedef XMLSocket = flash.net.XMLSocket;
-#end

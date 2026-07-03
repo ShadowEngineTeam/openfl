@@ -1,11 +1,10 @@
 package openfl.display;
 
-#if !flash
 /**
 	The StageAlign class provides constant values to use for the
 	`Stage.align` property.
 **/
-#if (haxe_ver >= 4.0) enum #else @:enum #end abstract StageAlign(Null<Int>)
+enum abstract StageAlign(Null<Int>)
 {
 	/**
 		Specifies that the Stage is aligned at the bottom.
@@ -79,6 +78,3 @@ package openfl.display;
 		}
 	}
 }
-#else
-typedef StageAlign = flash.display.StageAlign;
-#end

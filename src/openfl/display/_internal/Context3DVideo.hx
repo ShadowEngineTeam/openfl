@@ -1,6 +1,5 @@
 package openfl.display._internal;
 
-#if !flash
 import openfl.display.OpenGLRenderer;
 import openfl.media.Video;
 #if gl_stats
@@ -8,10 +7,6 @@ import openfl.display._internal.stats.Context3DStats;
 import openfl.display._internal.stats.DrawCallContext;
 #end
 
-#if !openfl_debug
-@:fileXml('tags="haxe,release"')
-@:noDebug
-#end
 @:access(openfl.display3D.Context3D)
 @:access(openfl.display.Shader)
 @:access(openfl.geom.ColorTransform)
@@ -135,4 +130,3 @@ class Context3DVideo
 		#end
 	}
 }
-#end

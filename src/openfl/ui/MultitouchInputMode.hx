@@ -1,13 +1,12 @@
 package openfl.ui;
 
-#if !flash
 /**
 	The MultitouchInputMode class provides values for the
 	`inputMode` property in the openfl.ui.Multitouch class. These
 	values set the type of touch events the Flash runtime dispatches when the
 	user interacts with a touch-enabled device.
 **/
-#if (haxe_ver >= 4.0) enum #else @:enum #end abstract MultitouchInputMode(Null<Int>)
+enum abstract MultitouchInputMode(Null<Int>)
 {
 	/**
 		Specifies that TransformGestureEvent, PressAndTapGestureEvent, and
@@ -51,6 +50,3 @@ package openfl.ui;
 		}
 	}
 }
-#else
-typedef MultitouchInputMode = flash.ui.MultitouchInputMode;
-#end

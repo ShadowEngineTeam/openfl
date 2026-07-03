@@ -1,6 +1,5 @@
 package openfl.net;
 
-#if !flash
 import haxe.io.Path;
 import haxe.Timer;
 import openfl.events.DataEvent;
@@ -308,10 +307,6 @@ import js.Browser;
 	@see `openfl.net.FileReferenceList`
 	@see `openfl.filesystem.File`
 **/
-#if !openfl_debug
-@:fileXml('tags="haxe,release"')
-@:noDebug
-#end
 @:access(openfl.events.Event)
 class FileReference extends EventDispatcher
 {
@@ -1725,6 +1720,3 @@ class FileReference extends EventDispatcher
 		return extension;
 	}
 }
-#else
-typedef FileReference = flash.net.FileReference;
-#end

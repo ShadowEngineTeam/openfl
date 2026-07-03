@@ -1,6 +1,5 @@
 package openfl.text._internal;
 
-#if !flash
 import haxe.Timer;
 import openfl.display3D._internal.GLTexture;
 import openfl.utils._internal.Log;
@@ -28,10 +27,6 @@ import js.html.Element;
 import js.Browser;
 #end
 
-#if !openfl_debug
-@:fileXml('tags="haxe,release"')
-@:noDebug
-#end
 @:access(openfl.text.Font)
 @:access(openfl.text.TextField)
 @:access(openfl.text.TextFormat)
@@ -2113,4 +2108,3 @@ private class DefaultFontSet
 		return normal;
 	}
 }
-#end

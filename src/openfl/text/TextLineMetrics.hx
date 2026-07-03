@@ -1,6 +1,5 @@
 package openfl.text;
 
-#if !flash
 /**
 	The TextLineMetrics class contains information about the text position and
 	measurements of a _line of text_ within a text field. All measurements are
@@ -15,10 +14,6 @@ package openfl.text;
 
 	![An image illustrating text metrics](/images/text-metrics.jpg)
 **/
-#if !openfl_debug
-@:fileXml('tags="haxe,release"')
-@:noDebug
-#end
 class TextLineMetrics
 {
 	/**
@@ -95,6 +90,3 @@ class TextLineMetrics
 		this.leading = leading;
 	}
 }
-#else
-typedef TextLineMetrics = flash.text.TextLineMetrics;
-#end

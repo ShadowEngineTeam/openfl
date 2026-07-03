@@ -1,6 +1,5 @@
 package openfl.display3D.textures;
 
-#if !flash
 import openfl.display._internal.SamplerState;
 import openfl.display.BitmapData;
 import openfl.utils._internal.ArrayBufferView;
@@ -16,10 +15,6 @@ import openfl.utils.ByteArray;
 	Texture cannot be instantiated directly. Create instances by using Context3D
 	`createRectangleTexture()` method.
 **/
-#if !openfl_debug
-@:fileXml('tags="haxe,release"')
-@:noDebug
-#end
 @:access(openfl.display3D.Context3D)
 @:access(openfl.display.Stage)
 @:final class RectangleTexture extends TextureBase
@@ -151,6 +146,3 @@ import openfl.utils.ByteArray;
 		return false;
 	}
 }
-#else
-typedef RectangleTexture = flash.display3D.textures.RectangleTexture;
-#end

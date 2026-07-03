@@ -1,6 +1,5 @@
 package openfl.text;
 
-#if !flash
 import openfl.utils.Assets;
 import openfl.utils.ByteArray;
 import openfl.utils.Future;
@@ -16,10 +15,6 @@ import lime.text.Font as LimeFont;
 	load external fonts, or to create an instance of a Font object by itself.
 	Use the Font class as an abstract base class.
 **/
-#if !openfl_debug
-@:fileXml('tags="haxe,release"')
-@:noDebug
-#end
 class Font #if lime extends LimeFont #end
 {
 	/**
@@ -306,6 +301,3 @@ class Font #if lime extends LimeFont #end
 		#end
 	}
 }
-#else
-typedef Font = flash.text.Font;
-#end

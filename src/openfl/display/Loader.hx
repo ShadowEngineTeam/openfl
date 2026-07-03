@@ -1,6 +1,5 @@
 package openfl.display;
 
-#if !flash
 import openfl.display._internal.AssetManifestLoader;
 import openfl.display._internal.BitmapDataLoader;
 import openfl.display._internal.ScriptLoader;
@@ -77,10 +76,6 @@ import openfl.utils.Future;
 
 	@see [Loading display content dynamically](https://books.openfl.org/openfl-developers-guide/display-programming/loading-display-content-dynamically/)
 **/
-#if !openfl_debug
-@:fileXml('tags="haxe,release"')
-@:noDebug
-#end
 @:access(openfl.display.LoaderInfo)
 @:access(openfl.events.Event)
 class Loader extends DisplayObjectContainer
@@ -760,7 +755,7 @@ class Loader extends DisplayObjectContainer
 	@SuppressWarnings("checkstyle:Dynamic")
 	@:noCompletion private function __dispatchError(error:Dynamic):Void
 	{
-		if (#if (haxe_ver >= 4.2) Std.isOfType #else Std.is #end (error, Event))
+		if (Std.isOfType(error, Event))
 		{
 			contentLoaderInfo.dispatchEvent(cast error);
 		}
@@ -835,6 +830,3 @@ class Loader extends DisplayObjectContainer
 		#end
 	}
 }
-#else
-typedef Loader = flash.display.Loader;
-#end

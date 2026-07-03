@@ -1,11 +1,11 @@
 package openfl.system;
 
-#if (!flash && sys && (!flash_doc_gen || air_doc_gen))
+#if sys
 /**
 	The ImageDecodingPolicy class provides values for `imageDecodingPolicy` in
 	the LoaderContext class.
 **/
-#if (haxe_ver >= 4.0) enum #else @:enum #end abstract ImageDecodingPolicy(Null<Int>)
+enum abstract ImageDecodingPolicy(Null<Int>)
 {
 	/**
 		Specifies that the image being loaded will be decoded when needed and

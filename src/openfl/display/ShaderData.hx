@@ -1,6 +1,5 @@
 package openfl.display;
 
-#if !flash
 import openfl.utils.ByteArray;
 
 /**
@@ -84,10 +83,6 @@ import openfl.utils.ByteArray;
 	ShaderData instance containing data, parameters, and inputs for a shader
 	is available as the Shader instance's `data` property.
 **/
-#if !openfl_debug
-@:fileXml('tags="haxe,release"')
-@:noDebug
-#end
 @:forward()
 @SuppressWarnings("checkstyle:Dynamic")
 abstract ShaderData(Dynamic) from Dynamic to Dynamic
@@ -105,6 +100,3 @@ abstract ShaderData(Dynamic) from Dynamic to Dynamic
 		this = {};
 	}
 }
-#else
-typedef ShaderData = flash.display.ShaderData;
-#end

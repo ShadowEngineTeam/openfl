@@ -1,6 +1,6 @@
 package openfl.desktop;
 
-#if (haxe4 && !flash && sys && (!flash_doc_gen || air_doc_gen))
+#if sys
 import haxe.Json;
 import haxe.Serializer;
 import haxe.io.Bytes;
@@ -48,9 +48,6 @@ import sys.thread.Thread;
 	communication is supported.
 **/
 @:access(openfl.utils.ByteArrayData)
-#if !openfl_debug
-@:fileXml('tags="haxe,release"') @:noDebug
-#end
 class NativeProcess extends EventDispatcher
 {
 	/**

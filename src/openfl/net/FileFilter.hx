@@ -1,6 +1,5 @@
 package openfl.net;
 
-#if !flash
 /**
 	The FileFilter class is used to indicate what files on the user's system
 	are shown in the file-browsing dialog box that is displayed when the
@@ -48,10 +47,6 @@ package openfl.net;
 	Macintosh, if you supply a list of Macintosh file types, that list is used
 	to filter the files. If not, the list of file extensions is used.
 **/
-#if !openfl_debug
-@:fileXml('tags="haxe,release"')
-@:noDebug
-#end
 @:final class FileFilter
 {
 	/**
@@ -105,6 +100,3 @@ package openfl.net;
 		this.macType = macType;
 	}
 }
-#else
-typedef FileFilter = flash.net.FileFilter;
-#end

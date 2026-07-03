@@ -1,6 +1,5 @@
 package openfl.filters;
 
-#if !flash
 import openfl.display.BitmapData;
 import openfl.display.DisplayObjectRenderer;
 import openfl.display.Shader;
@@ -11,6 +10,7 @@ import openfl.geom.Rectangle;
 import lime._internal.graphics.ImageDataUtil; // TODO
 
 #end
+
 /**
 	The GlowFilter class lets you apply a glow effect to display objects. You
 	have several options for the style of the glow, including inner or outer
@@ -58,10 +58,6 @@ import lime._internal.graphics.ImageDataUtil; // TODO
 	@see `openfl.display.DisplayObject.filters`
 	@see `openfl.display.BitmapData.applyFilter`
 **/
-#if !openfl_debug
-@:fileXml('tags="haxe,release"')
-@:noDebug
-#end
 @:access(openfl.geom.ColorTransform)
 @:access(openfl.geom.Point)
 @:access(openfl.geom.Rectangle)
@@ -431,10 +427,6 @@ import lime._internal.graphics.ImageDataUtil; // TODO
 	}
 }
 
-#if !openfl_debug
-@:fileXml('tags="haxe,release"')
-@:noDebug
-#end
 private class InvertAlphaShader extends BitmapFilterShader
 {
 	@:glFragmentSource("#pragma header
@@ -459,10 +451,6 @@ private class InvertAlphaShader extends BitmapFilterShader
 	}
 }
 
-#if !openfl_debug
-@:fileXml('tags="haxe,release"')
-@:noDebug
-#end
 private class BlurAlphaShader extends BitmapFilterShader
 {
 	@:glFragmentSource("#pragma header
@@ -525,10 +513,6 @@ private class BlurAlphaShader extends BitmapFilterShader
 	}
 }
 
-#if !openfl_debug
-@:fileXml('tags="haxe,release"')
-@:noDebug
-#end
 private class CombineShader extends BitmapFilterShader
 {
 	@:glFragmentSource("#pragma header
@@ -560,10 +544,6 @@ private class CombineShader extends BitmapFilterShader
 	}
 }
 
-#if !openfl_debug
-@:fileXml('tags="haxe,release"')
-@:noDebug
-#end
 private class InnerCombineShader extends BitmapFilterShader
 {
 	@:glFragmentSource("#pragma header
@@ -595,10 +575,6 @@ private class InnerCombineShader extends BitmapFilterShader
 	}
 }
 
-#if !openfl_debug
-@:fileXml('tags="haxe,release"')
-@:noDebug
-#end
 private class CombineKnockoutShader extends BitmapFilterShader
 {
 	@:glFragmentSource("#pragma header
@@ -630,10 +606,6 @@ private class CombineKnockoutShader extends BitmapFilterShader
 	}
 }
 
-#if !openfl_debug
-@:fileXml('tags="haxe,release"')
-@:noDebug
-#end
 private class InnerCombineKnockoutShader extends BitmapFilterShader
 {
 	@:glFragmentSource("#pragma header
@@ -664,6 +636,3 @@ private class InnerCombineKnockoutShader extends BitmapFilterShader
 		#end
 	}
 }
-#else
-typedef GlowFilter = flash.filters.GlowFilter;
-#end

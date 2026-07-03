@@ -1,6 +1,5 @@
 package openfl.geom;
 
-#if !flash
 import openfl.utils.ObjectPool;
 #if lime
 import openfl.utils._internal.Float32Array;
@@ -70,10 +69,6 @@ import lime.math.Matrix3;
 	@see [Working with geometry](https://books.openfl.org/openfl-developers-guide/working-with-geometry/)
 	@see [Using Matrix objects](https://books.openfl.org/openfl-developers-guide/working-with-geometry/using-matrix-objects.html)
 **/
-#if !openfl_debug
-@:fileXml('tags="haxe,release"')
-@:noDebug
-#end
 class Matrix
 {
 	@:noCompletion private static var __identity:Matrix = new Matrix();
@@ -873,6 +868,3 @@ class Matrix
 		// __cleanValues ();
 	}
 }
-#else
-typedef Matrix = flash.geom.Matrix;
-#end

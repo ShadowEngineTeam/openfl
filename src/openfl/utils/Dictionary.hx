@@ -1,7 +1,6 @@
 package openfl.utils;
 
-#if (!flash || display)
-#if (!js)
+#if !js
 import haxe.ds.StringMap;
 import haxe.ds.IntMap;
 import haxe.ds.ObjectMap;
@@ -81,7 +80,6 @@ abstract Dictionary<K, V>(IMap<K, V>)
 		return this.get(key);
 	}
 
-	#if (haxe_ver >= "4.0.0")
 	/**
 		Returns an Iterator over the keys and values of this Dictionary.
 
@@ -91,7 +89,6 @@ abstract Dictionary<K, V>(IMap<K, V>)
 	{
 		return this.keyValueIterator();
 	}
-	#end
 
 	/**
 		Removes the mapping of `key` and returns `true` if such a mapping existed, `false` otherwise.
@@ -202,10 +199,6 @@ abstract Dictionary<K, V>(IMap<K, V>)
 	}
 }
 
-#if !openfl_debug
-@:fileXml('tags="haxe,release"')
-@:noDebug
-#end
 @SuppressWarnings("checkstyle:FieldDocComment")
 @:dox(hide) private class ClassMap<K:Class<Dynamic>, V> implements IMap<K, V>
 {
@@ -218,15 +211,12 @@ abstract Dictionary<K, V>(IMap<K, V>)
 		values = new Map();
 	}
 
-	#if haxe4
 	public function clear():Void
 	{
 		types.clear();
 		values.clear();
 	}
-	#end
 
-	#if haxe4
 	public function copy():ClassMap<K, V>
 	{
 		var copied = new ClassMap<K, V>();
@@ -234,7 +224,6 @@ abstract Dictionary<K, V>(IMap<K, V>)
 			copied.set(key, get(key));
 		return copied;
 	}
-	#end
 
 	public function exists(key:K):Bool
 	{
@@ -253,12 +242,10 @@ abstract Dictionary<K, V>(IMap<K, V>)
 		return values.get(Type.getClassName(key));
 	}
 
-	#if haxe4
 	@:runtime public inline function keyValueIterator():KeyValueIterator<K, V>
 	{
 		return new haxe.iterators.MapKeyValueIterator(this);
 	}
-	#end
 
 	public function keys():Iterator<K>
 	{
@@ -290,10 +277,6 @@ abstract Dictionary<K, V>(IMap<K, V>)
 	}
 }
 
-#if !openfl_debug
-@:fileXml('tags="haxe,release"')
-@:noDebug
-#end
 @SuppressWarnings("checkstyle:FieldDocComment")
 @:dox(hide) private class FloatMap<K:Float, V> implements IMap<K, V>
 {
@@ -306,15 +289,12 @@ abstract Dictionary<K, V>(IMap<K, V>)
 		values = new Array<V>();
 	}
 
-	#if haxe4
 	public function clear():Void
 	{
 		floatKeys = new Array<K>();
 		values = new Array<V>();
 	}
-	#end
 
-	#if haxe4
 	public function copy():FloatMap<K, V>
 	{
 		var copied = new FloatMap<K, V>();
@@ -322,7 +302,6 @@ abstract Dictionary<K, V>(IMap<K, V>)
 			copied.set(key, get(key));
 		return copied;
 	}
-	#end
 
 	public function exists(key:K):Bool
 	{
@@ -342,12 +321,10 @@ abstract Dictionary<K, V>(IMap<K, V>)
 		return ind > -1 ? values[ind] : null;
 	}
 
-	#if haxe4
 	@:runtime public inline function keyValueIterator():KeyValueIterator<K, V>
 	{
 		return new haxe.iterators.MapKeyValueIterator(this);
 	}
-	#end
 
 	public function keys():Iterator<K>
 	{
@@ -482,10 +459,6 @@ abstract Dictionary<K, V>(IMap<K, V>)
 	}
 }
 
-#if !openfl_debug
-@:fileXml('tags="haxe,release"')
-@:noDebug
-#end
 @SuppressWarnings("checkstyle:FieldDocComment")
 @:dox(hide) private class UtilsObjectMap<K:Object, V> implements IMap<K, V>
 {
@@ -496,14 +469,11 @@ abstract Dictionary<K, V>(IMap<K, V>)
 		map = new ObjectMap<{}, V>();
 	}
 
-	#if haxe4
 	public function clear():Void
 	{
 		map.clear();
 	}
-	#end
 
-	#if haxe4
 	public function copy():UtilsObjectMap<K, V>
 	{
 		var copied = new UtilsObjectMap<K, V>();
@@ -511,7 +481,6 @@ abstract Dictionary<K, V>(IMap<K, V>)
 			copied.set(key, get(key));
 		return copied;
 	}
-	#end
 
 	public function exists(key:K):Bool
 	{
@@ -530,12 +499,10 @@ abstract Dictionary<K, V>(IMap<K, V>)
 		return map.get(cast key);
 	}
 
-	#if haxe4
 	@:runtime public inline function keyValueIterator():KeyValueIterator<K, V>
 	{
 		return new haxe.iterators.MapKeyValueIterator(this);
 	}
-	#end
 
 	public function keys():Iterator<K>
 	{
@@ -581,12 +548,10 @@ abstract Dictionary<K, V>(Dynamic)
 		return Reflect.field(this, cast key);
 	}
 
-	#if haxe4
 	@:runtime public inline function keyValueIterator():KeyValueIterator<K, V>
 	{
 		return new haxe.iterators.MapKeyValueIterator(this);
 	}
-	#end
 
 	public inline function remove(key:K):Bool
 	{
@@ -623,66 +588,6 @@ abstract Dictionary<K, V>(Dynamic)
 		}
 
 		return values.iterator();
-	}
-}
-#end
-#else
-@SuppressWarnings("checkstyle:FieldDocComment")
-abstract Dictionary<K, V>(flash.utils.Dictionary) from flash.utils.Dictionary to flash.utils.Dictionary
-{
-	public function new(weakKeys:Bool = false)
-	{
-		this = new flash.utils.Dictionary(weakKeys);
-	}
-
-	public inline function exists(key:K):Bool
-	{
-		return (untyped this[key] != untyped __global__["undefined"]);
-	}
-
-	@:arrayAccess public inline function get(key:K):V
-	{
-		return untyped this[key];
-	}
-
-	#if haxe4
-	@:runtime public inline function keyValueIterator():KeyValueIterator<K, V>
-	{
-		return new haxe.iterators.MapKeyValueIterator(untyped this);
-	}
-	#end
-
-	public inline function remove(key:K):Bool
-	{
-		var exists = (this : Dictionary<K, V>).exists(key);
-		untyped __delete__(this, key);
-		return exists;
-	}
-
-	@:arrayAccess public inline function set(key:K, value:V):V
-	{
-		return untyped this[key] = value;
-	}
-
-	public inline function iterator():Iterator<K>
-	{
-		return untyped __keys__(this).iterator();
-	}
-
-	@:analyzer(ignore) public function each():Iterator<V>
-	{
-		return untyped {
-			ref: this,
-			it: iterator(),
-			hasNext: function()
-			{
-				return __this__.it.hasNext();
-			},
-			next: function()
-			{
-				return get(__this__.it.next());
-			}
-		}
 	}
 }
 #end

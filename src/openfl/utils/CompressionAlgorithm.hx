@@ -1,13 +1,12 @@
 package openfl.utils;
 
-#if !flash
 /**
 	The CompressionAlgorithm class defines string constants for the names of
 	compress and uncompress options. These constants are used as values of the
 	`algorithm` parameter of the `ByteArray.compress()` and
 	`ByteArray.uncompress()` methods.
 **/
-#if (haxe_ver >= 4.0) enum #else @:enum #end abstract CompressionAlgorithm(Null<Int>)
+enum abstract CompressionAlgorithm(Null<Int>)
 {
 	/**
 		Defines the string to use for the deflate compression algorithm.
@@ -44,6 +43,3 @@ package openfl.utils;
 		}
 	}
 }
-#else
-typedef CompressionAlgorithm = flash.utils.CompressionAlgorithm;
-#end

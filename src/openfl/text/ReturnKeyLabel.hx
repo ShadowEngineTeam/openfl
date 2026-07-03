@@ -1,13 +1,13 @@
 package openfl.text;
 
-#if (!flash && sys && (!flash_doc_gen || air_doc_gen))
+#if sys
 /**
 	The ReturnKeyLabel class defines the values to use for the `returnKeyLabel`
 	property of the StageText class.
 
 	@see `openfl.text.StageText.returnKeyLabel`
 **/
-#if (haxe_ver >= 4.0) enum #else @:enum #end abstract ReturnKeyLabel(Null<Int>)
+enum abstract ReturnKeyLabel(Null<Int>)
 {
 	/**
 		Use the default label.

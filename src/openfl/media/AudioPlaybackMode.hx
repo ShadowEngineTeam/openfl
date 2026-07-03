@@ -1,6 +1,6 @@
 package openfl.media;
 
-#if (!flash && sys && (!flash_doc_gen || air_doc_gen))
+#if sys
 /**
 	The AudioPlaybackMode class defines constants for the `audioPlaybackMode`
 	property of the SoundMixer class.
@@ -11,7 +11,7 @@ package openfl.media;
 	Each of these constants represents a set of behavior for audio on mobile
 	tailored to a particular use.
 **/
-#if (haxe_ver >= 4.0) enum #else @:enum #end abstract AudioPlaybackMode(Null<Int>)
+enum abstract AudioPlaybackMode(Null<Int>)
 {
 	/**
 		A mode for playing ambient sound. Use this mode for playing sounds that

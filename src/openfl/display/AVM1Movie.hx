@@ -1,6 +1,5 @@
 package openfl.display;
 
-#if !flash
 #if (!openfl_doc_gen || flash_doc_gen)
 import haxe.Constraints.Function;
 import openfl.errors.ArgumentError;
@@ -33,10 +32,6 @@ import openfl.errors.ArgumentError;
 
 	_OpenFL target support:_ Not supported, except when targeting AIR.
 **/
-#if !openfl_debug
-@:fileXml('tags="haxe,release"')
-@:noDebug
-#end
 @SuppressWarnings("checkstyle:Dynamic")
 class AVM1Movie extends DisplayObject
 {
@@ -60,7 +55,4 @@ class AVM1Movie extends DisplayObject
 		return null;
 	}
 }
-#end
-#else
-typedef AVM1Movie = flash.display.AVM1Movie;
 #end

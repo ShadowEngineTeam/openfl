@@ -1,6 +1,6 @@
 package openfl.desktop;
 
-#if (haxe4 && !flash && sys && (!flash_doc_gen || air_doc_gen))
+#if sys
 import openfl.Vector;
 import openfl.filesystem.File;
 
@@ -13,10 +13,6 @@ import openfl.filesystem.File;
 	applications installed with native installers (applications in the
 	"extendedDesktop" profile).
 **/
-#if !openfl_debug
-@:fileXml('tags="haxe,release"')
-@:noDebug
-#end
 class NativeProcessStartupInfo
 {
 	/**

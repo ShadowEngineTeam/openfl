@@ -1,6 +1,5 @@
 package openfl.display;
 
-#if !flash
 import openfl.display._internal.Context3DGraphics;
 import openfl.display.Bitmap;
 import openfl.display.DisplayObject;
@@ -20,10 +19,6 @@ import lime.graphics.RenderContext;
 import lime.graphics.RenderContextType;
 #end
 
-#if !openfl_debug
-@:fileXml('tags="haxe,release"')
-@:noDebug
-#end
 @:access(openfl.display._internal.Context3DGraphics)
 @:access(lime.graphics.ImageBuffer)
 @:access(openfl.display.Bitmap)
@@ -955,14 +950,6 @@ class DisplayObjectRenderer extends EventDispatcher
 		return false;
 	}
 
-	#if (haxe_ver >= 4.2)
 	@:noCompletion private inline function __isShaderFilter(f:Dynamic):Bool
 		return Std.isOfType(f, ShaderFilter);
-	#else
-	@:noCompletion private inline function __isShaderFilter(f:Dynamic):Bool
-		return Std.is(f, ShaderFilter);
-	#end
 }
-#else
-typedef DisplayObjectRenderer = Dynamic;
-#end

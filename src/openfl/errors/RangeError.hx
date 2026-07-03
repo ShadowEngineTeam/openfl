@@ -1,6 +1,5 @@
 package openfl.errors;
 
-#if !flash
 /**
 	A RangeError exception is thrown when a numeric value is outside the
 	acceptable range.
@@ -12,10 +11,6 @@ package openfl.errors;
 	- Any OpenFL API that expects a frame number is invoked with an invalid frame number.
 	- Any OpenFL API that expects a layer number is invoked with an invalid layer number.
 **/
-#if !openfl_debug
-@:fileXml('tags="haxe,release"')
-@:noDebug
-#end
 class RangeError extends Error
 {
 	public function new(message:String = "")
@@ -25,6 +20,3 @@ class RangeError extends Error
 		name = "RangeError";
 	}
 }
-#else
-typedef RangeError = flash.errors.RangeError;
-#end

@@ -1,13 +1,12 @@
 package openfl.display;
 
-#if !flash
 /**
 	This class defines the constants that represent the possible values for
 	the ShaderParameter class's `type` property. Each constant represents one
 	of the data types available in Flash Player for parameters in the Pixel
 	Bender shader language.
 **/
-#if (haxe_ver >= 4.0) enum #else @:enum #end abstract ShaderParameterType(Null<Int>)
+enum abstract ShaderParameterType(Null<Int>)
 {
 	/**
 		Indicates that the shader parameter is defined as a `bool` value,
@@ -232,6 +231,3 @@ package openfl.display;
 		}
 	}
 }
-#else
-typedef ShaderParameterType = flash.display.ShaderParameterType;
-#end

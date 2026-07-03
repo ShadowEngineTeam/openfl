@@ -1,6 +1,5 @@
 package openfl.display;
 
-#if !flash
 import openfl.errors.ArgumentError;
 import openfl.errors.RangeError;
 import openfl.errors.TypeError;
@@ -38,10 +37,6 @@ import openfl.Vector;
 	@see [Basics of display programming](https://books.openfl.org/openfl-developers-guide/display-programming/basics-of-display-programming.html)
 	@see [Core display classes](https://books.openfl.org/openfl-developers-guide/display-programming/core-display-classes.html)
 **/
-#if !openfl_debug
-@:fileXml('tags="haxe,release"')
-@:noDebug
-#end
 @:access(openfl.display.Graphics)
 @:access(openfl.errors.Error)
 @:access(openfl.events.Event)
@@ -206,14 +201,12 @@ class DisplayObjectContainer extends InteractiveObject
 			error.errorID = 2024;
 			throw error;
 		}
-		#if ((haxe_ver >= "3.4.0") || !cpp)
 		else if (child.stage == child)
 		{
 			var error = new ArgumentError("Error #3783: A Stage object cannot be added as the child of another object.");
 			error.errorID = 3783;
 			throw error;
 		}
-		#end
 
 		if (index > __children.length || index < 0)
 		{
@@ -1049,6 +1042,3 @@ class DisplayObjectContainer extends InteractiveObject
 		return __tabChildren;
 	}
 }
-#else
-typedef DisplayObjectContainer = flash.display.DisplayObjectContainer;
-#end

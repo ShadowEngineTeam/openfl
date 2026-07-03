@@ -1,6 +1,5 @@
 package openfl.errors;
 
-#if !flash
 import haxe.CallStack;
 
 /**
@@ -13,11 +12,7 @@ import haxe.CallStack;
 
 	You can also create a subclass of the Error class and throw instances of that subclass.
 **/
-#if !openfl_debug
-@:fileXml('tags="haxe,release"')
-@:noDebug
-#end
-class Error #if (haxe_ver >= "4.1.0") extends haxe.Exception #elseif (openfl_dynamic && haxe_ver < "4.0.0") implements Dynamic #end
+class Error extends haxe.Exception
 {
 	@:noCompletion private static inline var DEFAULT_TO_STRING:String = "Error";
 
@@ -29,15 +24,6 @@ class Error #if (haxe_ver >= "4.1.0") extends haxe.Exception #elseif (openfl_dyn
 		constructor.
 	**/
 	public var errorID(default, null):Int;
-
-	/**
-		Contains the message associated with the Error object. By default, the value of
-		this property is "Error". You can specify a message property when you create an
-		Error object by passing the error string to the Error constructor function.
-	**/
-	#if (haxe_ver < "4.1.0")
-	public var message:String;
-	#end
 
 	/**
 		Contains the name of the Error object. By default, the value of this property is
@@ -54,13 +40,10 @@ class Error #if (haxe_ver >= "4.1.0") extends haxe.Exception #elseif (openfl_dyn
 	**/
 	public function new(message:String = "", id:Int = 0)
 	{
-		#if (haxe_ver >= "4.1.0")
 		super(message);
-		#else
-		this.message = message;
-		#end
 
 		this.errorID = id;
+
 		name = "Error";
 	}
 
@@ -104,13 +87,14 @@ class Error #if (haxe_ver >= "4.1.0") extends haxe.Exception #elseif (openfl_dyn
 	}
 
 	// @:noCompletion @:dox(hide) public static function throwError (type:Class<Dynamic>, index:UInt, ?p1:Dynamic, ?p2:Dynamic, ?p3:Dynamic, ?p4:Dynamic, ?p5:Dynamic):Dynamic;
+
 	/**
 		Returns the string "Error" by default or the value contained in the `Error.message`
 		property, if defined.
 
 		@returns	The error message.
 	**/
-	public #if (haxe_ver >= "4.1.0") override #end function toString():String
+	public override function toString():String
 	{
 		if (message != null)
 		{
@@ -122,6 +106,3 @@ class Error #if (haxe_ver >= "4.1.0") extends haxe.Exception #elseif (openfl_dyn
 		}
 	}
 }
-#else
-typedef Error = flash.errors.Error;
-#end
