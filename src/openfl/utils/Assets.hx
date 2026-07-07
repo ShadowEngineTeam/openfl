@@ -149,6 +149,7 @@ class Assets
 				return bitmapData;
 			}
 		}
+		#end
 
 		var image = LimeAssets.getImage(id, false);
 
