@@ -3245,7 +3245,7 @@ class BitmapData implements IBitmapDrawable
 		if (allowFramebuffer
 			&& __texture != null
 			&& __texture.__glFramebuffer != null
-			&& Lib.current.stage.__renderer.__type == OPENGL)
+			&& (Lib.current.stage.__renderer.__type == BGFX || Lib.current.stage.__renderer.__type == WEBGL))
 		{
 			var renderer:OpenGLRenderer = cast Lib.current.stage.__renderer;
 			var context = renderer.__context3D;

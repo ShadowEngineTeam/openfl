@@ -47,6 +47,13 @@ class BGFXGLSLTranslator
 		vertexSource = __stripDirectives(vertexSource);
 		fragmentSource = __stripDirectives(fragmentSource);
 
+		// bgfx varying.def has no array-varying support, so expand
+		// `varying vec2 vBlurCoords[6];` into 6 scalar varyings and rewrite the
+		// constant-index accesses; the normal scalar path then handles them.
+		// (openfl's Blur/Glow/DropShadow filters all use this pattern.)
+		vertexSource = __expandArrayVaryings(vertexSource);
+		fragmentSource = __expandArrayVaryings(fragmentSource);
+
 		// ---- attributes (vertex only) ----
 
 		var attribRegex = ~/^\s*attribute\s+(?:lowp\s+|mediump\s+|highp\s+)?(\w+)\s+(\w+)\s*;/gm;
@@ -228,6 +235,9 @@ class BGFXGLSLTranslator
 		var fs = new StringBuf();
 		if (varyingCanonical.length > 0) fs.add("$input " + varyingCanonical.join(", ") + "\n");
 		fs.add("#include <bgfx_shader.sh>\n");
+		// modern-GLSL shaders write openfl_FragColor; map it to gl_FragColor,
+		// which bgfx_shader.sh provides (the `out` declaration was stripped)
+		fs.add("#define openfl_FragColor gl_FragColor\n");
 
 		if (complexBlendMode != 0)
 		{
@@ -273,9 +283,26 @@ class BGFXGLSLTranslator
 		}
 		else
 		{
-			fs.add(varyingDefines.toString());
+			// bgfx exposes fragment varyings as main() parameters on every
+			// HLSL-style backend (D3D/Metal/SPIR-V), so helper functions in
+			// openfl/flixel shaders (e.g. flixel_texture2D, which reads
+			// openfl_ColorMultiplierv/openfl_Alphav directly) can't see them —
+			// desktop GL only works because its varyings are file-scope globals.
+			// Mirror each varying into a global and copy it at the top of main
+			// so those shaders compile on all backends.
+			fs.add("#if BGFX_SHADER_LANGUAGE_GLSL || BGFX_SHADER_LANGUAGE_ESSL\n#define OPENFL_GLOBAL\n#else\n#define OPENFL_GLOBAL static\n#endif\n");
+
+			var copyAssigns = new StringBuf();
+			for (i in 0...varyingNames.length)
+			{
+				var globalName = "openfl_vin_" + varyingCanonical[i].substr(2);
+				fs.add("OPENFL_GLOBAL " + varyingTypes[i] + " " + globalName + ";\n");
+				fs.add("#define " + varyingNames[i] + " " + globalName + "\n");
+				copyAssigns.add("\t" + globalName + " = " + varyingCanonical[i] + ";\n");
+			}
+
 			fs.add(result.fragmentUniformCode);
-			fs.add(fragmentBody);
+			fs.add(__injectMainPrologue(fragmentBody, copyAssigns.toString()));
 		}
 
 		result.fragmentSC = fs.toString();
@@ -724,11 +751,69 @@ class BGFXGLSLTranslator
 		return ~/void\s+main\s*\(\s*(void)?\s*\)/g.replace(body, "void main()");
 	}
 
+	/** Inserts statements immediately after the opening brace of `void main()`. **/
+	@:noCompletion private static function __injectMainPrologue(body:String, prologue:String):String
+	{
+		if (prologue == null || prologue.length == 0) return body;
+
+		var re = ~/(void\s+main\s*\(\s*\)\s*\{)/;
+		if (re.match(body)) return re.replace(body, "$1\n" + prologue);
+		return body;
+	}
+
+	/**
+		Expands array varyings (`varying vec2 name[N];`) into N scalar varyings
+		`name_0 .. name_{N-1}` and rewrites constant-index accesses `name[k]` to
+		`name_k`. bgfx's varying.def cannot express array varyings; every use in
+		openfl's built-in filters indexes with constant literals, so this keeps
+		them working. Variable-index accesses are left untouched (unsupported).
+	**/
+	@:noCompletion private static function __expandArrayVaryings(source:String):String
+	{
+		var declRegex = ~/varying\s+(?:lowp\s+|mediump\s+|highp\s+)?(\w+)\s+(\w+)\s*\[\s*(\d+)\s*\]\s*;/g;
+
+		var names = new Array<String>();
+		var counts = new Array<Int>();
+
+		source = declRegex.map(source, function(r)
+		{
+			var type = r.matched(1);
+			var name = r.matched(2);
+			var count = Std.parseInt(r.matched(3));
+
+			names.push(name);
+			counts.push(count);
+
+			var buf = new StringBuf();
+			for (k in 0...count)
+				buf.add("varying " + type + " " + name + "_" + k + ";\n");
+			return buf.toString();
+		});
+
+		for (i in 0...names.length)
+		{
+			var name = names[i];
+			for (k in 0...counts[i])
+			{
+				var idxRegex = new EReg("\\b" + name + "\\s*\\[\\s*" + k + "\\s*\\]", "g");
+				source = idxRegex.replace(source, name + "_" + k);
+			}
+		}
+
+		return source;
+	}
+
 	@:noCompletion private static function __stripDirectives(source:String):String
 	{
 		source = ~/^\s*#version[^\n]*$/gm.replace(source, "");
 		source = ~/^\s*#extension[^\n]*$/gm.replace(source, "");
 		source = ~/^\s*precision\s+(?:lowp|mediump|highp)\s+\w+\s*;\s*$/gm.replace(source, "");
+
+		// modern-GLSL shaders declare a `out vec4 openfl_FragColor;` fragment
+		// output; bgfx's HLSL-style frontend rejects file-scope in/out, and
+		// bgfx_shader.sh already provides gl_FragColor, so drop the declaration
+		// (openfl_FragColor is aliased to gl_FragColor in the fragment assembly)
+		source = ~/^\s*out\s+vec4\s+openfl_FragColor\s*;\s*$/gm.replace(source, "");
 
 		// GL_ES precision blocks from Shader.__buildSourcePrefix / Program3D
 		// prefix arrive already interleaved with #ifdef GL_ES — fcpp will see

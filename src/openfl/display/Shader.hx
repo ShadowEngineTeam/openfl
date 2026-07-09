@@ -539,8 +539,8 @@ class Shader
 
 		__context.__bindGLArrayBuffer(null);
 
-		#if lime
-		if (__context.__context.type == OPENGL)
+		#if (js && html5)
+		if (__context.__context.type == WEBGL)
 		{
 			gl.disable(gl.TEXTURE_2D);
 		}
@@ -574,8 +574,8 @@ class Shader
 			textureCount++;
 		}
 
-		#if (lime && js && html5)
-		if (__context.__context.type == OPENGL && textureCount > 0)
+		#if (js && html5)
+		if (textureCount > 0)
 		{
 			gl.enable(gl.TEXTURE_2D);
 		}
@@ -608,12 +608,8 @@ class Shader
 
 		var complexBlendsSupported = OpenGLRenderer.__complexBlendsSupported && isFragment;
 
-		#if lime
-		if (__context.__context.type == OPENGL)
-		{
-			complexBlendsSupported = complexBlendsSupported && (glVersion == "150" || !StringTools.startsWith(glVersion, "1"));
-		}
-		else if (__context.__context.type == OPENGLES)
+		#if (js && html5)
+		if (__context.__context.type == WEBGL)
 		{
 			complexBlendsSupported = complexBlendsSupported && !StringTools.startsWith(glVersion, "1");
 		}
@@ -623,8 +619,8 @@ class Shader
 		{
 			extensions += "#extension GL_KHR_blend_equation_advanced : enable\n";
 
-			#if lime
-			if (__context.__context.type == OPENGL)
+			#if (js && html5)
+			if (__context.__context.type == WEBGL)
 			{
 				// compiling without this gives the error
 				// 'gl_SampleID' : required extension not requested: GL_ARB_sample_shading
@@ -1402,6 +1398,16 @@ class Shader
 
 	@:noCompletion private static function get_glVersion():String
 	{
+		#if (lime && !js)
+		// under BGFX this is a GLSL DIALECT selector for __processGLSL, not the
+		// runtime API version: "100" keeps openfl emitting ES-1.00-style source
+		// (attribute/varying/texture2D/gl_FragColor) which BGFXGLSLTranslator
+		// consumes. Reporting 300+ would switch openfl to in/out/texture() that
+		// the translator can't parse. The real target (Vulkan/D3D11/Metal + its
+		// GLSL level) is chosen later by shaderc's profile in BGFX.defaultShaderProfile.
+		return "100";
+		#end
+
 		#if !macro
 		var str:String = lime.graphics.opengl.GL.getParameter(lime.graphics.opengl.GL.SHADING_LANGUAGE_VERSION);
 		var reg:EReg = ~/GLSL\s+ES\s+(\d+)\.(\d+)/i;

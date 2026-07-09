@@ -113,7 +113,16 @@ class DisplayObjectRenderer extends EventDispatcher
 
 			switch (renderer.__type)
 			{
-				case OPENGL:
+				case BGFX:
+					if (!renderer.__cleared) renderer.__clear();
+
+					var renderer:OpenGLRenderer = cast renderer;
+					renderer.setShader(displayObject.__worldShader);
+					renderer.__context3D.__flushGL();
+
+					displayObject.__customRenderEvent.type = RenderEvent.RENDER_BGFX;
+
+				case WEBGL:
 					if (!renderer.__cleared) renderer.__clear();
 
 					var renderer:OpenGLRenderer = cast renderer;
@@ -149,7 +158,7 @@ class DisplayObjectRenderer extends EventDispatcher
 
 			renderer.__popMaskObject(displayObject);
 
-			if (renderer.__type == OPENGL)
+			if (renderer.__type == BGFX || renderer.__type == WEBGL)
 			{
 				var renderer:OpenGLRenderer = cast renderer;
 				renderer.setViewport();
@@ -218,19 +227,19 @@ class DisplayObjectRenderer extends EventDispatcher
 				var bitmap:Bitmap = cast displayObject;
 				// TODO: Handle filters without an intermediate draw
 				if (bitmap.__bitmapData == null
-					|| (bitmap.__filters == null #if lime && renderer.__type == OPENGL #end && bitmap.__cacheBitmap == null)) return false;
+					|| (bitmap.__filters == null #if (lime && !js) && renderer.__type == BGFX #elseif lime && renderer.__type == WEBGL #end && bitmap.__cacheBitmap == null)) return false;
 				force = (bitmap.__bitmapData.image != null && bitmap.__bitmapData.image.version != bitmap.__imageVersion);
 
 			case TEXT_FIELD:
 				var textField:TextField = cast displayObject;
-				if (textField.__filters == null #if lime && renderer.__type == OPENGL #end && textField.__cacheBitmap == null
+				if (textField.__filters == null #if (lime && !js) && renderer.__type == BGFX #elseif lime && renderer.__type == WEBGL #end && textField.__cacheBitmap == null
 					&& !textField.__domRender) return false;
 				if (force) textField.__renderDirty = true;
 				force = force || textField.__dirty;
 
 			case TILEMAP:
 				var tilemap:Tilemap = cast displayObject;
-				if (tilemap.__filters == null #if lime && renderer.__type == OPENGL #end && tilemap.__cacheBitmap == null) return false;
+				if (tilemap.__filters == null #if (lime && !js) && renderer.__type == BGFX #elseif lime && renderer.__type == WEBGL #end && tilemap.__cacheBitmap == null) return false;
 
 			default:
 		}
@@ -247,9 +256,9 @@ class DisplayObjectRenderer extends EventDispatcher
 		var updated = false;
 
 		if (displayObject.cacheAsBitmap
-			|| (renderer.__type != OPENGL
+			|| (renderer.__type != BGFX && renderer.__type != WEBGL
 				&& !colorTransform.__isDefault(true) #if (openfl_legacy_scale9grid && openfl_force_gl_cacheasbitmap_for_scale9grid)
-					|| (renderer.__type == OPENGL && displayObject.scale9Grid != null) #end))
+					|| ((renderer.__type == BGFX || renderer.__type == WEBGL) && displayObject.scale9Grid != null) #end))
 		{
 			var rect:Rectangle = null;
 
@@ -266,7 +275,7 @@ class DisplayObjectRenderer extends EventDispatcher
 			if (softwareDirty || hardwareDirty)
 			{
 				#if !openfl_force_gl_cacheasbitmap
-				if (renderType == OPENGL)
+				if (renderType == BGFX || renderType == WEBGL)
 				{
 					if (#if !openfl_disable_gl_cacheasbitmap __shouldCacheHardware(displayObject, null) == false #else true #end)
 					{
@@ -280,7 +289,7 @@ class DisplayObjectRenderer extends EventDispatcher
 				#end
 
 				if (softwareDirty && (renderType == CANVAS || renderType == CAIRO)) needRender = true;
-				if (hardwareDirty && renderType == OPENGL) needRender = true;
+				if (hardwareDirty && (renderType == BGFX || renderType == WEBGL)) needRender = true;
 			}
 
 			var updateTransform = (needRender || !displayObject.__cacheBitmap.__worldTransform.equals(displayObject.__worldTransform));
@@ -331,7 +340,7 @@ class DisplayObjectRenderer extends EventDispatcher
 			}
 
 			if (!needRender
-				&& renderer.__type != OPENGL
+				&& renderer.__type != BGFX && renderer.__type != WEBGL
 				&& displayObject.__cacheBitmapData != null
 				&& displayObject.__cacheBitmapData.image != null
 				&& displayObject.__cacheBitmapData.image.version < displayObject.__cacheBitmapData.__textureVersion)
@@ -415,7 +424,7 @@ class DisplayObjectRenderer extends EventDispatcher
 						&& (bitmapWidth != filterWidth || bitmapHeight != filterHeight));
 					var fillColor = displayObject.opaqueBackground != null ? (0xFF << 24) | displayObject.opaqueBackground : 0;
 					var bitmapColor = needsFill ? 0 : fillColor;
-					var allowFramebuffer = (renderer.__type == OPENGL);
+					var allowFramebuffer = (renderer.__type == BGFX || renderer.__type == WEBGL);
 
 					if (displayObject.__cacheBitmapData == null
 						|| bitmapWidth > displayObject.__cacheBitmapData.width
@@ -432,8 +441,8 @@ class DisplayObjectRenderer extends EventDispatcher
 						displayObject.__cacheBitmapData.__fillRect(displayObject.__cacheBitmapData.rect, bitmapColor, allowFramebuffer);
 					}
 
-					if (renderer.__type == OPENGL
-						&& displayObject.__cacheBitmapData.__texture != null
+				if ((renderer.__type == BGFX || renderer.__type == WEBGL)
+					&& displayObject.__cacheBitmapData.__texture != null
 						&& __hasMaskedDescendant(displayObject)
 						&& __isOnMouseOverPath(displayObject))
 					{
@@ -531,7 +540,7 @@ class DisplayObjectRenderer extends EventDispatcher
 				#if lime
 				if (displayObject.__cacheBitmapRenderer == null || renderType != displayObject.__cacheBitmapRenderer.__type)
 				{
-					if (renderType == OPENGL)
+				if (renderType == BGFX || renderType == WEBGL)
 					{
 						displayObject.__cacheBitmapRenderer = new OpenGLRenderer(cast(renderer, OpenGLRenderer).__context3D, displayObject.__cacheBitmapData);
 					}
@@ -581,7 +590,7 @@ class DisplayObjectRenderer extends EventDispatcher
 
 				displayObject.__isCacheBitmapRender = true;
 
-				if (displayObject.__cacheBitmapRenderer.__type == OPENGL)
+				if (displayObject.__cacheBitmapRenderer.__type == BGFX || displayObject.__cacheBitmapRenderer.__type == WEBGL)
 				{
 					var parentRenderer:OpenGLRenderer = cast renderer;
 					var childRenderer:OpenGLRenderer = cast displayObject.__cacheBitmapRenderer;
@@ -680,12 +689,35 @@ class DisplayObjectRenderer extends EventDispatcher
 						var shader:Shader;
 						var cacheBitmap:BitmapData;
 
+						#if (lime && !js)
+						// OPENFL_FILTER_DEBUG="obj,pass" shows an intermediate
+						// texture fullscreen: obj = filtered-object ordinal this
+						// frame; pass = 0 (cache after __drawGL), 1..N (after
+						// shader pass N), 98 (preserved copy), 99 (final)
+						var __fdbg = Sys.getEnv("OPENFL_FILTER_DEBUG");
+						var __fdbgObj = -1, __fdbgPass = -1;
+						if (__fdbg != null)
+						{
+							var parts = __fdbg.split(",");
+							__fdbgObj = Std.parseInt(parts[0]);
+							__fdbgPass = parts.length > 1 ? Std.parseInt(parts[1]) : 99;
+							if (@:privateAccess openfl.display3D.Context3D.__bgfxDebugObjCounter == __fdbgObj && __fdbgPass == 0)
+								@:privateAccess openfl.display3D.Context3D.__bgfxDebugTex = @:privateAccess bitmap.getTexture(context).__bgfxTexture;
+						}
+						var __fdbgPassCounter = 0;
+						#end
+
 						for (filter in displayObject.__filters)
 						{
 							if (filter.__preserveObject)
 							{
 								childRenderer.__setRenderTarget(bitmap3);
 								childRenderer.__renderFilterPass(bitmap, childRenderer.__defaultDisplayShader, filter.__smooth);
+
+								#if (lime && !js)
+								if (__fdbgObj != -1 && @:privateAccess openfl.display3D.Context3D.__bgfxDebugObjCounter == __fdbgObj && __fdbgPass == 98)
+									@:privateAccess openfl.display3D.Context3D.__bgfxDebugTex = @:privateAccess bitmap3.getTexture(context).__bgfxTexture;
+								#end
 							}
 
 							for (i in 0...filter.__numShaderPasses)
@@ -698,10 +730,25 @@ class DisplayObjectRenderer extends EventDispatcher
 								cacheBitmap = bitmap;
 								bitmap = bitmap2;
 								bitmap2 = cacheBitmap;
+
+								#if (lime && !js)
+								__fdbgPassCounter++;
+								if (__fdbgObj != -1 && @:privateAccess openfl.display3D.Context3D.__bgfxDebugObjCounter == __fdbgObj && __fdbgPass == __fdbgPassCounter)
+									@:privateAccess openfl.display3D.Context3D.__bgfxDebugTex = @:privateAccess bitmap.getTexture(context).__bgfxTexture;
+								#end
 							}
 
 							filter.__renderDirty = false;
 						}
+
+						#if (lime && !js)
+						if (__fdbgObj != -1)
+						{
+							if (@:privateAccess openfl.display3D.Context3D.__bgfxDebugObjCounter == __fdbgObj && __fdbgPass == 99)
+								@:privateAccess openfl.display3D.Context3D.__bgfxDebugTex = @:privateAccess bitmap.getTexture(context).__bgfxTexture;
+							@:privateAccess openfl.display3D.Context3D.__bgfxDebugObjCounter++;
+						}
+						#end
 
 						if (displayObject.__cacheBitmapData != bitmap)
 						{

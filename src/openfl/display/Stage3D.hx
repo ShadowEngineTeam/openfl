@@ -292,7 +292,7 @@ class Stage3D extends EventDispatcher
 			return;
 		}
 
-		if (renderer.__type == OPENGL)
+		if (renderer.__type == BGFX || renderer.__type == WEBGL)
 		{
 			#if openfl_share_context
 			context3D = stage.context3D;

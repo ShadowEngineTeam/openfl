@@ -355,38 +355,12 @@ import lime.graphics.bgfx.BGFXVertexLayout;
 			}
 		}
 
-		#if lime
+		#if (js && html5)
 		if (__glDepthStencil == -1)
 		{
-			#if (js && html5)
 			__glDepthStencil = gl.DEPTH_STENCIL;
-			#else
-			if (__context.type == OPENGLES && Std.parseFloat(__context.version) >= 3)
-			{
-				__glDepthStencil = __context.gles3.DEPTH24_STENCIL8;
-			}
-			else
-			{
-				var extension = gl.getExtension("OES_packed_depth_stencil");
-				if (extension != null)
-				{
-					__glDepthStencil = extension.DEPTH24_STENCIL8_OES;
-				}
-				else
-				{
-					extension = gl.getExtension("EXT_packed_depth_stencil");
-					if (extension != null)
-					{
-						__glDepthStencil = extension.DEPTH24_STENCIL8_EXT;
-					}
-					else
-					{
-						__glDepthStencil = 0;
-					}
-				}
-			}
-			#end
 		}
+		#end
 
 		if (__glMemoryTotalAvailable == -1)
 		{
@@ -397,7 +371,6 @@ import lime.graphics.bgfx.BGFXVertexLayout;
 				__glMemoryCurrentAvailable = extension.GPU_MEMORY_INFO_CURRENT_AVAILABLE_VIDMEM_NVX;
 			}
 		}
-		#end
 
 		if (__driverInfo == null)
 		{
@@ -1394,6 +1367,7 @@ import lime.graphics.bgfx.BGFXVertexLayout;
 			__bgfxComposite();
 			BGFX.frame();
 			__bgfxNextViewId = 0;
+			__bgfxDebugObjCounter = 0;
 
 			// bgfx transient slots are frame-scoped
 			__bgfxExtraSlot = -1;
@@ -2277,6 +2251,11 @@ import lime.graphics.bgfx.BGFXVertexLayout;
 
 	@:noCompletion private function __flushGL():Void
 	{
+		#if (lime && !js)
+		// bgfx state is set at submit time; nothing to flush here
+		return;
+		#end
+
 		__flushGLProgram();
 		__flushGLFramebuffer();
 		__flushGLViewport();
@@ -2613,14 +2592,6 @@ import lime.graphics.bgfx.BGFXVertexLayout;
 					__bindGLTextureCubeMap(texture.__getTexture());
 				}
 
-				#if lime
-				if (__context.type == OPENGL)
-				{
-					// TODO: Cache?
-					gl.enable(gl.TEXTURE_2D);
-				}
-				#end
-
 				__contextState.textures[i] = texture;
 
 				// }
@@ -2649,14 +2620,6 @@ import lime.graphics.bgfx.BGFXVertexLayout;
 
 					texture.__alphaTexture.__setSamplerState(samplerState);
 					gl.uniform1i(__state.program.__agalAlphaSamplerEnabled[sampler].location, 1);
-
-					#if lime
-					if (__context.type == OPENGL)
-					{
-						// TODO: Cache?
-						gl.enable(gl.TEXTURE_2D);
-					}
-					#end
 				}
 				else
 				{
@@ -3024,6 +2987,10 @@ import lime.graphics.bgfx.BGFXVertexLayout;
 	@:noCompletion private var __bgfxComplexBlend:Int = 0;
 	@:noCompletion private var __bgfxMainFrameBuffer:Int = -1;
 	@:noCompletion private var __bgfxMainColor:Int = -1;
+	// debug: when != -1, __bgfxComposite shows this texture instead of the main
+	// target (set via OPENFL_FILTER_DEBUG, see DisplayObjectRenderer)
+	@:noCompletion private static var __bgfxDebugTex:Int = -1;
+	@:noCompletion private static var __bgfxDebugObjCounter:Int = 0;
 	@:noCompletion private var __bgfxMainDepth:Int = -1;
 	@:noCompletion private var __bgfxMainWidth:Int = 0;
 	@:noCompletion private var __bgfxMainHeight:Int = 0;
@@ -3115,7 +3082,8 @@ import lime.graphics.bgfx.BGFXVertexLayout;
 		BGFX.setViewClear(view, BGFX.CLEAR_NONE, 0);
 
 		BGFX.setState(0, BGFX.STATE_WRITE_RGB_LO | BGFX.STATE_WRITE_A_LO);
-		BGFX.setTexture(0, __bgfxCopySampler, #if openfl_bgfx_show_grab __bgfxGrabTexture #else __bgfxMainColor #end, BGFX.SAMPLER_UV_CLAMP);
+		BGFX.setTexture(0, __bgfxCopySampler, #if openfl_bgfx_show_grab __bgfxGrabTexture #else (__bgfxDebugTex != -1 ? __bgfxDebugTex : __bgfxMainColor) #end,
+			BGFX.SAMPLER_UV_CLAMP);
 
 		if (BGFX.setTransientVertexBuffer(0, __bgfxCopyVerts, 3, __bgfxCopyLayout) == 3)
 		{

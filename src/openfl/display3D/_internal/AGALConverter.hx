@@ -543,7 +543,9 @@ class AGALConverter
 			sb.add("\n");
 		}
 
-		#if lime
+		#if (lime && !js)
+		if (limitedProfile == null) limitedProfile = true;
+		#elseif lime
 		if (limitedProfile == null)
 		{
 			var version:String = GL.getParameter(GL.VERSION);

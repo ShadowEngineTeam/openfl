@@ -165,7 +165,7 @@ class OpenGLRenderer extends DisplayObjectRenderer
 
 		final exts = __gl.getSupportedExtensions();
 
-		if (__context.type == OPENGLES)
+		if (__context.type == WEBGL)
 		{
 			if (__sRGBWriteControlSupported == null)
 			{
@@ -202,8 +202,10 @@ class OpenGLRenderer extends DisplayObjectRenderer
 		__softwareRenderer = new CairoRenderer(null);
 		#end
 
-		#if lime
-		__type = OPENGL;
+		#if (lime && !js)
+		__type = BGFX;
+		#elseif lime
+		__type = WEBGL;
 		#end
 
 		__setBlendMode(NORMAL);
@@ -961,7 +963,27 @@ class OpenGLRenderer extends DisplayObjectRenderer
 			object.__scrollRect = cacheScrollRect;
 		}
 
-		__context3D.present();
+		// present() composites the offscreen main target and advances the bgfx
+		// frame (+ resets the view counter) — that's a once-per-frame backbuffer
+		// operation. When __render is a nested render-to-texture pass (filters,
+		// cacheAsBitmap), __defaultRenderTarget is set; presenting there would
+		// advance the frame mid-scene and desync the RTT views (filters render
+		// blank on GL / garbled on VK). Only the main stage render presents.
+		if (__defaultRenderTarget == null)
+		{
+			__context3D.present();
+		}
+		else
+		{
+			// nested render-to-texture (filters/cacheAsBitmap): don't advance the
+			// frame, but invalidate the view state so the next backbuffer draw
+			// starts a fresh view rather than continuing the RTT's view.
+			@:privateAccess
+			{
+				__context3D.__bgfxViewValid = false;
+				__context3D.__bgfxCurrentFrameBuffer = -2;
+			}
+		}
 	}
 
 	@:noCompletion private function __renderDrawable(object:IBitmapDrawable):Void

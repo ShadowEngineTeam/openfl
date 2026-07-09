@@ -89,6 +89,22 @@ import openfl.geom.Matrix;
 	public static inline var RENDER_DOM:EventType<RenderEvent> = "renderDOM";
 
 	/**
+		The `RenderEvent.RENDER_BGFX` constant defines the value of the `type` property
+		of an `renderEvent` event object.
+
+		This event has the following properties:
+
+		| Property | Value |
+		| --- | --- |
+		| `bubbles` | `true` |
+		| `cancelable` | `true` |
+		| `currentTarget` | The object that is actively processing the Event object with an event listener. |
+		| `renderer` | A reference to the active display object renderer. |
+		| `target` | The display object that is going to be rendered. |
+	**/
+	public static inline var RENDER_BGFX:EventType<RenderEvent> = "renderBGFX";
+
+	/**
 		The `RenderEvent.RENDER_OPENGL` constant defines the value of the `type` property
 		of an `renderEvent` event object.
 
