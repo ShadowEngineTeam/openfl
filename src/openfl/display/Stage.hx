@@ -1320,7 +1320,7 @@ class Stage extends DisplayObjectContainer #if lime implements IModule #end
 
 		switch (window.context.type)
 		{
-			case OPENGL, OPENGLES, WEBGL:
+			case #if (lime && !js) BGFX #else OPENGL, OPENGLES, WEBGL #end:
 				#if (!disable_cffi && (!html5 || !canvas))
 				context3D = new Context3D(this);
 				#if openfl_dpi_aware

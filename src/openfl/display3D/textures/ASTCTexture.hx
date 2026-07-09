@@ -5,6 +5,10 @@ import openfl.utils._internal.UInt8Array;
 import openfl.display.BlendMode;
 import openfl.utils.ByteArray;
 import openfl.Lib;
+#if (lime && !js)
+import lime.graphics.bgfx.BGFX;
+import lime.graphics.bgfx.BGFXVertexLayout.BGFXTextureFormat;
+#end
 
 /**
 	The ASTCTexture class represents a 2-dimensional compressed ASTC texture uploaded to a rendering context.
@@ -34,10 +38,37 @@ import openfl.Lib;
 	@:noCompletion private function new(context:Context3D, data:ByteArray, isSRGB:Bool = false, isHDR:Bool = false)
 	{
 		super(context);
-		var gl = __context.gl;
 
 		__isSRGB = isSRGB;
 		__isHDR = isHDR;
+
+		#if (lime && !js)
+		// bgfx accepts ASTC on every renderer: when the GPU lacks hardware
+		// support, bimg decodes the blocks in software at upload (the
+		// IMG_CONFIG_DECODE_ASTC path), so no capability gate is needed
+		__parseASTCHeader(data);
+		if (!supported) return;
+
+		__getImageSize(data);
+		__getImageDimensions(data);
+
+		var bgfxFormat = __getBGFXASTCFormat(blockDimX, blockDimY);
+
+		if (bgfxFormat == -1)
+		{
+			trace('[ERROR] ASTC block size ${blockDimX}x${blockDimY} is not supported by bgfx!');
+			supported = false;
+			return;
+		}
+
+		__bgfxFormat = bgfxFormat;
+		__bgfxTextureFlagsHi = __isSRGB ? BGFX.TEXTURE_SRGB_HI : 0;
+		__optimizeForRenderToTexture = false;
+		__streamingLevels = 0;
+
+		__uploadASTCTextureFromByteArray(data);
+		#else
+		var gl = __context.gl;
 
 		var astcLdrExtension = gl.getExtension("KHR_texture_compression_astc_ldr");
 		var astcHdrExtension = gl.getExtension("KHR_texture_compression_astc_hdr");
@@ -90,8 +121,44 @@ import openfl.Lib;
 		__streamingLevels = 0;
 
 		__uploadASTCTextureFromByteArray(data);
+		#end
 	}
 
+	#if (lime && !js)
+	@:noCompletion private static function __getBGFXASTCFormat(blockX:Int, blockY:Int):Int
+	{
+		return switch [blockX, blockY]
+		{
+			case [4, 4]: BGFXTextureFormat.ASTC4x4;
+			case [5, 4]: BGFXTextureFormat.ASTC5x4;
+			case [5, 5]: BGFXTextureFormat.ASTC5x5;
+			case [6, 5]: BGFXTextureFormat.ASTC6x5;
+			case [6, 6]: BGFXTextureFormat.ASTC6x6;
+			case [8, 5]: BGFXTextureFormat.ASTC8x5;
+			case [8, 6]: BGFXTextureFormat.ASTC8x6;
+			case [8, 8]: BGFXTextureFormat.ASTC8x8;
+			case [10, 5]: BGFXTextureFormat.ASTC10x5;
+			case [10, 6]: BGFXTextureFormat.ASTC10x6;
+			case [10, 8]: BGFXTextureFormat.ASTC10x8;
+			case [10, 10]: BGFXTextureFormat.ASTC10x10;
+			case [12, 10]: BGFXTextureFormat.ASTC12x10;
+			case [12, 12]: BGFXTextureFormat.ASTC12x12;
+			default: -1;
+		}
+	}
+
+	@:noCompletion public function __uploadASTCTextureFromByteArray(data:ByteArray):Void
+	{
+		var bytes:Bytes = cast data;
+		var textureBytes = new UInt8Array(bytes, IMAGE_DATA_OFFSET, imageSize);
+
+		__bgfxTexWidth = __width;
+		__bgfxTexHeight = __height;
+		__bgfxTexture = BGFX.createTexture2D(__width, __height, false, 1, __bgfxFormat, __bgfxTextureFlagsHi, __bgfxSamplerFlags, textureBytes);
+
+		if (__bgfxTexture == -1) supported = false;
+	}
+	#else
 	@:noCompletion public function __uploadASTCTextureFromByteArray(data:ByteArray):Void
 	{
 		var context = __context;
@@ -108,6 +175,7 @@ import openfl.Lib;
 
 		__context.__bindGLTexture2D(null);
 	}
+	#end
 
 	@:noCompletion private function __getImageDimensions(bytes:ByteArray):Void
 	{

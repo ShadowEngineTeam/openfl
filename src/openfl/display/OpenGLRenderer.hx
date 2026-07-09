@@ -115,16 +115,37 @@ class OpenGLRenderer extends DisplayObjectRenderer
 		__context3D = context;
 		__context = context.__context;
 
+		#if (lime && !js)
+		if (Graphics.maxTextureWidth == null)
+		{
+			Graphics.maxTextureWidth = Graphics.maxTextureHeight = lime.graphics.bgfx.BGFX.getCapsMaxTextureSize();
+		}
+
+		// bgfx has MIN/MAX blend equations on every backend (proper DARKEN/
+		// LIGHTEN). KHR-advanced blends (OVERLAY, HARDLIGHT, HSL...) are
+		// implemented as programmable blending: each complex draw blits a
+		// snapshot of the render target and evaluates the equation in a
+		// generated fragment-shader variant — snapshot-per-draw also makes
+		// them effectively coherent (no blend barriers needed)
+		__blendMinMaxSupported = true;
+		__complexBlendsSupported = true;
+		__coherentBlendsSupported = true;
+		__standardDerivativesSupported = true;
+		__sRGBWriteControlSupported = false;
+		#else
 		gl = context.__context.webgl;
 		__gl = gl;
+		#end
 
 		this.__defaultRenderTarget = defaultRenderTarget;
 		this.__flipped = (__defaultRenderTarget == null);
 
+		#if !(lime && !js)
 		if (Graphics.maxTextureWidth == null)
 		{
 			Graphics.maxTextureWidth = Graphics.maxTextureHeight = __gl.getParameter(__gl.MAX_TEXTURE_SIZE);
 		}
+		#end
 
 		#if lime
 		__matrix = new Matrix4();
@@ -132,6 +153,7 @@ class OpenGLRenderer extends DisplayObjectRenderer
 
 		__values = new Array();
 
+		#if !(lime && !js)
 		#if gl_debug
 		var ext:KHR_debug = __gl.getExtension("KHR_debug");
 		if (ext != null)
@@ -172,6 +194,7 @@ class OpenGLRenderer extends DisplayObjectRenderer
 		{
 			__standardDerivativesSupported = exts.contains("OES_standard_derivatives");
 		}
+		#end
 
 		#if (js && html5)
 		__softwareRenderer = new CanvasRenderer(null);
@@ -184,7 +207,9 @@ class OpenGLRenderer extends DisplayObjectRenderer
 		#end
 
 		__setBlendMode(NORMAL);
+		#if !(lime && !js)
 		__context3D.__setGLBlend(true);
+		#end
 
 		__clipRects = new Array();
 		__maskObjects = new Array();
@@ -424,6 +449,11 @@ class OpenGLRenderer extends DisplayObjectRenderer
 	**/
 	public function setViewport():Void
 	{
+		#if (lime && !js)
+		// bgfx view rects are set per view inside Context3D
+		return;
+		#end
+
 		__gl.viewport(__offsetX, __offsetY, __displayWidth, __displayHeight);
 	}
 
@@ -827,6 +857,30 @@ class OpenGLRenderer extends DisplayObjectRenderer
 
 			if (__offsetX > 0 || __offsetY > 0)
 			{
+				#if (lime && !js)
+				// letterbox bars: scissored clears through the Context3D API
+				if (__offsetX > 0)
+				{
+					__scissorRectangle.setTo(0, 0, __offsetX, __height);
+					__context3D.setScissorRectangle(__scissorRectangle);
+					__context3D.__clear(true, 0, 0, 0, 1, 1, 0, Context3DClearMask.COLOR);
+
+					__scissorRectangle.setTo(__offsetX + __displayWidth, 0, __width, __height);
+					__context3D.setScissorRectangle(__scissorRectangle);
+					__context3D.__clear(true, 0, 0, 0, 1, 1, 0, Context3DClearMask.COLOR);
+				}
+
+				if (__offsetY > 0)
+				{
+					__scissorRectangle.setTo(0, 0, __width, __offsetY);
+					__context3D.setScissorRectangle(__scissorRectangle);
+					__context3D.__clear(true, 0, 0, 0, 1, 1, 0, Context3DClearMask.COLOR);
+
+					__scissorRectangle.setTo(0, __offsetY + __displayHeight, __width, __height);
+					__context3D.setScissorRectangle(__scissorRectangle);
+					__context3D.__clear(true, 0, 0, 0, 1, 1, 0, Context3DClearMask.COLOR);
+				}
+				#else
 				// __context3D.__setGLScissorTest (true);
 
 				if (__offsetX > 0)
@@ -870,6 +924,7 @@ class OpenGLRenderer extends DisplayObjectRenderer
 					__gl.clear(__gl.COLOR_BUFFER_BIT);
 					// __context3D.clear (0, 0, 0, 1, 0, 0, Context3DClearMask.COLOR);
 				}
+				#end
 
 				__context3D.setScissorRectangle(null);
 			}

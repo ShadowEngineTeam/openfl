@@ -28,10 +28,14 @@ import openfl.utils.ByteArray;
 		// __format = format;
 		__optimizeForRenderToTexture = optimizeForRenderToTexture;
 
+		#if (lime && !js)
+		__ensureBGFXTexture(optimizeForRenderToTexture);
+		#else
 		__textureTarget = __context.gl.TEXTURE_2D;
 		uploadFromTypedArray(null);
 
 		if (optimizeForRenderToTexture) __getGLFramebuffer(true, 0, 0);
+		#end
 	}
 
 	/**
@@ -108,15 +112,26 @@ import openfl.utils.ByteArray;
 	**/
 	public function uploadFromTypedArray(data:ArrayBufferView):Void
 	{
+		#if (lime && !js)
+		__ensureBGFXTexture();
+		if (__bgfxTexture == -1 || data == null) return;
+
+		lime.graphics.bgfx.BGFX.updateTexture2D(__bgfxTexture, 0, 0, 0, 0, __width, __height, data);
+		#else
 		var gl = __context.gl;
 
 		__context.__bindGLTexture2D(__textureID);
 		gl.texImage2D(__textureTarget, 0, __internalFormat, __width, __height, 0, __format, gl.UNSIGNED_BYTE, data);
 		__context.__bindGLTexture2D(null);
+		#end
 	}
 
 	@:noCompletion private override function __setSamplerState(state:SamplerState):Bool
 	{
+		#if (lime && !js)
+		// anisotropy is a creation-time sampler flag in bgfx; skip for now
+		return super.__setSamplerState(state);
+		#else
 		if (super.__setSamplerState(state))
 		{
 			var gl = __context.gl;
@@ -144,5 +159,6 @@ import openfl.utils.ByteArray;
 		}
 
 		return false;
+		#end
 	}
 }

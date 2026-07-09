@@ -36,6 +36,9 @@ import openfl.utils.ByteArray;
 		__optimizeForRenderToTexture = optimizeForRenderToTexture;
 		__streamingLevels = streamingLevels;
 
+		#if (lime && !js)
+		__ensureBGFXTexture(optimizeForRenderToTexture);
+		#else
 		var gl = __context.gl;
 
 		__textureTarget = gl.TEXTURE_2D;
@@ -45,6 +48,7 @@ import openfl.utils.ByteArray;
 		__context.__bindGLTexture2D(null);
 
 		if (optimizeForRenderToTexture) __getGLFramebuffer(true, 0, 0);
+		#end
 	}
 
 	/**
@@ -239,6 +243,16 @@ import openfl.utils.ByteArray;
 	{
 		if (data == null) return;
 
+		#if (lime && !js)
+		// bgfx textures here are created without a mip chain; only the
+		// top level can be uploaded
+		if (miplevel != 0) return;
+
+		__ensureBGFXTexture();
+		if (__bgfxTexture == -1) return;
+
+		lime.graphics.bgfx.BGFX.updateTexture2D(__bgfxTexture, 0, 0, 0, 0, __bgfxTexWidth, __bgfxTexHeight, data);
+		#else
 		var gl = __context.gl;
 
 		var width = __width >> miplevel;
@@ -252,10 +266,14 @@ import openfl.utils.ByteArray;
 		__context.__bindGLTexture2D(__textureID);
 		gl.texImage2D(__textureTarget, miplevel, __internalFormat, width, height, 0, __format, gl.UNSIGNED_BYTE, data);
 		__context.__bindGLTexture2D(null);
+		#end
 	}
 
 	@:noCompletion private override function __setSamplerState(state:SamplerState):Bool
 	{
+		#if (lime && !js)
+		return super.__setSamplerState(state);
+		#else
 		if (super.__setSamplerState(state))
 		{
 			var gl = __context.gl;
@@ -289,8 +307,17 @@ import openfl.utils.ByteArray;
 		}
 
 		return false;
+		#end
 	}
 
+	#if (lime && !js)
+	@:noCompletion private function __uploadCompressedTextureFromByteArray(data:ByteArray, byteArrayOffset:UInt):Void
+	{
+		// ATF (DXT/ETC1/PVRTC containers) is not wired to bgfx; use
+		// createBCTexture/createASTCTexture for compressed textures instead
+		openfl.utils._internal.Log.warn("Texture.uploadCompressedTextureFromByteArray (ATF) is not supported on the BGFX renderer");
+	}
+	#else
 	@:noCompletion private function __uploadCompressedTextureFromByteArray(data:ByteArray, byteArrayOffset:UInt):Void
 	{
 		var reader = new ATFReader(data, byteArrayOffset);
@@ -347,4 +374,5 @@ import openfl.utils.ByteArray;
 
 		__context.__bindGLTexture2D(null);
 	}
+	#end
 }

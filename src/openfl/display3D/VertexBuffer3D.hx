@@ -5,6 +5,10 @@ import openfl.utils._internal.ArrayBufferView;
 import openfl.utils._internal.Float32Array;
 import openfl.utils.ByteArray;
 import openfl.Vector;
+#if (lime && !js)
+import lime.graphics.bgfx.BGFX;
+import lime.graphics.bgfx.BGFXVertexLayout;
+#end
 
 /**
 	The VertexBuffer3D class represents a set of vertex data uploaded to a rendering context.
@@ -55,18 +59,55 @@ class VertexBuffer3D
 	@:noCompletion private var __usage:Int;
 	@:noCompletion private var __vertexSize:Int;
 
+	#if (lime && !js)
+	// generic creation layouts keyed by data32PerVertex: only the stride
+	// matters at creation — draws override with the real attribute layout
+	// via setVertexBufferWithLayout
+	@:noCompletion private static var __bgfxGenericLayouts:Map<Int, BGFXVertexLayout> = new Map();
+	@:noCompletion private var __bgfxBuffer:Int = -1;
+	@:noCompletion private var __bgfxData:Float32Array;
+	@:noCompletion private var __bgfxDataLength:Int = 0;
+	#end
+
 	@:noCompletion private function new(context3D:Context3D, numVertices:Int, dataPerVertex:Int, bufferUsage:String)
 	{
 		__context = context3D;
 		__numVertices = numVertices;
 		__vertexSize = dataPerVertex;
+		__stride = __vertexSize * 4;
 
+		#if (lime && !js)
+		// no GPU-side buffer: draws feed transient buffers from the CPU copy
+		// (creating one here would leak — OpenFL recreates VertexBuffer3D on
+		// every growth without disposing the old one)
+		#else
 		var gl = __context.gl;
 
 		__id = gl.createBuffer();
-		__stride = __vertexSize * 4;
 		__usage = (bufferUsage == Context3DBufferUsage.DYNAMIC_DRAW) ? gl.DYNAMIC_DRAW : gl.STATIC_DRAW;
+		#end
 	}
+
+	#if (lime && !js)
+	@:noCompletion private static function __bgfxGenericLayout(dataPerVertex:Int):BGFXVertexLayout
+	{
+		var layout = __bgfxGenericLayouts.get(dataPerVertex);
+
+		if (layout == null)
+		{
+			var components = dataPerVertex > 4 ? 4 : dataPerVertex;
+
+			layout = new BGFXVertexLayout();
+			layout.begin().add(TEXCOORD7, components, FLOAT);
+			if (dataPerVertex > components) layout.skip((dataPerVertex - components) * 4);
+			layout.end();
+
+			__bgfxGenericLayouts.set(dataPerVertex, layout);
+		}
+
+		return layout;
+	}
+	#end
 
 	/**
 		Frees all resources associated with this object. After disposing a vertex
@@ -74,8 +115,16 @@ class VertexBuffer3D
 	**/
 	public function dispose():Void
 	{
+		#if (lime && !js)
+		if (__bgfxBuffer != -1)
+		{
+			BGFX.destroyDynamicVertexBuffer(__bgfxBuffer);
+			__bgfxBuffer = -1;
+		}
+		#else
 		var gl = __context.gl;
 		gl.deleteBuffer(__id);
+		#end
 	}
 
 	/**
@@ -120,6 +169,28 @@ class VertexBuffer3D
 	public function uploadFromTypedArray(data:ArrayBufferView, byteLength:Int = -1):Void
 	{
 		if (data == null) return;
+
+		#if (lime && !js)
+		// keep a CPU copy: bgfx defers dynamic buffer updates to frame
+		// execution, so re-uploading between draws inside one frame would
+		// make every draw see the last upload. Draws feed a transient
+		// buffer from this copy instead (GL-style immediate semantics).
+		var floats:Float32Array = cast data;
+		var length = Std.int(data.byteLength / 4);
+
+		if (__bgfxData == null || __bgfxData.length < length)
+		{
+			__bgfxData = new Float32Array(length);
+		}
+
+		for (i in 0...length)
+		{
+			__bgfxData[i] = floats[i];
+		}
+
+		__bgfxDataLength = length;
+		__memoryUsage = data.byteLength;
+		#else
 		var gl = __context.gl;
 
 		__context.__bindGLArrayBuffer(__id);
@@ -127,6 +198,7 @@ class VertexBuffer3D
 		else
 			gl.bufferData(gl.ARRAY_BUFFER, data, __usage);
 		__memoryUsage = data.byteLength;
+		#end
 	}
 
 	/**

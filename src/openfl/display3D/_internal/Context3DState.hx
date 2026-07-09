@@ -54,6 +54,10 @@ class Context3DState
 	// vertex buffer at?
 	public var shader:Shader; // TODO: Merge shader/program3d
 
+	// BGFX (native): framebuffer handle of a Stage3D context's back buffer
+	// texture (-1 = render to the window back buffer)
+	private var __bgfxPrimaryFrameBuffer:Int = -1;
+
 	private var __currentGLArrayBuffer:GLBuffer;
 	private var __currentGLElementArrayBuffer:GLBuffer;
 	private var __currentGLFramebuffer:GLFramebuffer;
@@ -99,7 +103,7 @@ class Context3DState
 		textures = new Array();
 		__frontFaceGLCCW = true;
 
-		#if lime
+		#if (lime && js && html5)
 		__glBlendEquation = GL.FUNC_ADD;
 		#end
 	}

@@ -14,6 +14,10 @@ import lime._internal.graphics.ImageCanvasUtil;
 import lime.graphics.Image;
 import lime.graphics.RenderContext;
 #end
+#if (lime && !js)
+import lime.graphics.bgfx.BGFX;
+import lime.graphics.bgfx.BGFXVertexLayout.BGFXTextureFormat;
+#end
 
 /**
 	The TextureBase class is the base class for Context3D texture objects.
@@ -52,11 +56,32 @@ class TextureBase extends EventDispatcher
 	@:noCompletion private var __textureTarget:Int;
 	@:noCompletion private var __width:Int;
 
+	#if (lime && !js)
+	// BGFX texture state (native): handle created lazily so render targets
+	// can get the RT flag before creation
+	@:noCompletion private var __bgfxTexture:Int = -1;
+	@:noCompletion private var __bgfxDepthTexture:Int = -1;
+	@:noCompletion private var __bgfxFrameBuffer:Int = -1;
+	@:noCompletion private var __bgfxFrameBufferDepthStencil:Bool = false;
+	// OpenFL native BitmapData image data is BGRA premultiplied
+	@:noCompletion private var __bgfxFormat:Int = BGFXTextureFormat.BGRA8;
+	@:noCompletion private var __bgfxTextureFlagsHi:Int = 0;
+	@:noCompletion private var __bgfxIsRenderTarget:Bool = false;
+	@:noCompletion private var __bgfxTexWidth:Int = 0;
+	@:noCompletion private var __bgfxTexHeight:Int = 0;
+	@:noCompletion private var __bgfxSamplerFlags:Int = BGFX.SAMPLER_UV_CLAMP;
+	#end
+
 	@:noCompletion private function new(context:Context3D)
 	{
 		super();
 
 		__context = context;
+
+		#if (lime && !js)
+		__textureContext = __context.__context;
+		__bgfxIsRenderTarget = false;
+		#else
 		var gl = __context.gl;
 		// __textureTarget = target;
 
@@ -147,10 +172,81 @@ class TextureBase extends EventDispatcher
 
 		__internalFormat = __textureInternalFormat;
 		__format = __textureFormat;
+		#end
 
 		// __memoryUsage = 0;
 		// __compressedMemoryUsage = 0;
 	}
+
+	#if (lime && !js)
+	/**
+		Creates the bgfx texture handle if it does not exist yet, optionally
+		promoting it to a render target. Promoting an existing non-RT texture
+		recreates the handle blank (callers render into it right afterwards).
+	**/
+	@:noCompletion private function __ensureBGFXTexture(renderTarget:Bool = false, width:Int = -1, height:Int = -1):Int
+	{
+		
+		if (width < 0) width = __width;
+		if (height < 0) height = __height;
+
+		var wantRT = renderTarget || __optimizeForRenderToTexture;
+		var needsRecreate = __bgfxTexture != -1 && ((wantRT && !__bgfxIsRenderTarget) || width != __bgfxTexWidth || height != __bgfxTexHeight);
+
+		if (needsRecreate)
+		{
+			if (__bgfxFrameBuffer != -1)
+			{
+				BGFX.destroyFrameBuffer(__bgfxFrameBuffer);
+				__bgfxFrameBuffer = -1;
+			}
+
+			BGFX.destroyTexture(__bgfxTexture);
+			__bgfxTexture = -1;
+		}
+
+		if (__bgfxTexture == -1 && width > 0 && height > 0)
+		{
+			__bgfxIsRenderTarget = wantRT;
+			__bgfxTexWidth = width;
+			__bgfxTexHeight = height;
+
+			var flagsHi = __bgfxTextureFlagsHi | (wantRT ? BGFX.TEXTURE_RT_HI : 0);
+			__bgfxTexture = BGFX.createTexture2D(width, height, false, 1, __bgfxFormat, flagsHi, __bgfxSamplerFlags);
+		}
+
+		return __bgfxTexture;
+	}
+
+	@:noCompletion private function __getBGFXFrameBuffer(enableDepthAndStencil:Bool, antiAlias:Int, surfaceSelector:Int):Int
+	{
+		
+
+		if (__bgfxFrameBuffer != -1 && enableDepthAndStencil && !__bgfxFrameBufferDepthStencil)
+		{
+			// depth+stencil requested after the framebuffer was created flat
+			BGFX.destroyFrameBuffer(__bgfxFrameBuffer);
+			__bgfxFrameBuffer = -1;
+		}
+
+		if (__bgfxFrameBuffer == -1)
+		{
+			__ensureBGFXTexture(true);
+			if (__bgfxTexture == -1) return -1;
+
+			if (enableDepthAndStencil && __bgfxDepthTexture == -1)
+			{
+				__bgfxDepthTexture = BGFX.createTexture2D(__bgfxTexWidth, __bgfxTexHeight, false, 1,
+					BGFXTextureFormat.D24S8, BGFX.TEXTURE_RT_HI, 0);
+			}
+
+			__bgfxFrameBuffer = BGFX.createFrameBufferFromTextures(__bgfxTexture, enableDepthAndStencil ? __bgfxDepthTexture : -1);
+			__bgfxFrameBufferDepthStencil = enableDepthAndStencil;
+		}
+
+		return __bgfxFrameBuffer;
+	}
+	#end
 
 	/**
 		Frees all GPU resources associated with this texture. After disposal, calling
@@ -158,13 +254,32 @@ class TextureBase extends EventDispatcher
 	**/
 	public function dispose():Void
 	{
-		var gl = __context.gl;
-
 		if (__alphaTexture != null)
 		{
 			__alphaTexture.dispose();
 			__alphaTexture = null;
 		}
+
+		#if (lime && !js)
+		if (__bgfxFrameBuffer != -1)
+		{
+			BGFX.destroyFrameBuffer(__bgfxFrameBuffer);
+			__bgfxFrameBuffer = -1;
+		}
+
+		if (__bgfxDepthTexture != -1)
+		{
+			BGFX.destroyTexture(__bgfxDepthTexture);
+			__bgfxDepthTexture = -1;
+		}
+
+		if (__bgfxTexture != -1)
+		{
+			BGFX.destroyTexture(__bgfxTexture);
+			__bgfxTexture = -1;
+		}
+		#else
+		var gl = __context.gl;
 
 		if (__textureID != null)
 		{
@@ -189,6 +304,7 @@ class TextureBase extends EventDispatcher
 			gl.deleteRenderbuffer(__glStencilRenderbuffer);
 			__glStencilRenderbuffer = null;
 		}
+		#end
 	}
 
 	@SuppressWarnings("checkstyle:Dynamic")
@@ -317,6 +433,41 @@ class TextureBase extends EventDispatcher
 
 	@:noCompletion private function __setSamplerState(state:SamplerState):Bool
 	{
+		#if (lime && !js)
+		if (!state.equals(__samplerState))
+		{
+			// translate to bgfx sampler flags, applied at setTexture time.
+			// bgfx cannot generate mipmaps for uploaded textures, so mip
+			// filtering degrades to sampling the top level (flags omitted).
+			var flags = 0;
+
+			switch (state.wrap)
+			{
+				case CLAMP:
+					flags |= BGFX.SAMPLER_UV_CLAMP;
+				case CLAMP_U_REPEAT_V:
+					flags |= BGFX.SAMPLER_U_CLAMP;
+				case REPEAT_U_CLAMP_V:
+					flags |= BGFX.SAMPLER_V_CLAMP;
+				case REPEAT:
+				default:
+			}
+
+			if (state.filter == NEAREST)
+			{
+				flags |= BGFX.SAMPLER_MIN_POINT | BGFX.SAMPLER_MAG_POINT;
+			}
+
+			__bgfxSamplerFlags = flags;
+
+			if (__samplerState == null) __samplerState = state.clone();
+			__samplerState.copyFrom(state);
+
+			return true;
+		}
+
+		return false;
+		#else
 		if (!state.equals(__samplerState))
 		{
 			var gl = __context.gl;
@@ -393,9 +544,20 @@ class TextureBase extends EventDispatcher
 		}
 
 		return false;
+		#end
 	}
 
-	#if lime
+	#if (lime && !js)
+	@:noCompletion private function __uploadFromImage(image:Image):Void
+	{
+		if (image == null || image.data == null) return;
+
+		__ensureBGFXTexture(false, image.buffer.width, image.buffer.height);
+		if (__bgfxTexture == -1) return;
+
+		BGFX.updateTexture2D(__bgfxTexture, 0, 0, 0, 0, image.buffer.width, image.buffer.height, image.data);
+	}
+	#elseif lime
 	@:noCompletion private function __uploadFromImage(image:Image):Void
 	{
 		var gl = __context.gl;

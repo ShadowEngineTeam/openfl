@@ -85,6 +85,7 @@ import openfl.display3D.Context3D;
 	parameters when the Shader instance is created.
 **/
 @:access(openfl.display3D.Context3D)
+@:access(openfl.display3D.Program3D)
 #if (!js && !display)
 @:generic
 #end
@@ -167,6 +168,11 @@ import openfl.display3D.Context3D;
 	{
 		if (index < 0) return;
 
+		#if (lime && !js)
+		// no persistent attribute state on the BGFX backend
+		return;
+		#end
+
 		var gl = context.gl;
 
 		if (!__isUniform)
@@ -178,9 +184,62 @@ import openfl.display3D.Context3D;
 		}
 	}
 
+	#if (lime && !js)
+	@:noCompletion private function __toFloats(value:Array<T>):Array<Float>
+	{
+		var floats = new Array<Float>();
+
+		if (value != null)
+		{
+			if (__isBool)
+			{
+				var boolValue:Array<Bool> = cast value;
+				for (i in 0...boolValue.length)
+					floats.push(boolValue[i] ? 1 : 0);
+			}
+			else if (__isInt)
+			{
+				var intValue:Array<Int> = cast value;
+				for (i in 0...intValue.length)
+					floats.push(intValue[i]);
+			}
+			else
+			{
+				var floatValue:Array<Float> = cast value;
+				for (i in 0...floatValue.length)
+					floats.push(floatValue[i]);
+			}
+		}
+
+		return floats;
+	}
+	#end
+
 	@:noCompletion private function __updateGL(context:Context3D, overrideValue:Array<T> = null):Void
 	{
 		if (index < 0) return;
+
+		#if (lime && !js)
+		var program = context.__state.program;
+		if (program == null) return;
+
+		var value = overrideValue != null ? overrideValue : this.value;
+
+		if (__isUniform)
+		{
+			var floats = __toFloats(value);
+			var count = __length > floats.length ? __length : floats.length;
+			program.__bgfxSetUniformFloats(index, floats, count);
+		}
+		else if (!__useArray && (value == null || value.length == __length))
+		{
+			context.__bgfxSetConstantAttrib(index, __toFloats(value));
+		}
+		// per-vertex data arrives via setVertexBufferAt / the ShaderBuffer
+		// param stream instead
+
+		return;
+		#end
 
 		#if lime
 		var gl = context.gl;
@@ -417,6 +476,39 @@ import openfl.display3D.Context3D;
 	@:noCompletion private function __updateGLFromBuffer(context:Context3D, buffer:Float32Array, position:Int, length:Int, bufferOffset:Int):Void
 	{
 		if (index < 0) return;
+
+		#if (lime && !js)
+		var program = context.__state.program;
+		if (program == null) return;
+
+		if (__isUniform)
+		{
+			if (length >= __length)
+			{
+				program.__bgfxSetUniformFromBuffer(index, buffer, position, __length);
+			}
+		}
+		else if (!__internal && (length == 0 || length == __length))
+		{
+			// constant attribute sourced from the param buffer
+			var floats = new Array<Float>();
+
+			if (length > 0)
+			{
+				for (i in 0...__length)
+					floats.push(buffer[position + i]);
+			}
+
+			context.__bgfxSetConstantAttrib(index, floats);
+		}
+		else
+		{
+			// per-vertex attribute inside the ShaderBuffer param data
+			context.__bgfxSetParamAttrib(index, position + bufferOffset * __length, __length);
+		}
+
+		return;
+		#end
 
 		#if lime
 		var gl = context.gl;

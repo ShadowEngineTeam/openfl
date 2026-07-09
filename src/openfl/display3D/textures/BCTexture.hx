@@ -5,6 +5,10 @@ import haxe.io.Bytes;
 import openfl.utils._internal.UInt8Array;
 import openfl.utils.ByteArray;
 import openfl.Lib;
+#if (lime && !js)
+import lime.graphics.bgfx.BGFX;
+import lime.graphics.bgfx.BGFXVertexLayout.BGFXTextureFormat;
+#end
 
 /**
 	The BCTexture class represents a 2-dimensional compressed BCn texture uploaded to a rendering context.
@@ -38,9 +42,34 @@ import openfl.Lib;
 	{
 		super(context);
 
-		var gl = __context.gl;
-
 		__detectBCFormat(data);
+
+		#if (lime && !js)
+		// bgfx accepts BCn on every renderer: when the GPU lacks hardware
+		// support, bimg decodes the blocks in software at upload, so no
+		// extension gate is needed. Signed variants (BC4/BC5 SNORM, BC6H
+		// SF16) are first-class formats in the vendored bgfx.
+		__getImageDimensions(data);
+		__computeImageSize();
+
+		__bgfxFormat = switch (__bcFormat)
+		{
+			case "BC1": BGFXTextureFormat.BC1;
+			case "BC2": BGFXTextureFormat.BC2;
+			case "BC3": BGFXTextureFormat.BC3;
+			case "BC4": __isSigned ? BGFXTextureFormat.BC4S : BGFXTextureFormat.BC4;
+			case "BC5": __isSigned ? BGFXTextureFormat.BC5S : BGFXTextureFormat.BC5;
+			case "BC6H": __isSigned ? BGFXTextureFormat.BC6HS : BGFXTextureFormat.BC6H;
+			default: BGFXTextureFormat.BC7;
+		}
+
+		__bgfxTextureFlagsHi = __isSRGB ? BGFX.TEXTURE_SRGB_HI : 0;
+		__optimizeForRenderToTexture = false;
+		__streamingLevels = 0;
+
+		__uploadBCTextureFromByteArray(data);
+		#else
+		var gl = __context.gl;
 
 		var dxt1Extension = __getExtension(gl, ["EXT_texture_compression_dxt1", "WEBGL_compressed_texture_s3tc",
 			"MOZ_WEBGL_compressed_texture_s3tc", "WEBKIT_WEBGL_compressed_texture_s3tc"]);
@@ -112,6 +141,7 @@ import openfl.Lib;
 		__streamingLevels = 0;
 
 		__uploadBCTextureFromByteArray(data);
+		#end
 	}
 
 	@:noCompletion private static function __getExtension(gl:Dynamic, names:Array<String>):Dynamic
@@ -124,6 +154,20 @@ import openfl.Lib;
 		return null;
 	}
 
+	#if (lime && !js)
+	private function __uploadBCTextureFromByteArray(data:ByteArray):Void
+	{
+		var bytes:Bytes = cast data;
+		var dataOffset = __isDX10 ? DX10_HEADER_SIZE : DDS_HEADER_SIZE;
+		var textureBytes = new UInt8Array(bytes, dataOffset, imageSize);
+
+		__bgfxTexWidth = __width;
+		__bgfxTexHeight = __height;
+		__bgfxTexture = BGFX.createTexture2D(__width, __height, false, 1, __bgfxFormat, __bgfxTextureFlagsHi, __bgfxSamplerFlags, textureBytes);
+
+		if (__bgfxTexture == -1) supported = false;
+	}
+	#else
 	private function __uploadBCTextureFromByteArray(data:ByteArray):Void
 	{
 		var gl = __context.gl;
@@ -140,6 +184,7 @@ import openfl.Lib;
 
 		__context.__bindGLTexture2D(null);
 	}
+	#end
 
 	private function __getImageDimensions(bytes:ByteArray):Void
 	{

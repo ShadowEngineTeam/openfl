@@ -5,6 +5,9 @@ import openfl.utils._internal.ArrayBufferView;
 import openfl.utils._internal.UInt16Array;
 import openfl.utils.ByteArray;
 import openfl.Vector;
+#if (lime && !js)
+import lime.graphics.bgfx.BGFX;
+#end
 
 /**
 	IndexBuffer3D is used to represent lists of vertex indices comprising graphic elements
@@ -30,15 +33,26 @@ import openfl.Vector;
 	@:noCompletion private var __tempUInt16Array:UInt16Array;
 	@:noCompletion private var __usage:Int;
 
+	#if (lime && !js)
+	@:noCompletion private var __bgfxBuffer:Int = -1;
+	@:noCompletion private var __bgfxData:UInt16Array;
+	@:noCompletion private var __bgfxDataLength:Int = 0;
+	#end
+
 	@:noCompletion private function new(context3D:Context3D, numIndices:Int, bufferUsage:Context3DBufferUsage)
 	{
 		__context = context3D;
 		__numIndices = numIndices;
 
+		#if (lime && !js)
+		// no GPU-side buffer: draws feed transient buffers from the CPU copy
+		// (avoids leaking handles when OpenFL recreates buffers on growth)
+		#else
 		var gl = __context.gl;
 		__id = gl.createBuffer();
 
 		__usage = (bufferUsage == Context3DBufferUsage.DYNAMIC_DRAW) ? gl.DYNAMIC_DRAW : gl.STATIC_DRAW;
+		#end
 	}
 
 	/**
@@ -47,8 +61,16 @@ import openfl.Vector;
 	**/
 	public function dispose():Void
 	{
+		#if (lime && !js)
+		if (__bgfxBuffer != -1)
+		{
+			BGFX.destroyDynamicIndexBuffer(__bgfxBuffer);
+			__bgfxBuffer = -1;
+		}
+		#else
 		var gl = __context.gl;
 		gl.deleteBuffer(__id);
+		#end
 	}
 
 	/**
@@ -89,12 +111,33 @@ import openfl.Vector;
 	public function uploadFromTypedArray(data:ArrayBufferView, byteLength:Int = -1):Void
 	{
 		if (data == null) return;
+
+		#if (lime && !js)
+		// CPU copy for GL-style immediate upload semantics (see
+		// VertexBuffer3D); draws feed a transient index buffer from this
+		var shorts:UInt16Array = cast data;
+		var length = Std.int(data.byteLength / 2);
+
+		if (__bgfxData == null || __bgfxData.length < length)
+		{
+			__bgfxData = new UInt16Array(length);
+		}
+
+		for (i in 0...length)
+		{
+			__bgfxData[i] = shorts[i];
+		}
+
+		__bgfxDataLength = length;
+		__memoryUsage = data.byteLength;
+		#else
 		var gl = __context.gl;
 		__context.__bindGLElementArrayBuffer(__id);
 		if (__memoryUsage == data.byteLength) gl.bufferSubData(gl.ELEMENT_ARRAY_BUFFER, 0, data);
 		else
 			gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, data, __usage);
 		__memoryUsage = data.byteLength;
+		#end
 	}
 
 	/**

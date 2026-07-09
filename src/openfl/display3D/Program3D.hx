@@ -15,6 +15,9 @@ import openfl.Vector;
 import lime.graphics.opengl.GL;
 import lime.utils.BytePointer;
 #end
+#if (lime && !js)
+import lime.graphics.bgfx.BGFX;
+#end
 
 /**
 	The Program3D class represents a pair of rendering programs (also called "shaders")
@@ -71,6 +74,240 @@ import lime.utils.BytePointer;
 	@:noCompletion private var __glVertexSource:String;
 	// @:noCompletion private var __memUsage:Int;
 	@:noCompletion private var __samplerStates:Array<SamplerState>;
+
+	#if (lime && !js)
+	// BGFX program state (native): handle + uniform staging flushed per submit
+	@:noCompletion private var __bgfxProgram:Int = -1;
+	@:noCompletion private var __bgfxTranslated:openfl.display3D._internal.BGFXGLSLTranslator.BGFXTranslatedProgram;
+	@:noCompletion private var __bgfxVertexGLSL:String;
+	@:noCompletion private var __bgfxFragmentGLSL:String;
+	@:noCompletion private var __bgfxComplexPrograms:Map<Int, Int>;
+	@:noCompletion private var __bgfxDstSampler:Int = -1;
+	@:noCompletion private var __bgfxDstSamplerStage:Int = -1;
+	@:noCompletion private var __bgfxUniformHandles:Array<Int>;
+	@:noCompletion private var __bgfxUniformStaging:Array<openfl.utils._internal.Float32Array>;
+	@:noCompletion private var __bgfxUniformDirty:Array<Bool>;
+	@:noCompletion private var __bgfxUniformVec4Counts:Array<Int>; // vec4 regs (0 = mat3, -1 = mat4)
+	@:noCompletion private var __bgfxSamplerHandles:Array<Int>;
+
+	@:noCompletion private function __uploadBGFX(vertexGLSL:String, fragmentGLSL:String):Bool
+	{
+		__bgfxVertexGLSL = vertexGLSL;
+		__bgfxFragmentGLSL = fragmentGLSL;
+
+		var translated = openfl.display3D._internal.BGFXGLSLTranslator.translate(vertexGLSL, fragmentGLSL);
+		__bgfxTranslated = translated;
+
+		var vs = BGFX.compileShader(translated.vertexSC, "v", null, null, translated.varyingDef);
+		if (vs == null)
+		{
+			Log.error("BGFX vertex shader failed:\n" + BGFX.getShaderCompileMessages() + "\n" + translated.vertexSC);
+			return false;
+		}
+
+		var fs = BGFX.compileShader(translated.fragmentSC, "f", null, null, translated.varyingDef);
+		if (fs == null)
+		{
+			Log.error("BGFX fragment shader failed:\n" + BGFX.getShaderCompileMessages() + "\n" + translated.fragmentSC);
+			return false;
+		}
+
+		__bgfxProgram = BGFX.createProgram(BGFX.createShader(vs), BGFX.createShader(fs), true);
+
+		__bgfxUniformHandles = [];
+		__bgfxUniformStaging = [];
+		__bgfxUniformDirty = [];
+		__bgfxUniformVec4Counts = [];
+		__bgfxSamplerHandles = [];
+
+		for (i in 0...translated.uniformNames.length)
+		{
+			var glslType = translated.uniformGLSLTypes[i];
+			var arrayLength = translated.uniformArrayLengths[i];
+			var name = translated.uniformNames[i];
+			var handle:Int, floats:Int, vec4Count:Int;
+
+			switch (glslType)
+			{
+				case "mat4":
+					handle = BGFX.createUniform(name, MAT4, arrayLength > 0 ? arrayLength : 1);
+					floats = 16 * (arrayLength > 0 ? arrayLength : 1);
+					vec4Count = -1;
+				case "mat3":
+					handle = BGFX.createUniform(name, MAT3, arrayLength > 0 ? arrayLength : 1);
+					floats = 9 * (arrayLength > 0 ? arrayLength : 1);
+					vec4Count = 0;
+				case "vec4":
+					handle = BGFX.createUniform(name, VEC4, arrayLength > 0 ? arrayLength : 1);
+					floats = 4 * (arrayLength > 0 ? arrayLength : 1);
+					vec4Count = arrayLength > 0 ? arrayLength : 1;
+				default:
+					// packed scalar/small vector: the translator renamed the
+					// uniform to name_ofl4 (vec4); arrays stay under their name
+					var uniformName = arrayLength > 0 ? name : name + "_ofl4";
+					handle = BGFX.createUniform(uniformName, VEC4, arrayLength > 0 ? arrayLength : 1);
+					floats = 4 * (arrayLength > 0 ? arrayLength : 1);
+					vec4Count = arrayLength > 0 ? arrayLength : 1;
+			}
+
+			__bgfxUniformHandles.push(handle);
+			__bgfxUniformStaging.push(new openfl.utils._internal.Float32Array(floats));
+			__bgfxUniformDirty.push(false);
+			__bgfxUniformVec4Counts.push(vec4Count);
+		}
+
+		for (name in translated.samplerNames)
+		{
+			__bgfxSamplerHandles.push(BGFX.createUniform(name, SAMPLER, 1));
+		}
+
+		// pre-create the complex-blend snapshot sampler so the handle exists
+		// before any program (base or variant) references the name
+		__bgfxDstSampler = BGFX.createUniform("openfl_DstSampler", SAMPLER, 1);
+		__bgfxDstSamplerStage = translated.samplerNames.length;
+
+		// expose reflection data the GLSL bookkeeping expects
+		__glslAttribNames = translated.attribNames.copy();
+		__glslSamplerNames = translated.samplerNames.copy();
+		__glslUniformNames = translated.uniformNames.copy();
+
+		return true;
+	}
+
+	/** index of a uniform name in the staging tables, or -1 (stripped/unknown) **/
+	@:noCompletion private function __bgfxUniformIndex(name:String):Int
+	{
+		if (__bgfxTranslated == null) return -1;
+		return __bgfxTranslated.uniformNames.indexOf(name);
+	}
+
+	/** index of a sampler name = its texture stage, or -1 **/
+	@:noCompletion private function __bgfxSamplerIndex(name:String):Int
+	{
+		if (__bgfxTranslated == null) return -1;
+		return __bgfxTranslated.samplerNames.indexOf(name);
+	}
+
+	/**
+		Lazily compiled fragment-shader variant that evaluates a KHR advanced
+		blend equation against the sampled render target. Returns the bgfx
+		program handle, or -1 when compilation failed.
+	**/
+	@:noCompletion private function __bgfxGetComplexProgram(mode:Int):Int
+	{
+		if (__bgfxVertexGLSL == null) return -1;
+		if (__bgfxComplexPrograms == null) __bgfxComplexPrograms = new Map();
+
+		var cached = __bgfxComplexPrograms.get(mode);
+		if (cached != null) return cached;
+
+		var translated = openfl.display3D._internal.BGFXGLSLTranslator.translate(__bgfxVertexGLSL, __bgfxFragmentGLSL, mode);
+		var program = -1;
+
+		var vs = BGFX.compileShader(translated.vertexSC, "v", null, null, translated.varyingDef);
+		var fs = vs != null ? BGFX.compileShader(translated.fragmentSC, "f", null, null, translated.varyingDef) : null;
+
+		if (fs != null)
+		{
+			#if openfl_bgfx_debug_shaders
+			sys.io.File.saveContent("complex-blend-ok-" + StringTools.hex(mode) + ".txt", translated.fragmentSC);
+			#end
+			program = BGFX.createProgram(BGFX.createShader(vs), BGFX.createShader(fs), true);
+			__bgfxDstSamplerStage = translated.dstSamplerStage;
+
+			if (__bgfxDstSampler == -1)
+			{
+				__bgfxDstSampler = BGFX.createUniform("openfl_DstSampler", SAMPLER, 1);
+			}
+		}
+		else
+		{
+			Log.warn("BGFX complex blend shader variant failed:\n" + BGFX.getShaderCompileMessages());
+			#if openfl_bgfx_debug_shaders
+			sys.io.File.saveContent("complex-blend-fail-" + StringTools.hex(mode) + ".txt",
+				BGFX.getShaderCompileMessages() + "\n---- vertex ----\n" + translated.vertexSC + "\n---- fragment ----\n" + translated.fragmentSC);
+			#end
+		}
+
+		__bgfxComplexPrograms.set(mode, program);
+		return program;
+	}
+
+	/** submit-time flush of dirty staged uniforms **/
+	@:noCompletion private function __bgfxFlushUniforms():Void
+	{
+		
+
+		for (i in 0...__bgfxUniformHandles.length)
+		{
+			if (__bgfxUniformDirty[i])
+			{
+				var count = __bgfxUniformVec4Counts[i];
+				BGFX.setUniform(__bgfxUniformHandles[i], __bgfxUniformStaging[i], count > 0 ? count : 1);
+				// bgfx encoder state resets after submit; keep dirty so the
+				// next draw with this program re-applies the values
+			}
+		}
+	}
+
+	@:noCompletion private function __bgfxSetUniformFloats(index:Int, values:Array<Float>, count:Int):Void
+	{
+		if (index < 0 || __bgfxUniformStaging == null || index >= __bgfxUniformStaging.length) return;
+
+		var staging = __bgfxUniformStaging[index];
+		if (count > staging.length) count = staging.length;
+
+		for (i in 0...count)
+		{
+			staging[i] = (values != null && i < values.length) ? values[i] : 0;
+		}
+
+		__bgfxUniformDirty[index] = true;
+	}
+
+	@:noCompletion private function __bgfxSetUniformFromBuffer(index:Int, buffer:openfl.utils._internal.Float32Array, position:Int, count:Int):Void
+	{
+		if (index < 0 || __bgfxUniformStaging == null || index >= __bgfxUniformStaging.length) return;
+
+		var staging = __bgfxUniformStaging[index];
+		if (count > staging.length) count = staging.length;
+
+		for (i in 0...count)
+		{
+			staging[i] = buffer[position + i];
+		}
+
+		__bgfxUniformDirty[index] = true;
+	}
+
+	@:noCompletion private function __bgfxSetUniformMatrix(index:Int, rawData:Vector<Float>, transposed:Bool):Void
+	{
+		if (index < 0 || __bgfxUniformStaging == null || index >= __bgfxUniformStaging.length) return;
+
+		var staging = __bgfxUniformStaging[index];
+		if (staging.length < 16) return;
+
+		if (transposed)
+		{
+			for (row in 0...4)
+			{
+				for (column in 0...4)
+				{
+					staging[row * 4 + column] = rawData[column * 4 + row];
+				}
+			}
+		}
+		else
+		{
+			for (i in 0...16)
+			{
+				staging[i] = rawData[i];
+			}
+		}
+
+		__bgfxUniformDirty[index] = true;
+	}
+	#end
 
 	@:noCompletion private function new(context3D:Context3D, format:Context3DProgramFormat)
 	{
@@ -395,9 +632,17 @@ import lime.utils.BytePointer;
 			Log.info(glslFragment);
 		}
 
+		#if (lime && !js)
+		// AGAL programs run through the same GLSL → bgfx path; the register
+		// constant API (setProgramConstantsFrom*) is not wired up yet, so
+		// AGAL content renders but only with default uniform values
+		__deleteShaders();
+		__uploadBGFX(glslVertex, glslFragment);
+		#else
 		__deleteShaders();
 		__uploadFromGLSL(glslVertex, glslFragment);
 		__buildAGALUniformList();
+		#end
 
 		for (i in 0...samplerStates.length)
 		{
@@ -433,6 +678,21 @@ import lime.utils.BytePointer;
 		__processGLSLData(vertexSource, "attribute");
 		__processGLSLData(vertexSource, "uniform");
 		__processGLSLData(fragmentSource, "uniform");
+
+		#if (lime && !js)
+		__deleteShaders();
+		__uploadBGFX(vertexSource, fragmentSource);
+
+		// locations are staging-table indices on the BGFX backend
+		__glslUniformLocations = [];
+
+		for (i in 0...__glslUniformNames.length)
+		{
+			__glslUniformLocations[i] = cast __bgfxUniformIndex(__glslUniformNames[i]);
+		}
+
+		return;
+		#end
 
 		__deleteShaders();
 		__uploadFromGLSL(vertex, fragment);
@@ -580,6 +840,37 @@ import lime.utils.BytePointer;
 
 	@:noCompletion private function __deleteShaders():Void
 	{
+		#if (lime && !js)
+		if (__bgfxProgram != -1)
+		{
+			BGFX.destroyProgram(__bgfxProgram);
+			__bgfxProgram = -1;
+		}
+
+		if (__bgfxUniformHandles != null)
+		{
+			for (handle in __bgfxUniformHandles)
+			{
+				BGFX.destroyUniform(handle);
+			}
+
+			__bgfxUniformHandles = null;
+		}
+
+		if (__bgfxSamplerHandles != null)
+		{
+			for (handle in __bgfxSamplerHandles)
+			{
+				BGFX.destroyUniform(handle);
+			}
+
+			__bgfxSamplerHandles = null;
+		}
+
+		__bgfxTranslated = null;
+		return;
+		#end
+
 		var gl = __context.gl;
 
 		if (__glProgram != null)
@@ -644,6 +935,11 @@ import lime.utils.BytePointer;
 
 	@:noCompletion private function __enable():Void
 	{
+		#if (lime && !js)
+		// bgfx binds the program at submit time
+		return;
+		#end
+
 		var gl = __context.gl;
 		gl.useProgram(__glProgram);
 
@@ -949,7 +1245,10 @@ import lime.utils.BytePointer;
 
 	public function flush():Void
 	{
-		#if lime
+		#if (lime && !js)
+		// AGAL register uniforms are not wired to the BGFX backend yet
+		return;
+		#elseif lime
 		#if (js && html5)
 		var gl = context.gl;
 		#else

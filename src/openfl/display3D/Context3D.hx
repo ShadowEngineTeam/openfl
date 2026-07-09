@@ -36,6 +36,10 @@ import lime.graphics.WebGLRenderContext;
 import lime.math.Rectangle as LimeRectangle;
 import lime.math.Vector2;
 #end
+#if (lime && !js)
+import lime.graphics.bgfx.BGFX;
+import lime.graphics.bgfx.BGFXVertexLayout;
+#end
 
 /**
 	The Context3D class provides a context for rendering geometrically defined graphics.
@@ -294,7 +298,7 @@ import lime.math.Vector2;
 		__context = stage.window.context;
 		#if (js && html5 && dom)
 		gl = GL.context;
-		#else
+		#elseif (js && html5)
 		gl = __context.webgl;
 		#end
 
@@ -320,6 +324,14 @@ import lime.math.Vector2;
 		maxBackBufferWidth = __glMaxViewportDims;
 		maxBackBufferHeight = __glMaxViewportDims;
 
+		#if (lime && !js)
+		if (__driverInfo == null)
+		{
+			__driverInfo = "BGFX (renderer type " + (BGFX.rendererType : Int) + ")";
+		}
+
+		driverInfo = __driverInfo;
+		#else
 		if (__glMaxTextureMaxAnisotropy == -1)
 		{
 			var extension:Dynamic = gl.getExtension("EXT_texture_filter_anisotropic");
@@ -398,6 +410,7 @@ import lime.math.Vector2;
 		}
 
 		driverInfo = __driverInfo;
+		#end
 
 		__quadIndexBufferElements = Math.floor(0xFFFF / 4);
 		__quadIndexBufferCount = __quadIndexBufferElements * 6;
@@ -467,6 +480,33 @@ import lime.math.Vector2;
 	@:noCompletion private function __clear(useScissor:Bool, red:Float = 0, green:Float = 0, blue:Float = 0, alpha:Float = 1, depth:Float = 1,
 			stencil:UInt = 0, mask:UInt = Context3DClearMask.ALL)
 	{
+		#if (lime && !js)
+		var clearFlags = 0;
+
+		if (mask & Context3DClearMask.COLOR != 0)
+		{
+			if (__state.renderToTexture == null)
+			{
+				if (__stage.context3D == this && !__stage.__renderer.__cleared) __stage.__renderer.__cleared = true;
+				__cleared = true;
+			}
+
+			clearFlags |= BGFX.CLEAR_COLOR;
+		}
+
+		if (mask & Context3DClearMask.DEPTH != 0) clearFlags |= BGFX.CLEAR_DEPTH;
+		if (mask & Context3DClearMask.STENCIL != 0) clearFlags |= BGFX.CLEAR_STENCIL;
+
+		if (clearFlags == 0) return;
+
+		var clearColor = (Std.int(red * 255) << 24) | (Std.int(green * 255) << 16) | (Std.int(blue * 255) << 8) | Std.int(alpha * 255);
+
+		// clears always allocate a fresh view (view-level operation in bgfx)
+		__bgfxViewValid = false;
+		__bgfxEnsureView(clearFlags, clearColor, depth, stencil, useScissor);
+		return;
+		#end
+
 		__flushGLFramebuffer();
 		__flushGLViewport();
 
@@ -611,6 +651,19 @@ import lime.math.Vector2;
 			__state.backBufferEnableDepthAndStencil = enableDepthAndStencil;
 			__backBufferWantsBestResolution = wantsBestResolution;
 			__backBufferWantsBestResolutionOnBrowserZoom = wantsBestResolutionOnBrowserZoom;
+
+			#if (lime && !js)
+			var scaledWidth = width;
+			var scaledHeight = height;
+			#if !openfl_dpi_aware
+			if (!wantsBestResolution)
+			{
+				scaledWidth = Std.int(width * __stage.window.scale);
+				scaledHeight = Std.int(height * __stage.window.scale);
+			}
+			#end
+			__bgfxEnsureMainTarget(scaledWidth, scaledHeight);
+			#end
 		}
 		else
 		{
@@ -676,8 +729,13 @@ import lime.math.Vector2;
 			__state.backBufferEnableDepthAndStencil = enableDepthAndStencil;
 			__backBufferWantsBestResolution = wantsBestResolution;
 			__backBufferWantsBestResolutionOnBrowserZoom = wantsBestResolutionOnBrowserZoom;
+			#if (lime && !js)
+			__state.__bgfxPrimaryFrameBuffer = __backBufferTexture.__getBGFXFrameBuffer(enableDepthAndStencil, antiAlias, 0);
+			__frontBufferTexture.__getBGFXFrameBuffer(enableDepthAndStencil, antiAlias, 0);
+			#else
 			__state.__primaryGLFramebuffer = __backBufferTexture.__getGLFramebuffer(enableDepthAndStencil, antiAlias, 0);
 			__frontBufferTexture.__getGLFramebuffer(enableDepthAndStencil, antiAlias, 0);
+			#end
 		}
 	}
 
@@ -1235,6 +1293,11 @@ import lime.math.Vector2;
 	**/
 	public function drawTriangles(indexBuffer:IndexBuffer3D, firstIndex:Int = 0, numTriangles:Int = -1):Void
 	{
+		#if (lime && !js)
+		__bgfxDraw(indexBuffer, firstIndex, (numTriangles == -1) ? indexBuffer.__numIndices : (numTriangles * 3));
+		return;
+		#end
+
 		#if !openfl_disable_display_render
 		if (__state.renderToTexture == null)
 		{
@@ -1314,9 +1377,32 @@ import lime.math.Vector2;
 			__backBufferTexture = __frontBufferTexture;
 			__frontBufferTexture = cacheBuffer;
 
+			#if (lime && !js)
+			__state.__bgfxPrimaryFrameBuffer = __backBufferTexture.__getBGFXFrameBuffer(__state.backBufferEnableDepthAndStencil, __backBufferAntiAlias, 0);
+			#else
 			__state.__primaryGLFramebuffer = __backBufferTexture.__getGLFramebuffer(__state.backBufferEnableDepthAndStencil, __backBufferAntiAlias, 0);
+			#end
 			__cleared = false;
 		}
+
+		#if (lime && !js)
+		// the stage's primary context owns the frame: composite the offscreen
+		// main target to the backbuffer, then one bgfx frame per lime render
+		// event, and the view counter starts over
+		if (__stage3D == null && __stage.context3D == this)
+		{
+			__bgfxComposite();
+			BGFX.frame();
+			__bgfxNextViewId = 0;
+
+			// bgfx transient slots are frame-scoped
+			__bgfxExtraSlot = -1;
+			__bgfxExtraSlotKey = null;
+		}
+
+		__bgfxViewValid = false;
+		__bgfxCurrentFrameBuffer = -2;
+		#end
 
 		__present = true;
 	}
@@ -1367,8 +1453,15 @@ import lime.math.Vector2;
 		__state.blendSourceAlphaFactor = sourceAlphaFactor;
 		__state.blendDestinationAlphaFactor = destinationAlphaFactor;
 
+		#if (lime && !js)
+		// setting blend factors resets the equation, matching the GL path
+		__bgfxBlendEquationHi = BGFX.STATE_BLEND_EQUATION_ADD_HI;
+		__bgfxBlendEquationLo = BGFX.STATE_BLEND_EQUATION_ADD_LO;
+		__bgfxComplexBlend = 0;
+		#else
 		// TODO: Better way to handle this?
 		__setGLBlendEquation(gl.FUNC_ADD);
+		#end
 	}
 
 	/**
@@ -1546,6 +1639,11 @@ import lime.math.Vector2;
 		#if lime
 		if (__state.program != null && __state.program.__format == GLSL)
 		{
+			#if (lime && !js)
+			// firstRegister is the uniform's index in the program's staging
+			// tables (assigned by Shader.__initGL on native)
+			__state.program.__bgfxSetUniformMatrix(cast firstRegister, matrix.rawData, transposedMatrix);
+			#else
 			__flushGLProgram();
 
 			// TODO: Cache value, prevent need to copy
@@ -1556,6 +1654,7 @@ import lime.math.Vector2;
 			}
 
 			gl.uniformMatrix4fv(cast firstRegister, transposedMatrix, data);
+			#end
 		}
 		else
 		{
@@ -2009,6 +2108,17 @@ import lime.math.Vector2;
 	{
 		if (index < 0) return;
 
+		#if (lime && !js)
+		if (buffer == null)
+		{
+			__bgfxSetVertexBufferAt(index, null, 0, FLOAT_4);
+			return;
+		}
+
+		__bgfxSetVertexBufferAt(index, buffer, bufferOffset * 4, format);
+		return;
+		#end
+
 		if (buffer == null)
 		{
 			gl.disableVertexAttribArray(index);
@@ -2120,6 +2230,11 @@ import lime.math.Vector2;
 
 	@:noCompletion private function __drawTriangles(firstIndex:Int = 0, count:Int):Void
 	{
+		#if (lime && !js)
+		__bgfxDraw(null, firstIndex, count);
+		return;
+		#end
+
 		#if !openfl_disable_display_render
 		if (__state.renderToTexture == null)
 		{
@@ -2335,6 +2450,11 @@ import lime.math.Vector2;
 
 	@:noCompletion private function __flushGLProgram():Void
 	{
+		#if (lime && !js)
+		// bgfx binds the program at submit time; nothing to flush here
+		return;
+		#end
+
 		var shader = __state.shader;
 		var program = __state.program;
 
@@ -2458,6 +2578,11 @@ import lime.math.Vector2;
 
 	@:noCompletion private function __flushGLTextures():Void
 	{
+		#if (lime && !js)
+		// bgfx binds textures at submit time; nothing to flush here
+		return;
+		#end
+
 		var sampler = 0;
 		var texture:TextureBase;
 		var samplerState:SamplerState;
@@ -2725,6 +2850,7 @@ import lime.math.Vector2;
 
 	@:noCompletion private function __setGLBlend(enable:Bool):Void
 	{
+		#if (lime && !js) return; #end
 		if (#if openfl_disable_context_cache true #else __contextState.__enableGLBlend != enable #end)
 		{
 			if (enable)
@@ -2741,6 +2867,41 @@ import lime.math.Vector2;
 
 	@:noCompletion private function __setGLBlendEquation(value:Int):Void
 	{
+		#if (lime && !js)
+		// map the GL blend equation enums OpenGLRenderer passes as literals.
+		// KHR advanced equations (0x92xx) select a shader-blend variant that
+		// samples a blitted snapshot of the render target
+		if (value >= 0x9294 && value <= 0x92B0)
+		{
+			__bgfxComplexBlend = value;
+			__bgfxBlendEquationHi = BGFX.STATE_BLEND_EQUATION_ADD_HI;
+			__bgfxBlendEquationLo = BGFX.STATE_BLEND_EQUATION_ADD_LO;
+			return;
+		}
+
+		__bgfxComplexBlend = 0;
+
+		switch (value)
+		{
+			case 0x8007: // GL_MIN
+				__bgfxBlendEquationHi = BGFX.STATE_BLEND_EQUATION_MIN_HI;
+				__bgfxBlendEquationLo = BGFX.STATE_BLEND_EQUATION_MIN_LO;
+			case 0x8008: // GL_MAX
+				__bgfxBlendEquationHi = BGFX.STATE_BLEND_EQUATION_MAX_HI;
+				__bgfxBlendEquationLo = BGFX.STATE_BLEND_EQUATION_MAX_LO;
+			case 0x800A: // GL_FUNC_SUBTRACT
+				__bgfxBlendEquationHi = BGFX.STATE_BLEND_EQUATION_SUB_HI;
+				__bgfxBlendEquationLo = BGFX.STATE_BLEND_EQUATION_SUB_LO;
+			case 0x800B: // GL_FUNC_REVERSE_SUBTRACT
+				__bgfxBlendEquationHi = BGFX.STATE_BLEND_EQUATION_REVSUB_HI;
+				__bgfxBlendEquationLo = BGFX.STATE_BLEND_EQUATION_REVSUB_LO;
+			default: // GL_FUNC_ADD / unsupported
+				__bgfxBlendEquationHi = BGFX.STATE_BLEND_EQUATION_ADD_HI;
+				__bgfxBlendEquationLo = BGFX.STATE_BLEND_EQUATION_ADD_LO;
+		}
+		return;
+		#end
+
 		if (#if openfl_disable_context_cache true #else __contextState.__glBlendEquation != value #end)
 		{
 			gl.blendEquation(value);
@@ -2750,6 +2911,7 @@ import lime.math.Vector2;
 
 	@:noCompletion private function __setGLCullFace(enable:Bool):Void
 	{
+		#if (lime && !js) return; #end
 		if (#if openfl_disable_context_cache true #else __contextState.__enableGLCullFace != enable #end)
 		{
 			if (enable)
@@ -2766,6 +2928,7 @@ import lime.math.Vector2;
 
 	@:noCompletion private function __setGLDepthTest(enable:Bool):Void
 	{
+		#if (lime && !js) return; #end
 		if (#if openfl_disable_context_cache true #else __contextState.__enableGLDepthTest != enable #end)
 		{
 			if (enable)
@@ -2782,6 +2945,7 @@ import lime.math.Vector2;
 
 	@:noCompletion private function __setGLFrontFace(counterClockWise:Bool):Void
 	{
+		#if (lime && !js) return; #end
 		if (#if openfl_disable_context_cache true #else __contextState.__frontFaceGLCCW != counterClockWise #end)
 		{
 			gl.frontFace(counterClockWise ? gl.CCW : gl.CW);
@@ -2791,6 +2955,7 @@ import lime.math.Vector2;
 
 	@:noCompletion private function __setGLScissorTest(enable:Bool):Void
 	{
+		#if (lime && !js) return; #end
 		if (#if openfl_disable_context_cache true #else __contextState.__enableGLScissorTest != enable #end)
 		{
 			if (enable)
@@ -2807,6 +2972,7 @@ import lime.math.Vector2;
 
 	@:noCompletion private function __setGLStencilTest(enable:Bool):Void
 	{
+		#if (lime && !js) return; #end
 		if (#if openfl_disable_context_cache true #else __contextState.__enableGLStencilTest != enable #end)
 		{
 			if (enable)
@@ -2823,8 +2989,835 @@ import lime.math.Vector2;
 
 	@:noCompletion private inline function __glBlendBarrier():Void
 	{
+		#if !(lime && !js)
 		gl.blendBarrier();
+		#end
 	}
+
+	#if (lime && !js)
+	// ---- BGFX backend ----
+	// bgfx sorts draws by view id; 2D correctness needs submission order, so
+	// every view runs in SEQUENTIAL mode and a fresh view id is allocated
+	// whenever the render target changes or a clear is requested. The counter
+	// is frame-global (shared across Stage3D contexts) and resets at frame().
+
+	@:noCompletion private static var __bgfxNextViewId:Int = 0;
+	@:noCompletion private var __bgfxViewId:Int = -1;
+	@:noCompletion private var __bgfxViewValid:Bool = false;
+	@:noCompletion private var __bgfxCurrentFrameBuffer:Int = -2;
+	@:noCompletion private var __bgfxAttribBuffers:Array<VertexBuffer3D> = [];
+	@:noCompletion private var __bgfxAttribOffsets:Array<Int> = []; // bytes
+	@:noCompletion private var __bgfxAttribFormats:Array<Context3DVertexBufferFormat> = [];
+	@:noCompletion private var __bgfxAttribConstants:Array<Array<Float>> = [];
+	@:noCompletion private var __bgfxAttribParamPositions:Array<Int> = [];
+	@:noCompletion private var __bgfxAttribParamLengths:Array<Int> = [];
+	@:noCompletion private var __bgfxParamData:Float32Array;
+	@:noCompletion private var __bgfxLayoutHandles:Map<String, Int> = new Map();
+	@:noCompletion private var __bgfxLayoutObjects:Map<String, BGFXVertexLayout> = new Map();
+	@:noCompletion private var __bgfxScratch:Float32Array;
+	@:noCompletion private var __bgfxBlendEquationHi:Int = 0;
+	@:noCompletion private var __bgfxBlendEquationLo:Int = 0;
+
+	// complex (KHR-advanced) blends: the primary display renders into an
+	// offscreen target so each complex draw can blit a snapshot and blend
+	// against it in the fragment shader
+	@:noCompletion private var __bgfxComplexBlend:Int = 0;
+	@:noCompletion private var __bgfxMainFrameBuffer:Int = -1;
+	@:noCompletion private var __bgfxMainColor:Int = -1;
+	@:noCompletion private var __bgfxMainDepth:Int = -1;
+	@:noCompletion private var __bgfxMainWidth:Int = 0;
+	@:noCompletion private var __bgfxMainHeight:Int = 0;
+	@:noCompletion private var __bgfxGrabTexture:Int = -1;
+	@:noCompletion private var __bgfxCopyProgram:Int = -1;
+	@:noCompletion private var __bgfxCopySampler:Int = -1;
+	@:noCompletion private var __bgfxCopyLayout:BGFXVertexLayout;
+	@:noCompletion private var __bgfxCopyVerts:Float32Array;
+
+	// frame-scoped transient slot shared across draws with identical
+	// constant attribute values (static: bgfx slots are global per frame)
+	@:noCompletion private static var __bgfxExtraSlot:Int = -1;
+	@:noCompletion private static var __bgfxExtraSlotKey:String;
+
+	@:noCompletion private function __bgfxTargetFrameBuffer():Int
+	{
+		if (__state.renderToTexture != null)
+		{
+			return __state.renderToTexture.__getBGFXFrameBuffer(__state.renderToTextureDepthStencil, __state.renderToTextureAntiAlias,
+				__state.renderToTextureSurfaceSelector);
+		}
+
+		// the primary display renders offscreen (composited at present) so
+		// complex blends can snapshot the target — the backbuffer cannot be
+		// blitted from
+		if (__stage3D == null && __bgfxMainFrameBuffer != -1) return __bgfxMainFrameBuffer;
+
+		return __state.__bgfxPrimaryFrameBuffer;
+	}
+
+	/** (re)creates the offscreen main target + blend snapshot texture **/
+	@:noCompletion private function __bgfxEnsureMainTarget(width:Int, height:Int):Void
+	{
+		if (width <= 0 || height <= 0) return;
+		if (__bgfxMainFrameBuffer != -1 && width == __bgfxMainWidth && height == __bgfxMainHeight) return;
+
+		if (__bgfxMainFrameBuffer != -1) BGFX.destroyFrameBuffer(__bgfxMainFrameBuffer);
+		if (__bgfxMainColor != -1) BGFX.destroyTexture(__bgfxMainColor);
+		if (__bgfxMainDepth != -1) BGFX.destroyTexture(__bgfxMainDepth);
+		if (__bgfxGrabTexture != -1) BGFX.destroyTexture(__bgfxGrabTexture);
+
+		__bgfxMainWidth = width;
+		__bgfxMainHeight = height;
+		__bgfxMainColor = BGFX.createTexture2D(width, height, false, 1, BGRA8, BGFX.TEXTURE_RT_HI, BGFX.SAMPLER_UV_CLAMP);
+		__bgfxMainDepth = BGFX.createTexture2D(width, height, false, 1, D24S8, BGFX.TEXTURE_RT_HI, 0);
+		__bgfxMainFrameBuffer = BGFX.createFrameBufferFromTextures(__bgfxMainColor, __bgfxMainDepth);
+		__bgfxGrabTexture = BGFX.createTexture2D(width, height, false, 1, BGRA8, BGFX.TEXTURE_BLIT_DST_HI, BGFX.SAMPLER_UV_CLAMP);
+	}
+
+	/** draws the offscreen main target to the real backbuffer **/
+	@:noCompletion private function __bgfxComposite():Void
+	{
+		if (__bgfxMainFrameBuffer == -1 || __bgfxMainColor == -1) return;
+
+		if (__bgfxCopyProgram == -1)
+		{
+			var varyingDef = "vec2 v_texcoord0 : TEXCOORD0;\n" + "vec2 a_position : POSITION;\n" + "vec2 a_texcoord0 : TEXCOORD0;\n";
+			var vsSource = "$input a_position, a_texcoord0\n" + "$output v_texcoord0\n" + "#include <bgfx_shader.sh>\n" + "void main() {\n"
+				+ "\tgl_Position = vec4(a_position, 0.0, 1.0);\n" + "\tv_texcoord0 = a_texcoord0;\n" + "}\n";
+			var fsSource = "$input v_texcoord0\n" + "#include <bgfx_shader.sh>\n" + "SAMPLER2D(s_openflMain, 0);\n" + "void main() {\n"
+				+ "\tgl_FragColor = texture2D(s_openflMain, v_texcoord0);\n" + "}\n";
+
+			var vs = BGFX.compileShader(vsSource, "v", null, null, varyingDef);
+			var fs = vs != null ? BGFX.compileShader(fsSource, "f", null, null, varyingDef) : null;
+			if (fs == null) return;
+
+			__bgfxCopyProgram = BGFX.createProgram(BGFX.createShader(vs), BGFX.createShader(fs), true);
+			__bgfxCopySampler = BGFX.createUniform("s_openflMain", SAMPLER, 1);
+
+			__bgfxCopyLayout = new BGFXVertexLayout();
+			__bgfxCopyLayout.begin().add(POSITION, 2, FLOAT).add(TEXCOORD0, 2, FLOAT).end();
+
+			// fullscreen triangle; GL render-to-texture is stored bottom-up,
+			// so flip V there
+			var top = BGFX.getCapsOriginBottomLeft() ? 1.0 : 0.0;
+			var bottomOver = BGFX.getCapsOriginBottomLeft() ? -1.0 : 2.0;
+
+			__bgfxCopyVerts = new Float32Array(12);
+			__bgfxCopyVerts[0] = -1.0; __bgfxCopyVerts[1] = 1.0;  __bgfxCopyVerts[2] = 0.0; __bgfxCopyVerts[3] = top;
+			__bgfxCopyVerts[4] = -1.0; __bgfxCopyVerts[5] = -3.0; __bgfxCopyVerts[6] = 0.0; __bgfxCopyVerts[7] = bottomOver;
+			__bgfxCopyVerts[8] = 3.0;  __bgfxCopyVerts[9] = 1.0;  __bgfxCopyVerts[10] = 2.0; __bgfxCopyVerts[11] = top;
+		}
+
+		var view = __bgfxNextViewId < 255 ? __bgfxNextViewId++ : 255;
+		BGFX.setViewMode(view, SEQUENTIAL);
+		BGFX.setViewFrameBuffer(view, BGFX.INVALID_HANDLE);
+		BGFX.setViewRect(view, 0, 0, Std.int(__stage.window.width * __stage.window.scale), Std.int(__stage.window.height * __stage.window.scale));
+		BGFX.setViewScissor(view, 0, 0, 0, 0);
+		BGFX.setViewClear(view, BGFX.CLEAR_NONE, 0);
+
+		BGFX.setState(0, BGFX.STATE_WRITE_RGB_LO | BGFX.STATE_WRITE_A_LO);
+		BGFX.setTexture(0, __bgfxCopySampler, #if openfl_bgfx_show_grab __bgfxGrabTexture #else __bgfxMainColor #end, BGFX.SAMPLER_UV_CLAMP);
+
+		if (BGFX.setTransientVertexBuffer(0, __bgfxCopyVerts, 3, __bgfxCopyLayout) == 3)
+		{
+			BGFX.submit(view, __bgfxCopyProgram);
+		}
+		else
+		{
+			BGFX.discard();
+		}
+	}
+
+	@:noCompletion private function __bgfxEnsureView(clearFlags:Int = 0, clearColor:Int = 0, clearDepth:Float = 1, clearStencil:Int = 0,
+			useScissor:Bool = false):Void
+	{
+		var frameBuffer = __bgfxTargetFrameBuffer();
+
+		if (__bgfxViewValid && frameBuffer == __bgfxCurrentFrameBuffer && clearFlags == 0) return;
+
+		__bgfxViewId = __bgfxNextViewId < 255 ? __bgfxNextViewId++ : 255;
+		__bgfxCurrentFrameBuffer = frameBuffer;
+		__bgfxViewValid = true;
+
+		BGFX.setViewMode(__bgfxViewId, SEQUENTIAL);
+		BGFX.setViewFrameBuffer(__bgfxViewId, frameBuffer == -1 ? BGFX.INVALID_HANDLE : frameBuffer);
+
+		var x = 0, y = 0, width = 0, height = 0;
+
+		if (__state.renderToTexture != null)
+		{
+			if ((__state.renderToTexture is Texture))
+			{
+				var texture2D:Texture = cast __state.renderToTexture;
+				width = texture2D.__width;
+				height = texture2D.__height;
+			}
+			else if ((__state.renderToTexture is RectangleTexture))
+			{
+				var rectTexture:RectangleTexture = cast __state.renderToTexture;
+				width = rectTexture.__width;
+				height = rectTexture.__height;
+			}
+			else if ((__state.renderToTexture is CubeTexture))
+			{
+				var cubeTexture:CubeTexture = cast __state.renderToTexture;
+				width = cubeTexture.__size;
+				height = cubeTexture.__size;
+			}
+		}
+		else if (__stage.context3D == this)
+		{
+			width = backBufferWidth;
+			height = backBufferHeight;
+			#if !openfl_dpi_aware
+			if (__stage3D == null && !__backBufferWantsBestResolution)
+			{
+				width = Std.int(backBufferWidth * __stage.window.scale);
+				height = Std.int(backBufferHeight * __stage.window.scale);
+			}
+			#end
+			x = __stage3D == null ? 0 : Std.int(__stage3D.x);
+			y = __stage3D == null ? 0 : Std.int(__stage3D.y);
+		}
+		else
+		{
+			width = backBufferWidth;
+			height = backBufferHeight;
+		}
+
+		if (width <= 0 || height <= 0)
+		{
+			width = Std.int(__stage.window.width * __stage.window.scale);
+			height = Std.int(__stage.window.height * __stage.window.scale);
+		}
+
+		BGFX.setViewRect(__bgfxViewId, x, y, width, height);
+
+		if (useScissor && __state.scissorEnabled)
+		{
+			BGFX.setViewScissor(__bgfxViewId, Std.int(__state.scissorRectangle.x), Std.int(__state.scissorRectangle.y),
+				Std.int(__state.scissorRectangle.width), Std.int(__state.scissorRectangle.height));
+		}
+		else
+		{
+			BGFX.setViewScissor(__bgfxViewId, 0, 0, 0, 0);
+		}
+
+		// view state is consumed once per view at frame time: the clear runs
+		// before this view's draws, and later views (fresh ids) don't clear
+		BGFX.setViewClear(__bgfxViewId, clearFlags, clearColor, clearDepth, clearStencil);
+
+		if (clearFlags != 0)
+		{
+			BGFX.touch(__bgfxViewId);
+		}
+	}
+
+	@:noCompletion private static function __bgfxBlendFactor(factor:Context3DBlendFactor):Int
+	{
+		return switch (factor)
+		{
+			case DESTINATION_ALPHA: BGFX.STATE_BLEND_DST_ALPHA_LO;
+			case DESTINATION_COLOR: BGFX.STATE_BLEND_DST_COLOR_LO;
+			case ONE: BGFX.STATE_BLEND_ONE_LO;
+			case ONE_MINUS_DESTINATION_ALPHA: BGFX.STATE_BLEND_INV_DST_ALPHA_LO;
+			case ONE_MINUS_DESTINATION_COLOR: BGFX.STATE_BLEND_INV_DST_COLOR_LO;
+			case ONE_MINUS_SOURCE_ALPHA: BGFX.STATE_BLEND_INV_SRC_ALPHA_LO;
+			case ONE_MINUS_SOURCE_COLOR: BGFX.STATE_BLEND_INV_SRC_COLOR_LO;
+			case SOURCE_ALPHA: BGFX.STATE_BLEND_SRC_ALPHA_LO;
+			case SOURCE_COLOR: BGFX.STATE_BLEND_SRC_COLOR_LO;
+			case ZERO: BGFX.STATE_BLEND_ZERO_LO;
+			default: BGFX.STATE_BLEND_ONE_LO;
+		}
+	}
+
+	@:noCompletion private static function __bgfxDepthTest(mode:Context3DCompareMode):Int
+	{
+		return switch (mode)
+		{
+			case ALWAYS: BGFX.STATE_DEPTH_TEST_ALWAYS_LO;
+			case EQUAL: BGFX.STATE_DEPTH_TEST_EQUAL_LO;
+			case GREATER: BGFX.STATE_DEPTH_TEST_GREATER_LO;
+			case GREATER_EQUAL: BGFX.STATE_DEPTH_TEST_GEQUAL_LO;
+			case LESS: BGFX.STATE_DEPTH_TEST_LESS_LO;
+			case LESS_EQUAL: BGFX.STATE_DEPTH_TEST_LEQUAL_LO;
+			case NEVER: BGFX.STATE_DEPTH_TEST_NEVER_LO;
+			case NOT_EQUAL: BGFX.STATE_DEPTH_TEST_NOTEQUAL_LO;
+			default: BGFX.STATE_DEPTH_TEST_ALWAYS_LO;
+		}
+	}
+
+	@:noCompletion private static function __bgfxStencilTest(mode:Context3DCompareMode):Int
+	{
+		return switch (mode)
+		{
+			case ALWAYS: BGFX.STENCIL_TEST_ALWAYS;
+			case EQUAL: BGFX.STENCIL_TEST_EQUAL;
+			case GREATER: BGFX.STENCIL_TEST_GREATER;
+			case GREATER_EQUAL: BGFX.STENCIL_TEST_GEQUAL;
+			case LESS: BGFX.STENCIL_TEST_LESS;
+			case LESS_EQUAL: BGFX.STENCIL_TEST_LEQUAL;
+			case NEVER: BGFX.STENCIL_TEST_NEVER;
+			case NOT_EQUAL: BGFX.STENCIL_TEST_NOTEQUAL;
+			default: BGFX.STENCIL_TEST_ALWAYS;
+		}
+	}
+
+	@:noCompletion private static function __bgfxStencilOp(action:Context3DStencilAction):Int
+	{
+		return switch (action)
+		{
+			case DECREMENT_SATURATE: BGFX.STENCIL_OP_DECRSAT;
+			case DECREMENT_WRAP: BGFX.STENCIL_OP_DECR;
+			case INCREMENT_SATURATE: BGFX.STENCIL_OP_INCRSAT;
+			case INCREMENT_WRAP: BGFX.STENCIL_OP_INCR;
+			case INVERT: BGFX.STENCIL_OP_INVERT;
+			case KEEP: BGFX.STENCIL_OP_KEEP;
+			case SET: BGFX.STENCIL_OP_REPLACE;
+			case ZERO: BGFX.STENCIL_OP_ZERO;
+			default: BGFX.STENCIL_OP_KEEP;
+		}
+	}
+
+	// registration entry points used by ShaderParameter/Shader
+
+	@:noCompletion private function __bgfxSetVertexBufferAt(index:Int, buffer:VertexBuffer3D, byteOffset:Int, format:Context3DVertexBufferFormat):Void
+	{
+		if (index < 0 || index > 15) return;
+
+		__bgfxAttribBuffers[index] = buffer;
+		__bgfxAttribOffsets[index] = byteOffset;
+		__bgfxAttribFormats[index] = format;
+		__bgfxAttribConstants[index] = null;
+		__bgfxAttribParamLengths[index] = 0;
+	}
+
+	@:noCompletion private function __bgfxSetConstantAttrib(index:Int, values:Array<Float>):Void
+	{
+		if (index < 0 || index > 15) return;
+
+		__bgfxAttribBuffers[index] = null;
+		__bgfxAttribConstants[index] = values;
+		__bgfxAttribParamLengths[index] = 0;
+	}
+
+	@:noCompletion private function __bgfxSetParamAttrib(index:Int, position:Int, length:Int):Void
+	{
+		if (index < 0 || index > 15) return;
+
+		__bgfxAttribBuffers[index] = null;
+		__bgfxAttribConstants[index] = null;
+		__bgfxAttribParamPositions[index] = position;
+		__bgfxAttribParamLengths[index] = length;
+	}
+
+	@:noCompletion private function __bgfxSetParamData(data:Float32Array):Void
+	{
+		__bgfxParamData = data;
+	}
+
+	@:noCompletion private function __bgfxFormatComponents(format:Context3DVertexBufferFormat):Int
+	{
+		return switch (format)
+		{
+			case BYTES_4, FLOAT_4: 4;
+			case FLOAT_3: 3;
+			case FLOAT_2: 2;
+			case FLOAT_1: 1;
+			default: 4;
+		}
+	}
+
+	@:noCompletion private function __bgfxDraw(indexBuffer:IndexBuffer3D, firstIndex:Int, count:Int):Void
+	{
+		#if !openfl_disable_display_render
+		if (__state.renderToTexture == null)
+		{
+			if (__stage.context3D == this && !__stage.__renderer.__cleared)
+			{
+				__stage.__renderer.__clear();
+			}
+			else if (!__cleared)
+			{
+				clear(0, 0, 0, 0, 1, 0, Context3DClearMask.COLOR);
+			}
+		}
+		#end
+
+		var program = __state.program;
+		if (program == null || program.__bgfxProgram == -1) return;
+		if (__state.culling == FRONT_AND_BACK) return; // bgfx cannot cull both faces
+
+		// complex (KHR-advanced) blend: snapshot the target and blend in the
+		// fragment shader via a program variant
+		var complexProgram = -1;
+
+		if (__usingComplexBlend && __bgfxComplexBlend != 0 && __state.renderToTexture == null && __stage3D == null && __bgfxMainColor != -1
+			&& __bgfxNextViewId < 250)
+		{
+			complexProgram = program.__bgfxGetComplexProgram(__bgfxComplexBlend);
+		}
+
+		if (complexProgram != -1)
+		{
+			// snapshot the target into the grab texture. The blit is keyed to
+			// this draw's own (fresh) view: bgfx executes view-keyed blits
+			// right before that view's render pass, i.e. after all earlier
+			// views' draws — exactly the ordering we need.
+			__bgfxViewValid = false;
+			__bgfxEnsureView();
+			BGFX.blit(__bgfxViewId, __bgfxGrabTexture, 0, 0, __bgfxMainColor, 0, 0, __bgfxMainWidth, __bgfxMainHeight);
+		}
+
+		__bgfxEnsureView();
+
+		// ---- render state ----
+
+		var lo = 0, hi = 0;
+
+		if (__state.colorMaskRed) lo |= BGFX.STATE_WRITE_R_LO;
+		if (__state.colorMaskGreen) lo |= BGFX.STATE_WRITE_G_LO;
+		if (__state.colorMaskBlue) lo |= BGFX.STATE_WRITE_B_LO;
+		if (__state.colorMaskAlpha) lo |= BGFX.STATE_WRITE_A_LO;
+
+		if (complexProgram == -1)
+		{
+			lo |= BGFX.blendFunctionSeparate(__bgfxBlendFactor(__state.blendSourceRGBFactor), __bgfxBlendFactor(__state.blendDestinationRGBFactor),
+				__bgfxBlendFactor(__state.blendSourceAlphaFactor), __bgfxBlendFactor(__state.blendDestinationAlphaFactor));
+
+			// blend equation set through __setGLBlendEquation (MIN/MAX/SUB/REVSUB)
+			hi |= __bgfxBlendEquationHi;
+			lo |= __bgfxBlendEquationLo;
+		}
+		// else: blending off — the shader variant writes the blended result
+
+		var depthStencilEnabled = (__state.renderToTexture != null) ? __state.renderToTextureDepthStencil : __state.backBufferEnableDepthAndStencil;
+
+		if (depthStencilEnabled)
+		{
+			if (__state.depthMask) hi |= BGFX.STATE_WRITE_Z_HI;
+			lo |= __bgfxDepthTest(__state.depthCompareMode);
+		}
+
+		// GL path used frontFace(CW) for the primary back buffer and CCW for
+		// render-to-texture; mirror by swapping the bgfx winding
+		var frontIsCW = (__state.renderToTexture == null && __stage.context3D == this);
+
+		switch (__state.culling)
+		{
+			case BACK:
+				hi |= frontIsCW ? BGFX.STATE_CULL_CCW_HI : BGFX.STATE_CULL_CW_HI;
+			case FRONT:
+				hi |= frontIsCW ? BGFX.STATE_CULL_CW_HI : BGFX.STATE_CULL_CCW_HI;
+			default:
+		}
+
+		BGFX.setState(hi, lo);
+
+		// ---- stencil ----
+
+		if (depthStencilEnabled
+			&& (__state.stencilCompareMode != ALWAYS || __state.stencilPass != KEEP || __state.stencilFail != KEEP || __state.stencilDepthFail != KEEP))
+		{
+			var stencil = __bgfxStencilTest(__state.stencilCompareMode)
+				| ((__state.stencilReferenceValue & 0xFF) << BGFX.STENCIL_FUNC_REF_SHIFT)
+				| ((__state.stencilReadMask & 0xFF) << BGFX.STENCIL_FUNC_RMASK_SHIFT)
+				| (__bgfxStencilOp(__state.stencilFail) << BGFX.STENCIL_OP_FAIL_S_SHIFT)
+				| (__bgfxStencilOp(__state.stencilDepthFail) << BGFX.STENCIL_OP_FAIL_Z_SHIFT)
+				| (__bgfxStencilOp(__state.stencilPass) << BGFX.STENCIL_OP_PASS_Z_SHIFT);
+
+			BGFX.setStencil(stencil, stencil);
+		}
+
+		// ---- scissor ----
+
+		if (__state.scissorEnabled)
+		{
+			var scissorX = Std.int(__state.scissorRectangle.x);
+			var scissorY = Std.int(__state.scissorRectangle.y);
+			var scissorWidth = Std.int(__state.scissorRectangle.width);
+			var scissorHeight = Std.int(__state.scissorRectangle.height);
+			#if !openfl_dpi_aware
+			if (__backBufferWantsBestResolution)
+			{
+				scissorX = Std.int(__state.scissorRectangle.x * __stage.window.scale);
+				scissorY = Std.int(__state.scissorRectangle.y * __stage.window.scale);
+				scissorWidth = Std.int(__state.scissorRectangle.width * __stage.window.scale);
+				scissorHeight = Std.int(__state.scissorRectangle.height * __stage.window.scale);
+			}
+			#end
+
+			// bgfx scissor origin is top-left (no y flip, unlike GL)
+			if (scissorWidth > 0 && scissorHeight > 0)
+			{
+				BGFX.setScissor(scissorX, scissorY, scissorWidth, scissorHeight);
+			}
+		}
+
+		// ---- textures ----
+
+		if (complexProgram != -1)
+		{
+			// bind the target snapshot for the shader-side blend (before the
+			// user stages: some backends resolve bind state in stage order)
+			BGFX.setTexture(program.__bgfxDstSamplerStage, program.__bgfxDstSampler, __bgfxGrabTexture,
+				BGFX.SAMPLER_UV_CLAMP | BGFX.SAMPLER_POINT);
+		}
+
+		if (program.__bgfxSamplerHandles != null)
+		{
+			for (i in 0...program.__bgfxSamplerHandles.length)
+			{
+				var texture = __state.textures[i];
+
+				if (texture != null)
+				{
+					texture.__ensureBGFXTexture();
+
+					var samplerState = __state.samplerStates[i];
+					if (samplerState != null) texture.__setSamplerState(samplerState);
+
+					if (texture.__bgfxTexture != -1)
+					{
+						BGFX.setTexture(i, program.__bgfxSamplerHandles[i], texture.__bgfxTexture, texture.__bgfxSamplerFlags);
+					}
+				}
+			}
+		}
+
+		// ---- uniforms ----
+
+		program.__bgfxFlushUniforms();
+
+		// ---- vertex streams ----
+
+		// non-indexed draws (GL drawArrays semantics) read vertices
+		// [firstIndex, firstIndex + count); indexed draws use the whole pool
+		var firstVertex = indexBuffer == null ? firstIndex : 0;
+		var vertexLimit = indexBuffer == null ? count : -1;
+
+		if (!__bgfxBindVertexStreams(program, firstVertex, vertexLimit))
+		{
+			// abandon the draw cleanly so half-set encoder state (streams,
+			// textures, render state) cannot leak into the next submit
+			BGFX.discard();
+			return;
+		}
+
+		// ---- indices + submit ----
+
+		if (indexBuffer != null && indexBuffer.__bgfxData != null)
+		{
+			if (firstIndex + count > indexBuffer.__bgfxDataLength) count = indexBuffer.__bgfxDataLength - firstIndex;
+
+			if (count <= 0)
+			{
+				BGFX.discard();
+				return;
+			}
+
+			// transient copy of the used range (immediate upload semantics)
+			var indexView = new openfl.utils._internal.UInt16Array(indexBuffer.__bgfxData.buffer, firstIndex * 2, count);
+
+			if (BGFX.setTransientIndexBuffer(indexView, count) < count)
+			{
+				BGFX.discard();
+				return;
+			}
+		}
+
+		BGFX.submit(__bgfxViewId, complexProgram != -1 ? complexProgram : program.__bgfxProgram);
+	}
+
+	/**
+		Binds stream 0 from the VertexBuffer3D attribute bindings (all bound
+		buffers must share one VertexBuffer3D), and stream 1 as a transient
+		buffer interleaving constant attributes and ShaderBuffer param data.
+	**/
+	@:noCompletion private function __bgfxBindVertexStreams(program:Program3D, firstVertex:Int = 0, vertexLimit:Int = -1):Bool
+	{
+		var translated = program.__bgfxTranslated;
+		if (translated == null) return false;
+
+		var attribCount = translated.attribNames.length;
+		var mainBuffer:VertexBuffer3D = null;
+		var extraFloats = 0;
+		var numVertices = 0;
+
+		for (i in 0...attribCount)
+		{
+			if (__bgfxAttribBuffers[i] != null)
+			{
+				if (mainBuffer == null) mainBuffer = __bgfxAttribBuffers[i];
+				else if (mainBuffer != __bgfxAttribBuffers[i]) return false; // multi-buffer draws unsupported
+
+				var available = Std.int(mainBuffer.__bgfxDataLength / mainBuffer.__vertexSize);
+				if (available > numVertices) numVertices = available;
+			}
+			else if (__bgfxAttribParamLengths[i] > 0)
+			{
+				extraFloats += __bgfxAttribParamLengths[i];
+			}
+			else
+			{
+				// constant (or unbound → zero constant)
+				extraFloats += translated.attribComponents[i];
+			}
+		}
+
+		if (numVertices == 0 && __bgfxParamData != null)
+		{
+			// pure ShaderBuffer draw: derive the vertex count from the
+			// tightest param attribute
+			for (i in 0...attribCount)
+			{
+				if (__bgfxAttribParamLengths[i] > 0)
+				{
+					var available = Std.int((__bgfxParamData.length - __bgfxAttribParamPositions[i]) / __bgfxAttribParamLengths[i]);
+					if (numVertices == 0 || available < numVertices) numVertices = available;
+				}
+			}
+		}
+
+		if (vertexLimit > 0 && firstVertex + vertexLimit <= numVertices) numVertices = vertexLimit;
+		else firstVertex = 0;
+
+		if (numVertices == 0) return false;
+
+		var stream = 0;
+
+		// stream 0: the main vertex buffer with a layout matching the
+		// current attribute bindings. Stage3D bufferOffset can address any
+		// vertex (chunked draws pass start-of-chunk offsets), while bgfx
+		// layout offsets are within-vertex uint16s: split the smallest
+		// stride-aligned offset off as a base vertex.
+		if (mainBuffer != null)
+		{
+			if (mainBuffer.__bgfxData == null) return false;
+
+			var strideBytes = mainBuffer.__stride;
+			var order:Array<Int> = [];
+			var minOffset = 0x7FFFFFFF;
+
+			for (i in 0...attribCount)
+			{
+				if (__bgfxAttribBuffers[i] == mainBuffer)
+				{
+					order.push(i);
+					if (__bgfxAttribOffsets[i] < minOffset) minOffset = __bgfxAttribOffsets[i];
+				}
+			}
+
+			var baseVertex = Std.int(minOffset / strideBytes);
+
+			var key = new StringBuf();
+			key.add(strideBytes);
+
+			for (i in order)
+			{
+				var relative = __bgfxAttribOffsets[i] - baseVertex * strideBytes;
+				if (relative < 0 || relative >= strideBytes) return false; // attributes span chunks
+
+				key.add(";");
+				key.add(i);
+				key.add(",");
+				key.add(translated.attribSemantics[i]);
+				key.add(",");
+				key.add(relative);
+				key.add(",");
+				key.add(__bgfxAttribFormats[i] == BYTES_4 ? "b" : "f");
+				key.add(__bgfxFormatComponents(__bgfxAttribFormats[i]));
+			}
+
+			var keyString = key.toString();
+			var layout = __bgfxLayoutObjects.get(keyString);
+
+			if (layout == null)
+			{
+				order.sort(function(a, b) return __bgfxAttribOffsets[a] - __bgfxAttribOffsets[b]);
+
+				layout = new BGFXVertexLayout();
+				layout.begin();
+
+				var position = 0;
+
+				for (i in order)
+				{
+					var offset = __bgfxAttribOffsets[i] - baseVertex * strideBytes;
+					if (offset < position) return false; // overlapping attributes
+					if (offset > position) layout.skip(offset - position);
+
+					var components = __bgfxFormatComponents(__bgfxAttribFormats[i]);
+
+					if (__bgfxAttribFormats[i] == BYTES_4)
+					{
+						layout.add(translated.attribSemantics[i], 4, UINT8, true);
+						position = offset + 4;
+					}
+					else
+					{
+						layout.add(translated.attribSemantics[i], components, FLOAT);
+						position = offset + components * 4;
+					}
+				}
+
+				if (position < strideBytes) layout.skip(strideBytes - position);
+				layout.end();
+
+				__bgfxLayoutObjects.set(keyString, layout);
+			}
+
+			// vertices available past the base; indices are chunk-relative.
+			// Indexed draws use 16-bit indices, so nothing past 65536 vertices
+			// is addressable — clamping keeps transient pool usage bounded
+			var startVertex = baseVertex + firstVertex;
+			var available = Std.int(mainBuffer.__bgfxDataLength / mainBuffer.__vertexSize) - startVertex;
+			if (available <= 0) return false;
+			if (available > 65536) available = 65536;
+
+			numVertices = (vertexLimit > 0 && vertexLimit <= available) ? vertexLimit : available;
+
+			// transient copy of the CPU-side data (immediate upload semantics)
+			var vertexData:Float32Array = startVertex > 0 ? new Float32Array(mainBuffer.__bgfxData.buffer, startVertex * strideBytes,
+				numVertices * mainBuffer.__vertexSize) : mainBuffer.__bgfxData;
+
+			if (BGFX.setTransientVertexBuffer(stream, vertexData, numVertices, layout) < numVertices) return false;
+			stream++;
+		}
+
+		// stream 1: interleaved transient data for constant attributes and
+		// ShaderBuffer params
+		if (extraFloats > 0)
+		{
+			var extraKey = new StringBuf();
+			extraKey.add("x");
+
+			var extras:Array<Int> = [];
+			var allConstants = true;
+
+			for (i in 0...attribCount)
+			{
+				if (__bgfxAttribBuffers[i] == null)
+				{
+					extras.push(i);
+					var length = __bgfxAttribParamLengths[i] > 0 ? __bgfxAttribParamLengths[i] : translated.attribComponents[i];
+					if (__bgfxAttribParamLengths[i] > 0) allConstants = false;
+					extraKey.add(";");
+					extraKey.add(translated.attribSemantics[i]);
+					extraKey.add(",");
+					extraKey.add(length);
+				}
+			}
+
+			var extraKeyString = extraKey.toString();
+			var extraLayout = __bgfxLayoutObjects.get(extraKeyString);
+
+			if (extraLayout == null)
+			{
+				extraLayout = new BGFXVertexLayout();
+				extraLayout.begin();
+
+				for (i in extras)
+				{
+					var length = __bgfxAttribParamLengths[i] > 0 ? __bgfxAttribParamLengths[i] : translated.attribComponents[i];
+					extraLayout.add(translated.attribSemantics[i], length, FLOAT);
+				}
+
+				extraLayout.end();
+				__bgfxLayoutObjects.set(extraKeyString, extraLayout);
+			}
+
+			// all-constants extra streams are identical for every chunk of a
+			// batched draw (and usually across draws): allocate once per
+			// frame per (values, count) and rebind the slot
+			var slotKey:String = null;
+
+			if (allConstants)
+			{
+				var valueKey = new StringBuf();
+				valueKey.add(extraKeyString);
+				valueKey.add("|");
+				valueKey.add(numVertices);
+
+				for (i in extras)
+				{
+					var constant = __bgfxAttribConstants[i];
+					valueKey.add("|");
+					if (constant != null) for (value in constant)
+					{
+						valueKey.add(value);
+						valueKey.add(",");
+					}
+				}
+
+				slotKey = valueKey.toString();
+
+				if (slotKey == __bgfxExtraSlotKey && __bgfxExtraSlot != -1)
+				{
+					BGFX.setTransientVertexBufferSlot(stream, __bgfxExtraSlot);
+					return true;
+				}
+			}
+
+			var strideFloats = 0;
+			for (i in extras)
+			{
+				strideFloats += __bgfxAttribParamLengths[i] > 0 ? __bgfxAttribParamLengths[i] : translated.attribComponents[i];
+			}
+
+			var totalFloats = strideFloats * numVertices;
+
+			if (__bgfxScratch == null || __bgfxScratch.length < totalFloats)
+			{
+				__bgfxScratch = new Float32Array(totalFloats);
+			}
+
+			var write = 0;
+
+			for (v in 0...numVertices)
+			{
+				for (i in extras)
+				{
+					if (__bgfxAttribParamLengths[i] > 0)
+					{
+						var length = __bgfxAttribParamLengths[i];
+						var read = __bgfxAttribParamPositions[i] + (firstVertex + v) * length;
+
+						for (c in 0...length)
+						{
+							__bgfxScratch[write++] = __bgfxParamData[read + c];
+						}
+					}
+					else
+					{
+						var constant = __bgfxAttribConstants[i];
+						var length = translated.attribComponents[i];
+
+						for (c in 0...length)
+						{
+							__bgfxScratch[write++] = (constant != null && c < constant.length) ? constant[c] : 0;
+						}
+					}
+				}
+			}
+
+			if (allConstants)
+			{
+				var slot = BGFX.allocTransientVertexBufferSlot(__bgfxScratch, numVertices, extraLayout);
+				if (slot == -1) return false;
+
+				__bgfxExtraSlot = slot;
+				__bgfxExtraSlotKey = slotKey;
+				BGFX.setTransientVertexBufferSlot(stream, slot);
+			}
+			else
+			{
+				if (BGFX.setTransientVertexBuffer(stream, __bgfxScratch, numVertices, extraLayout) < numVertices) return false;
+			}
+		}
+
+		return true;
+	}
+	#end
 
 	// Get & Set Methods
 	@:noCompletion private function get_enableErrorChecking():Bool

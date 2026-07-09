@@ -305,7 +305,7 @@ class Shader
 	public function new(code:ByteArray = null, ?process:Bool = true)
 	{
 		this.process = process;
-		
+
 		byteCode = code;
 		precisionHint = FULL;
 
@@ -499,6 +499,18 @@ class Shader
 
 	@:noCompletion private function __disableGL():Void
 	{
+		#if (lime && !js)
+		var textureCount = 0;
+
+		for (input in __inputBitmapData)
+		{
+			input.__disableGL(__context, textureCount);
+			textureCount++;
+		}
+
+		return;
+		#end
+
 		var gl = __context.gl;
 
 		var textureCount = 0;
@@ -547,6 +559,11 @@ class Shader
 
 	@:noCompletion private function __enableGL():Void
 	{
+		#if (lime && !js)
+		// bgfx sampler stages are fixed at program creation; nothing to bind
+		return;
+		#end
+
 		var textureCount = 0;
 
 		var gl = __context.gl;
@@ -557,7 +574,7 @@ class Shader
 			textureCount++;
 		}
 
-		#if lime
+		#if (lime && js && html5)
 		if (__context.__context.type == OPENGL && textureCount > 0)
 		{
 			gl.enable(gl.TEXTURE_2D);
@@ -661,6 +678,11 @@ class Shader
 
 		if (__context != null && program == null)
 		{
+			#if (lime && !js)
+			__initBGFX();
+			return;
+			#end
+
 			if (process)
 			{
 				//trace('processing inside Shader!!!');
@@ -758,6 +780,54 @@ class Shader
 			}
 		}
 	}
+
+	#if (lime && !js)
+	/**
+		BGFX (native) program setup: the raw GLSL pair goes through
+		BGFXGLSLTranslator + runtime shaderc inside Program3D.__uploadBGFX.
+		Parameter/input `index` values become indices into the program's
+		uniform staging tables, sampler stages, or attribute slots.
+	**/
+	@:noCompletion private function __initBGFX():Void
+	{
+		var id = glVertexSource + glFragmentSource;
+
+		if (__context.__programs.exists(id))
+		{
+			program = __context.__programs.get(id);
+		}
+		else
+		{
+			program = __context.createProgram(GLSL);
+			program.__uploadBGFX(glVertexSource, glFragmentSource);
+			__context.__programs.set(id, program);
+		}
+
+		if (program == null || program.__bgfxTranslated == null) return;
+
+		var translated = program.__bgfxTranslated;
+
+		for (input in __inputBitmapData)
+		{
+			input.index = program.__bgfxSamplerIndex(input.name);
+		}
+
+		for (parameter in __paramBool)
+		{
+			parameter.index = parameter.__isUniform ? program.__bgfxUniformIndex(parameter.name) : translated.attribNames.indexOf(parameter.name);
+		}
+
+		for (parameter in __paramFloat)
+		{
+			parameter.index = parameter.__isUniform ? program.__bgfxUniformIndex(parameter.name) : translated.attribNames.indexOf(parameter.name);
+		}
+
+		for (parameter in __paramInt)
+		{
+			parameter.index = parameter.__isUniform ? program.__bgfxUniformIndex(parameter.name) : translated.attribNames.indexOf(parameter.name);
+		}
+	}
+	#end
 
 	@:noCompletion private function __processGLData(source:String, storageType:String):Void
 	{
@@ -1027,6 +1097,10 @@ class Shader
 			}
 		}
 
+		#if (lime && !js)
+		// the CPU-side param data feeds a transient vertex stream at draw time
+		__context.__bgfxSetParamData(shaderBuffer.paramDataLength > 0 ? shaderBuffer.paramData : null);
+		#else
 		var gl = __context.gl;
 
 		if (shaderBuffer.paramDataLength > 0)
@@ -1047,6 +1121,7 @@ class Shader
 
 			__context.__bindGLArrayBuffer(null);
 		}
+		#end
 
 		var boolIndex = 0;
 		var floatIndex = 0;
