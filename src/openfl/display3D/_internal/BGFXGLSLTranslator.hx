@@ -222,19 +222,27 @@ class BGFXGLSLTranslator
 			}
 		}
 
+		// every backend except plain GLSL/ESSL parses the source with an
+		// HLSL-style frontend where an unqualified global is a uniform;
+		// `static` makes it a mutable global (invalid syntax in GLSL). Used by
+		// the promoted-uniform globals and the fragment varying mirrors.
+		var globalMacro = "#if BGFX_SHADER_LANGUAGE_GLSL || BGFX_SHADER_LANGUAGE_ESSL\n#define OPENFL_GLOBAL\n#else\n#define OPENFL_GLOBAL static\n#endif\n";
+
 		var vs = new StringBuf();
 		if (result.attribCanonicalNames.length > 0) vs.add("$input " + result.attribCanonicalNames.join(", ") + "\n");
 		if (varyingCanonical.length > 0) vs.add("$output " + varyingCanonical.join(", ") + "\n");
 		vs.add("#include <bgfx_shader.sh>\n");
+		vs.add(globalMacro);
 		vs.add(attribDefines.toString());
 		vs.add(varyingDefines.toString());
 		vs.add(result.vertexUniformCode);
-		vs.add(vertexBody);
+		vs.add(__injectMainPrologue(vertexBody, result.vertexUniformPrologue));
 		result.vertexSC = vs.toString();
 
 		var fs = new StringBuf();
 		if (varyingCanonical.length > 0) fs.add("$input " + varyingCanonical.join(", ") + "\n");
 		fs.add("#include <bgfx_shader.sh>\n");
+		fs.add(globalMacro);
 		// modern-GLSL shaders write openfl_FragColor; map it to gl_FragColor,
 		// which bgfx_shader.sh provides (the `out` declaration was stripped)
 		fs.add("#define openfl_FragColor gl_FragColor\n");
@@ -243,18 +251,13 @@ class BGFXGLSLTranslator
 		{
 			// the original program writes into openfl_SrcColor; the wrapper
 			// main computes the advanced blend against the sampled target.
-			// HLSL constraints shape the structure: unqualified globals turn
-			// into uniforms (need `static`), and varyings only exist as
-			// main() parameters, so the impl function reads static copies
-			// that main fills in before calling it
+			// HLSL constraints shape the structure: varyings only exist as
+			// main() parameters there, so the impl function reads static
+			// copies that main fills in before calling it
 			result.dstSamplerStage = result.samplerNames.length;
 
 			fs.add(result.fragmentUniformCode);
 			fs.add("SAMPLER2D(openfl_DstSampler, " + result.dstSamplerStage + ");\n");
-			// every backend except plain GLSL/ESSL parses the source with an
-			// HLSL-style frontend where an unqualified global is a uniform;
-			// `static` makes it a mutable global (invalid syntax in GLSL)
-			fs.add("#if BGFX_SHADER_LANGUAGE_GLSL || BGFX_SHADER_LANGUAGE_ESSL\n#define OPENFL_GLOBAL\n#else\n#define OPENFL_GLOBAL static\n#endif\n");
 			fs.add("OPENFL_GLOBAL vec4 openfl_SrcColor;\n");
 
 			var copyUndefs = new StringBuf();
@@ -274,6 +277,7 @@ class BGFXGLSLTranslator
 			fs.add(copyUndefs.toString());
 			fs.add(__blendLibrary(complexBlendMode));
 			fs.add("void main() {\n"
+				+ result.fragmentUniformPrologue
 				+ copyAssigns.toString()
 				+ "\topenfl_blend_impl();\n"
 				+ "\tvec2 openfl_dstUV = gl_FragCoord.xy * u_viewTexel.xy;\n"
@@ -290,8 +294,6 @@ class BGFXGLSLTranslator
 			// desktop GL only works because its varyings are file-scope globals.
 			// Mirror each varying into a global and copy it at the top of main
 			// so those shaders compile on all backends.
-			fs.add("#if BGFX_SHADER_LANGUAGE_GLSL || BGFX_SHADER_LANGUAGE_ESSL\n#define OPENFL_GLOBAL\n#else\n#define OPENFL_GLOBAL static\n#endif\n");
-
 			var copyAssigns = new StringBuf();
 			for (i in 0...varyingNames.length)
 			{
@@ -302,7 +304,7 @@ class BGFXGLSLTranslator
 			}
 
 			fs.add(result.fragmentUniformCode);
-			fs.add(__injectMainPrologue(fragmentBody, copyAssigns.toString()));
+			fs.add(__injectMainPrologue(fragmentBody, result.fragmentUniformPrologue + copyAssigns.toString()));
 		}
 
 		result.fragmentSC = fs.toString();
@@ -401,6 +403,7 @@ class BGFXGLSLTranslator
 	{
 		var uniformRegex = ~/^\s*uniform\s+(?:lowp\s+|mediump\s+|highp\s+)?(\w+)\s+(\w+)\s*(\[\s*(\d+)\s*\])?\s*;/gm;
 		var declarations = new StringBuf();
+		var prologue = new StringBuf();
 
 		var stripped = uniformRegex.map(body, function(r)
 		{
@@ -452,17 +455,32 @@ class BGFXGLSLTranslator
 					}
 					else
 					{
-						// pack scalars/small vectors into a vec4 with an alias
+						// pack scalars/small vectors into a vec4, exposed as a
+						// mutable global under the ORIGINAL name and type,
+						// unpacked at the top of main. A `#define name ...`
+						// alias breaks shaders that shadow the uniform with a
+						// local (`float offset = ...;` while `uniform vec2
+						// offset` exists — common in FNF mod shaders); a real
+						// global can be shadowed legally, same as a uniform.
 						declarations.add("uniform vec4 " + name + "_ofl4;\n");
-						declarations.add("#define " + name + " " + __unpackAlias(type, name + "_ofl4") + "\n");
+						declarations.add("OPENFL_GLOBAL " + type + " " + name + ";\n");
+						prologue.add("\t" + name + " = " + __unpackAlias(type, name + "_ofl4") + ";\n");
 					}
 			}
 
 			return "";
 		});
 
-		if (isVertex) result.vertexUniformCode = declarations.toString();
-		else result.fragmentUniformCode = declarations.toString();
+		if (isVertex)
+		{
+			result.vertexUniformCode = declarations.toString();
+			result.vertexUniformPrologue = prologue.toString();
+		}
+		else
+		{
+			result.fragmentUniformCode = declarations.toString();
+			result.fragmentUniformPrologue = prologue.toString();
+		}
 
 		return stripped;
 	}
@@ -861,6 +879,10 @@ class BGFXTranslatedProgram
 
 	public var vertexUniformCode:String = "";
 	public var fragmentUniformCode:String = "";
+
+	/** main() prologue statements unpacking promoted (_ofl4) uniforms into their globals **/
+	public var vertexUniformPrologue:String = "";
+	public var fragmentUniformPrologue:String = "";
 
 	public function new() {}
 }

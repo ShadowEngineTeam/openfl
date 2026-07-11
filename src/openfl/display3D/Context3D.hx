@@ -3750,9 +3750,14 @@ import lime.graphics.bgfx.BGFXVertexLayout;
 						var length = __bgfxAttribParamLengths[i];
 						var read = __bgfxAttribParamPositions[i] + (firstVertex + v) * length;
 
+						// the staged param buffer can hold fewer vertices than the
+						// main vertex buffer being drawn (e.g. param data left over
+						// from a previous, smaller draw): read past its end as zero
+						// instead of dereferencing out of bounds and crashing
+						var avail = __bgfxParamData != null ? __bgfxParamData.length : 0;
 						for (c in 0...length)
 						{
-							__bgfxScratch[write++] = __bgfxParamData[read + c];
+							__bgfxScratch[write++] = (read + c < avail) ? __bgfxParamData[read + c] : 0;
 						}
 					}
 					else

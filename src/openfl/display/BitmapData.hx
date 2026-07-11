@@ -3209,7 +3209,7 @@ class BitmapData implements IBitmapDrawable
 		image.version++;
 	}
 
-	@:noCompletion private function __drawGL(source:IBitmapDrawable, renderer:OpenGLRenderer):Void
+	@:noCompletion private function __drawGL(source:IBitmapDrawable, renderer:OpenGLRenderer, clearFirst:Bool = false):Void
 	{
 		var context = renderer.__context3D;
 
@@ -3219,6 +3219,15 @@ class BitmapData implements IBitmapDrawable
 		var cacheRTTSurfaceSelector = context.__state.renderToTextureSurfaceSelector;
 
 		context.setRenderToTexture(getTexture(context), true);
+
+		#if (lime && !js)
+		// Clear the target after binding its (depth-enabled) framebuffer so
+		// the exact surface being drawn into is well-defined. A freshly
+		// (re)allocated bgfx render target is otherwise uninitialized, and any
+		// region the source doesn't cover — e.g. a filter's padding border —
+		// leaks stale GPU memory through later blur/shadow sampling.
+		if (clearFirst) context.__clear(false, 0, 0, 0, 0, 1, 0, Context3DClearMask.COLOR);
+		#end
 
 		renderer.__render(source);
 
@@ -3242,9 +3251,19 @@ class BitmapData implements IBitmapDrawable
 			color = 0;
 		}
 
+		// bgfx render targets (and textures flagged for RTT use) must clear
+		// GPU-side: the CPU image fill never reaches the texture, so skipping
+		// this path leaves stale frame content accumulating in the target.
+		// The bgfx handle may not exist yet — setRenderToTexture creates it.
+		#if (lime && !js)
+		var fillFramebufferReady = __texture != null
+			&& (__texture.__bgfxIsRenderTarget || __texture.__optimizeForRenderToTexture);
+		#else
+		var fillFramebufferReady = __texture != null && __texture.__glFramebuffer != null;
+		#end
+
 		if (allowFramebuffer
-			&& __texture != null
-			&& __texture.__glFramebuffer != null
+			&& fillFramebufferReady
 			&& (Lib.current.stage.__renderer.__type == BGFX || Lib.current.stage.__renderer.__type == WEBGL))
 		{
 			var renderer:OpenGLRenderer = cast Lib.current.stage.__renderer;

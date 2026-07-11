@@ -300,6 +300,18 @@ class OpenGLRenderer extends DisplayObjectRenderer
 					__currentShader.__textureSize.value = null;
 				}
 			}
+
+			#if (lime && !js)
+			if (Sys.getEnv("LIME_TEXSIZE_DEBUG") != null)
+			{
+				var f = sys.io.File.append(Sys.getEnv("TEMP") + "/texsize-debug.txt", false);
+				f.writeString("shader bitmap=" + (__currentShader.__bitmap != null) + " texSize=" + (__currentShader.__textureSize != null)
+					+ " bmp=" + (bitmapData != null)
+					+ " texW=" + (bitmapData != null ? bitmapData.__textureWidth : -1)
+					+ " texH=" + (bitmapData != null ? bitmapData.__textureHeight : -1) + "\n");
+				f.close();
+			}
+			#end
 		}
 	}
 
@@ -1257,7 +1269,21 @@ class OpenGLRenderer extends DisplayObjectRenderer
 	@:noCompletion private function __setRenderTarget(renderTarget:BitmapData):Void
 	{
 		__defaultRenderTarget = renderTarget;
+		#if (lime && !js)
+		// RTT orientation: openfl's legacy GL convention renders offscreen
+		// targets with the NON-flipped projection — on GL (bottom-left texture
+		// origin) storage and sampling mirror each other and cancel out, and
+		// UV-space math (e.g. the drop-shadow offset in the filter combine
+		// shader) comes out in openfl's top-down screen space. On top-left
+		// backends (VK/D3D/Metal) the same non-flipped projection stores the
+		// content Y-mirrored: plain display still looks right (the mirror
+		// cancels on sampling), but directional UV math flips (shadows offset
+		// upward). Use the FLIPPED projection there so RTT content is stored
+		// upright; keep GL on the legacy convention.
+		__flipped = (renderTarget == null) || !lime.graphics.bgfx.BGFX.getCapsOriginBottomLeft();
+		#else
 		__flipped = (renderTarget == null);
+		#end
 
 		if (renderTarget != null)
 		{

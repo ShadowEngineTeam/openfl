@@ -92,6 +92,28 @@ import lime.graphics.bgfx.BGFX;
 
 	@:noCompletion private function __uploadBGFX(vertexGLSL:String, fragmentGLSL:String):Bool
 	{
+		#if openfl_bgfx_upload_guard
+		try
+		{
+			return __uploadBGFXInner(vertexGLSL, fragmentGLSL);
+		}
+		catch (e:Dynamic)
+		{
+			try
+			{
+				var f = sys.io.File.append(Sys.getEnv("TEMP") + "/upload-guard.txt", false);
+				f.writeString("EXCEPTION: " + Std.string(e) + "\n" + haxe.CallStack.toString(haxe.CallStack.exceptionStack()) + "\n---- vertex ----\n"
+					+ vertexGLSL + "\n---- fragment ----\n" + fragmentGLSL + "\n");
+				f.close();
+			}
+			catch (e2:Dynamic) {}
+			return false;
+		}
+	}
+
+	@:noCompletion private function __uploadBGFXInner(vertexGLSL:String, fragmentGLSL:String):Bool
+	{
+		#end
 		__bgfxVertexGLSL = vertexGLSL;
 		__bgfxFragmentGLSL = fragmentGLSL;
 
@@ -112,8 +134,13 @@ import lime.graphics.bgfx.BGFX;
 			return false;
 		}
 
-		__bgfxProgram = BGFX.createProgram(BGFX.createShader(vs), BGFX.createShader(fs), true);
-
+		// ALL uniform handles (samplers especially) must exist BEFORE program
+		// creation: bgfx attaches shader-reflected uniforms to existing handles
+		// at createProgram time. A sampler uniform created afterwards doesn't
+		// attach, and its stage assignment silently defaults to 0 — harmless
+		// for single-sampler shaders, but multi-sampler shaders (filter
+		// combine passes) alias every sampler onto stage 0. (Same failure
+		// class as the complex-blend dst-sampler first-draw bug.)
 		__bgfxUniformHandles = [];
 		__bgfxUniformStaging = [];
 		__bgfxUniformDirty = [];
@@ -165,6 +192,8 @@ import lime.graphics.bgfx.BGFX;
 		// before any program (base or variant) references the name
 		__bgfxDstSampler = BGFX.createUniform("openfl_DstSampler", SAMPLER, 1);
 		__bgfxDstSamplerStage = translated.samplerNames.length;
+
+		__bgfxProgram = BGFX.createProgram(BGFX.createShader(vs), BGFX.createShader(fs), true);
 
 		// expose reflection data the GLSL bookkeeping expects
 		__glslAttribNames = translated.attribNames.copy();

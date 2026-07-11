@@ -615,7 +615,11 @@ class DisplayObjectRenderer extends EventDispatcher
 						displayObject.__cacheBitmapData.__textureVersion = displayObject.__cacheBitmapData.image.version
 						+ 1;
 
-					displayObject.__cacheBitmapData.__drawGL(displayObject, childRenderer);
+					// clearFirst: the cache RT may have just been (re)allocated
+					// this frame (grew to fit larger content); its bgfx texture
+					// is then uninitialized and the filter-padding border would
+					// otherwise leak stale GPU memory through the blur/shadow.
+					displayObject.__cacheBitmapData.__drawGL(displayObject, childRenderer, hasFilters);
 
 					if (hasFilters)
 					{
