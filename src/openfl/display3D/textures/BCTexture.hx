@@ -50,8 +50,8 @@ import openfl.Lib;
 			"WEBGL_compressed_texture_s3tc", "MOZ_WEBGL_compressed_texture_s3tc", "WEBKIT_WEBGL_compressed_texture_s3tc"]);
 		var s3tcSRGBExtension = __getExtension(gl, ["EXT_texture_compression_s3tc_srgb", "WEBGL_compressed_texture_s3tc_srgb",
 			"MOZ_WEBGL_compressed_texture_s3tc_srgb", "WEBKIT_WEBGL_compressed_texture_s3tc_srgb"]);
-		var rgtcExtension = __getExtension(gl, ["EXT_texture_compression_rgtc", "GL_EXT_texture_compression_rgtc"]);
-		var bptcExtension = __getExtension(gl, ["EXT_texture_compression_bptc", "GL_EXT_texture_compression_bptc"]);
+		var rgtcExtension = __getExtension(gl, ["EXT_texture_compression_rgtc", "ARB_texture_compression_rgtc"]);
+		var bptcExtension = __getExtension(gl, ["EXT_texture_compression_bptc", "ARB_texture_compression_bptc"]);
 
 		var extensionSupported = switch (__bcFormat)
 		{
