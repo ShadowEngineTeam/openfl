@@ -1366,6 +1366,13 @@ class Shader
 
 		return "120";
 		#end
+		#else
+		#if lime_opengles
+		return "100";
+		#else
+		return "120";
+		#end
+		#end
 	}
 
 	@:noCompletion private function get_glVertexExtensions():Array<{name:String, behavior:String}>
