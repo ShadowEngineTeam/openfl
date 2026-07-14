@@ -42,16 +42,14 @@ import openfl.Lib;
 
 		__detectBCFormat(data);
 
-		var dxt1Extension = __getExtension(gl, ["EXT_texture_compression_dxt1", "WEBGL_compressed_texture_s3tc",
-			"MOZ_WEBGL_compressed_texture_s3tc", "WEBKIT_WEBGL_compressed_texture_s3tc"]);
-		var dxt3Extension = __getExtension(gl, ["ANGLE_texture_compression_dxt3", "EXT_texture_compression_s3tc",
-			"WEBGL_compressed_texture_s3tc", "MOZ_WEBGL_compressed_texture_s3tc", "WEBKIT_WEBGL_compressed_texture_s3tc"]);
-		var dxt5Extension = __getExtension(gl, ["ANGLE_texture_compression_dxt5", "EXT_texture_compression_s3tc",
-			"WEBGL_compressed_texture_s3tc", "MOZ_WEBGL_compressed_texture_s3tc", "WEBKIT_WEBGL_compressed_texture_s3tc"]);
-		var s3tcSRGBExtension = __getExtension(gl, ["EXT_texture_compression_s3tc_srgb", "WEBGL_compressed_texture_s3tc_srgb",
-			"MOZ_WEBGL_compressed_texture_s3tc_srgb", "WEBKIT_WEBGL_compressed_texture_s3tc_srgb"]);
-		var rgtcExtension = __getExtension(gl, ["EXT_texture_compression_rgtc", "ARB_texture_compression_rgtc"]);
-		var bptcExtension = __getExtension(gl, ["EXT_texture_compression_bptc", "ARB_texture_compression_bptc"]);
+		var dxt1Extension = __getExtension(gl, ["EXT_texture_compression_dxt1"]);
+		var dxt3Extension = __getExtension(gl, ["ANGLE_texture_compression_dxt3", "EXT_texture_compression_s3tc"]);
+		var dxt5Extension = __getExtension(gl, ["ANGLE_texture_compression_dxt5", "EXT_texture_compression_s3tc"]);
+		var s3tcSRGBExtension = __getExtension(gl, ["EXT_texture_compression_s3tc_srgb"]);
+		var rgtcExtensionEXT = __getExtension(gl, ["EXT_texture_compression_rgtc"]);
+		var rgtcExtensionARB = __getExtension(gl, ["ARB_texture_compression_rgtc"]);
+		var bptcExtensionEXT = __getExtension(gl, ["EXT_texture_compression_bptc"]);
+		var bptcExtensionARB = __getExtension(gl, ["ARB_texture_compression_bptc"]);
 
 		var extensionSupported = switch (__bcFormat)
 		{
@@ -62,9 +60,9 @@ import openfl.Lib;
 			case "BC3":
 				dxt5Extension != null && (!__isSRGB || s3tcSRGBExtension != null);
 			case "BC4", "BC5":
-				rgtcExtension != null;
+				rgtcExtensionEXT != null || rgtcExtensionARB != null;
 			case "BC6H", "BC7":
-				bptcExtension != null;
+				bptcExtensionEXT != null || bptcExtensionARB != null;
 			default:
 				false;
 		}
@@ -96,15 +94,23 @@ import openfl.Lib;
 			case "BC3":
 				__isSRGB ? 0x8C4F /* COMPRESSED_SRGB_ALPHA_S3TC_DXT5_EXT */ : 0x83F3 /* COMPRESSED_RGBA_S3TC_DXT5_EXT/ANGLE */;
 			case "BC4":
-				__isSigned ? rgtcExtension.COMPRESSED_SIGNED_RED_RGTC1_EXT : rgtcExtension.COMPRESSED_RED_RGTC1_EXT;
+				__isSigned ?
+					(rgtcExtensionEXT != null ? rgtcExtensionEXT.COMPRESSED_SIGNED_RED_RGTC1_EXT : rgtcExtensionARB.COMPRESSED_SIGNED_RED_RGTC1_ARB) :
+					(rgtcExtensionEXT != null ? rgtcExtensionEXT.COMPRESSED_RED_RGTC1_EXT : rgtcExtensionARB.COMPRESSED_RED_RGTC1_ARB);
 			case "BC5":
-				__isSigned ? rgtcExtension.COMPRESSED_SIGNED_RED_GREEN_RGTC2_EXT : rgtcExtension.COMPRESSED_RED_GREEN_RGTC2_EXT;
+				__isSigned ?
+					(rgtcExtensionEXT != null ? rgtcExtensionEXT.COMPRESSED_SIGNED_RED_GREEN_RGTC2_EXT : rgtcExtensionARB.COMPRESSED_SIGNED_RED_GREEN_RGTC2_ARB) :
+					(rgtcExtensionEXT != null ? rgtcExtensionEXT.COMPRESSED_RED_GREEN_RGTC2_EXT : rgtcExtensionARB.COMPRESSED_RED_GREEN_RGTC2_ARB);
 			case "BC6H":
-				__isSigned ? bptcExtension.COMPRESSED_RGB_BPTC_SIGNED_FLOAT_EXT : bptcExtension.COMPRESSED_RGB_BPTC_UNSIGNED_FLOAT_EXT;
+				__isSigned ?
+					(bptcExtensionEXT != null ? bptcExtensionEXT.COMPRESSED_RGB_BPTC_SIGNED_FLOAT_EXT : bptcExtensionARB.COMPRESSED_RGB_BPTC_SIGNED_FLOAT_ARB) :
+					(bptcExtensionEXT != null ? bptcExtensionEXT.COMPRESSED_RGB_BPTC_UNSIGNED_FLOAT_EXT : bptcExtensionARB.COMPRESSED_RGB_BPTC_UNSIGNED_FLOAT_ARB);
 			case "BC7":
-				__isSRGB ? bptcExtension.COMPRESSED_SRGB_ALPHA_BPTC_UNORM_EXT : bptcExtension.COMPRESSED_RGBA_BPTC_UNORM_EXT;
+				__isSRGB ?
+					(bptcExtensionEXT != null ? bptcExtensionEXT.COMPRESSED_SRGB_ALPHA_BPTC_UNORM_EXT : bptcExtensionARB.COMPRESSED_SRGB_ALPHA_BPTC_UNORM_ARB) :
+					(bptcExtensionEXT != null ? bptcExtensionEXT.COMPRESSED_RGBA_BPTC_UNORM_EXT : bptcExtensionARB.COMPRESSED_RGBA_BPTC_UNORM_ARB);
 			default:
-				bptcExtension.COMPRESSED_RGBA_BPTC_UNORM_EXT; // fallback
+				bptcExtensionEXT != null ? bptcExtensionEXT.COMPRESSED_RGBA_BPTC_UNORM_EXT : bptcExtensionARB.COMPRESSED_RGBA_BPTC_UNORM_ARB;
 		}
 
 		__internalFormat = __format;
