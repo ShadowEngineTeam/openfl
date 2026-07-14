@@ -305,7 +305,7 @@ class Shader
 	public function new(code:ByteArray = null, ?process:Bool = true)
 	{
 		this.process = process;
-		
+
 		byteCode = code;
 		precisionHint = FULL;
 
@@ -590,6 +590,7 @@ class Shader
 		}
 
 		var complexBlendsSupported = OpenGLRenderer.__complexBlendsSupported && isFragment;
+		var standardDerivativesSupported = OpenGLRenderer.__standardDerivativesSupported && isFragment;
 
 		#if lime
 		if (__context.__context.type == OPENGL)
@@ -614,6 +615,11 @@ class Shader
 				extensions += "#extension GL_ARB_sample_shading : enable\n";
 			}
 			#end
+		}
+
+		if (standardDerivativesSupported)
+		{
+			extensions += "#extension GL_OES_standard_derivatives : enable\n";
 		}
 
 		// #version must be the first directive and cannot be repeated,
@@ -1329,26 +1335,37 @@ class Shader
 	{
 		#if !macro
 		var str:String = lime.graphics.opengl.GL.getParameter(lime.graphics.opengl.GL.SHADING_LANGUAGE_VERSION);
-		var reg:EReg = ~/GLSL\s+ES\s+(\d+)\.(\d+)/i;
-		var fallbackReg:EReg = ~/(\d+)\.(\d+)/;
 
-		if (reg.match(str))
-		{
-			var major:Int = Std.parseInt(reg.matched(1));
-			if (major >= 3)
-				return "300 es";
-			return "100";
-		}
+		#if lime_opengles
+		var glesReg:EReg = ~/GLSL\s+ES\s+(\d+)\.(\d+)/i;
 
-		if (fallbackReg.match(str))
+		if (glesReg.match(str))
 		{
-			var major:Int = Std.parseInt(fallbackReg.matched(1));
-			if (major >= 3)
-				return "300 es";
+			var major:Int = Std.parseInt(glesReg.matched(1));
+			var minor:Int = Std.parseInt(glesReg.matched(2));
+			var num:Int = major * 100 + minor;
+
+			if (major <= 2)
+				return "100";
+
+			return num + " es";
 		}
-		#end
 
 		return "100";
+		#else
+		var glReg:EReg = ~/(\d+)\.(\d+)/;
+
+		if (glReg.match(str))
+		{
+			var major:Int = Std.parseInt(glReg.matched(1));
+			var minorStr:String = glReg.matched(2);
+			var minor:Float = Std.parseFloat("0." + minorStr);
+			var num:Int = Std.int(Math.round(major * 100 + minor * 100));
+			return Std.string(num);
+		}
+
+		return "120";
+		#end
 	}
 
 	@:noCompletion private function get_glVertexExtensions():Array<{name:String, behavior:String}>
@@ -1433,3 +1450,4 @@ class Shader
 		return __fieldList.indexOf(name) != -1;
 	}
 }
+

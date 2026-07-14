@@ -457,7 +457,7 @@ class ShaderMacro
 	{
 		// Specify the default glVersion.
 		// We can use compile defines to guess the value that prevents crashes in the majority of cases.
-		return "100";
+		return #if lime_opengles "100" #else "120" #end;
 	}
 
 	/**
