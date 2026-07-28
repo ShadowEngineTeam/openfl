@@ -31,17 +31,11 @@ import openfl.utils.ByteArray;
 
 		__width = width;
 		__height = height;
-		// __format = format;
 		__optimizeForRenderToTexture = optimizeForRenderToTexture;
 		__streamingLevels = streamingLevels;
+		__textureTarget = __context.gl.TEXTURE_2D;
 
-		var gl = __context.gl;
-
-		__textureTarget = gl.TEXTURE_2D;
-
-		__context.__bindGLTexture2D(__textureID);
-		gl.texImage2D(__textureTarget, 0, __internalFormat, __width, __height, 0, __format, gl.UNSIGNED_BYTE, null);
-		__context.__bindGLTexture2D(null);
+		uploadFromTypedArray(null);
 
 		__memoryUsage = 0;
 
@@ -213,29 +207,10 @@ import openfl.utils.ByteArray;
 	**/
 	public function uploadFromTypedArray(data:ArrayBufferView, miplevel:UInt = 0):Void
 	{
-		if (data == null) return;
-
 		var gl = __context.gl;
 
-		var width = __width >> miplevel;
-		var height = __height >> miplevel;
-
-		if (width == 0 && height == 0) return;
-
-		if (width == 0) width = 1;
-		if (height == 0) height = 1;
-
 		__context.__bindGLTexture2D(__textureID);
-
-		if (data != null && __memoryUsage == data.byteLength)
-		{
-			gl.texSubImage2D(__textureTarget, miplevel, 0, 0, width, height, __format, gl.UNSIGNED_BYTE, data);
-		}
-		else
-		{
-			gl.texImage2D(__textureTarget, miplevel, __internalFormat, width, height, 0, __format, gl.UNSIGNED_BYTE, data);
-		}
-
+		__uploadTexture2D(__textureTarget, __width, __height, __internalFormat, __format, data);
 		__context.__bindGLTexture2D(null);
 
 		__memoryUsage = data != null ? data.byteLength : 0;

@@ -1664,8 +1664,6 @@ class Stage extends DisplayObjectContainer #if lime implements IModule #end
 			}
 			catch (e2:Dynamic) {}
 			untyped js.Syntax.code("throw e");
-			#elseif hl
-			hl.Api.rethrow(e);
 			#else
 			throw e;
 			#end
@@ -2280,12 +2278,12 @@ class Stage extends DisplayObjectContainer #if lime implements IModule #end
 
 	@:noCompletion private function __renderAfterEvent():Void
 	{
-		#if (cpp || hl)
+		#if native
 		// TODO: should Lime have a public API to force rendering?
 		window.__backend.render();
 		#end
 		var cancelled = __render(window.context);
-		#if (cpp || hl)
+		#if native
 		if (!cancelled)
 		{
 			window.__backend.contextFlip();
