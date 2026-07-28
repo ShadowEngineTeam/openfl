@@ -5,6 +5,8 @@ import haxe.io.Bytes;
 import openfl.utils._internal.UInt8Array;
 import openfl.utils.ByteArray;
 import openfl.Lib;
+import openfl.display._internal.SamplerState;
+import openfl.display3D.Context3D;
 
 /**
 	The BCTexture class represents a 2-dimensional compressed BCn texture uploaded to a rendering context.
@@ -22,6 +24,7 @@ import openfl.Lib;
 @:final class BCTexture extends TextureBase
 {
 	@:noCompletion private static var __warned:Bool = false;
+	//@:noCompletion private static var __warnedMipmap:Bool = false;
 	public static inline final BC_MAGIC_NUMBER:Int = 0x20534444;
 	public static final DDS_HEADER_SIZE:Int = 128;
 	public static final DX10_HEADER_SIZE:Int = 148;
@@ -274,5 +277,51 @@ import openfl.Lib;
 
 		return magic == BC_MAGIC_NUMBER;
 	}
+
+	@:noCompletion private override function __setSamplerState(state:SamplerState):Bool
+	{
+		var effectiveState = state;
+
+		if (state.mipfilter != MIPNONE)
+		{
+			effectiveState = state.clone();
+			effectiveState.mipfilter = MIPNONE;
+
+			/*if (!__warnedMipmap)
+			{
+				trace("[WARNING] Mip filtering is not supported for BCTexture (no mip chain is uploaded); ignoring mipfilter.");
+				__warnedMipmap = true;
+			}*/
+		}
+
+		if (super.__setSamplerState(effectiveState))
+		{
+			var gl = __context.gl;
+
+			if (Context3D.__glMaxTextureMaxAnisotropy != 0)
+			{
+				var aniso = switch (state.filter)
+				{
+					case ANISOTROPIC2X: 2;
+					case ANISOTROPIC4X: 4;
+					case ANISOTROPIC8X: 8;
+					case ANISOTROPIC16X: 16;
+					default: 1;
+				}
+
+				if (aniso > Context3D.__glMaxTextureMaxAnisotropy)
+				{
+					aniso = Context3D.__glMaxTextureMaxAnisotropy;
+				}
+
+				gl.texParameterf(gl.TEXTURE_2D, Context3D.__glTextureMaxAnisotropy, aniso);
+			}
+
+			return true;
+		}
+
+		return false;
+	}
 }
+
 #end

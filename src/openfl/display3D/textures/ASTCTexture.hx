@@ -5,6 +5,8 @@ import openfl.utils._internal.UInt8Array;
 import openfl.display.BlendMode;
 import openfl.utils.ByteArray;
 import openfl.Lib;
+import openfl.display._internal.SamplerState;
+import openfl.display3D.Context3D;
 
 /**
 	The ASTCTexture class represents a 2-dimensional compressed ASTC texture uploaded to a rendering context.
@@ -18,6 +20,7 @@ import openfl.Lib;
 @:final class ASTCTexture extends TextureBase
 {
 	@:noCompletion private static var __warned:Bool = false;
+	//@:noCompletion private static var __warnedMipmap:Bool = false;
 	public static inline final ASTC_MAGIC_NUMBER:Int = 0x5CA1AB13;
 	public static inline final IMAGE_DATA_OFFSET = 16;
 
@@ -163,6 +166,51 @@ import openfl.Lib;
 			supported = false;
 			return;
 		}
+	}
+
+	@:noCompletion private override function __setSamplerState(state:SamplerState):Bool
+	{
+		var effectiveState = state;
+
+		if (state.mipfilter != MIPNONE)
+		{
+			effectiveState = state.clone();
+			effectiveState.mipfilter = MIPNONE;
+
+			/*if (!__warnedMipmap)
+			{
+				trace("[WARNING] Mip filtering is not supported for ASTCTexture (no mip chain is uploaded); ignoring mipfilter.");
+				__warnedMipmap = true;
+			}*/
+		}
+
+		if (super.__setSamplerState(effectiveState))
+		{
+			var gl = __context.gl;
+
+			if (Context3D.__glMaxTextureMaxAnisotropy != 0)
+			{
+				var aniso = switch (state.filter)
+				{
+					case ANISOTROPIC2X: 2;
+					case ANISOTROPIC4X: 4;
+					case ANISOTROPIC8X: 8;
+					case ANISOTROPIC16X: 16;
+					default: 1;
+				}
+
+				if (aniso > Context3D.__glMaxTextureMaxAnisotropy)
+				{
+					aniso = Context3D.__glMaxTextureMaxAnisotropy;
+				}
+
+				gl.texParameterf(gl.TEXTURE_2D, Context3D.__glTextureMaxAnisotropy, aniso);
+			}
+
+			return true;
+		}
+
+		return false;
 	}
 
 	public static function isBytesASTC(bytes:ByteArray)
