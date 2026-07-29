@@ -1,6 +1,5 @@
 package openfl.net;
 
-#if !html5
 import haxe.io.Error;
 import openfl.Lib;
 import openfl.errors.ArgumentError;
@@ -24,7 +23,7 @@ import sys.net.Socket;
 	property.
 
 	_OpenFL target support:_ This feature is supported on all desktop operating
-	systems, on iOS, and on Android. This feature is not supported on the html5
+	systems, on iOS, and on Android. This feature is not supported on the 
 	target or other non-sys targets.
 
 	_Adobe AIR profile support:_ This feature is supported on all desktop
@@ -72,7 +71,7 @@ class ServerSocket extends EventDispatcher
 	/**
 		Indicates whether or not ServerSocket features are supported in the run-time environment.
 	**/
-	public static var isSupported(default, null):Bool = #if !html5 true #else false #end;
+	public static var isSupported(default, null):Bool = true;
 
 	/**
 		Indicates whether the server socket is listening for incoming connections.
@@ -316,11 +315,6 @@ class ServerSocket extends EventDispatcher
 
 	private function get_isSupported():Bool
 	{
-		#if html5
-		return false;
-		#else
 		return true;
-		#end
 	}
 }
-#end

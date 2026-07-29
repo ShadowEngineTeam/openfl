@@ -174,7 +174,7 @@ class EventDispatcher implements IEventDispatcher
 								it is not garbage-collected and stays
 								persistent.
 
-								Weak reference support is limited to html5 and
+								Weak reference support is limited to  and
 								flash/air. On other targets, this parameter is
 								ignored, and the reference will be strong instead.
 		@throws ArgumentError The `listener` specified is not a
@@ -398,55 +398,7 @@ class EventDispatcher implements IEventDispatcher
 
 			if (listener.useCapture == capture)
 			{
-				#if (js && html5)
-				if (listener.useWeakReference && listener.weakRefCallback != null)
-				{
-					var weakCallback = listener.weakRefCallback.deref();
-					if (weakCallback == null)
-					{
-						// a weakly referenced callback was garbage collected
-						var indexToRemove = iterator.index - 1;
-						list.splice(indexToRemove, 1);
-						iterator.remove(listener, indexToRemove);
-					}
-					else if (Lib.current != null && Lib.current.stage != null && Lib.current.stage.__uncaughtErrorEvents.__enabled)
-					{
-						try
-						{
-							weakCallback(event);
-						}
-						catch (e:Dynamic)
-						{
-							if (!(event is UncaughtErrorEvent))
-							{
-								Lib.current.stage.__handleError(e);
-							}
-						}
-					}
-					else
-					{
-						weakCallback(event);
-					}
-				}
-				else if (Lib.current != null && Lib.current.stage != null && Lib.current.stage.__uncaughtErrorEvents.__enabled)
-				{
-					try
-					{
-						listener.callback(event);
-					}
-					catch (e:Dynamic)
-					{
-						if (!(event is UncaughtErrorEvent))
-						{
-							Lib.current.stage.__handleError(e);
-						}
-					}
-				}
-				else
-				{
-					listener.callback(event);
-				}
-				#else
+	
 				if (Lib.current != null && Lib.current.stage != null && Lib.current.stage.__uncaughtErrorEvents.__enabled)
 				{
 					try
@@ -465,8 +417,6 @@ class EventDispatcher implements IEventDispatcher
 				{
 					listener.callback(event);
 				}
-				#end
-
 				if (event.__isCanceledNow)
 				{
 					break;
@@ -595,30 +545,13 @@ class EventDispatcher implements IEventDispatcher
 private class Listener
 {
 	public var callback:Dynamic->Void;
-	#if (js && html5)
-	public var weakRefCallback:Dynamic;
-
-	private static var supportsWeakReference:Bool = Reflect.hasField(js.Lib.global, "WeakRef");
-	#end
-
-	public var priority:Int;
+public var priority:Int;
 	public var useCapture:Bool;
 	public var useWeakReference:Bool;
 
 	public function new(callback:Dynamic->Void, useCapture:Bool, priority:Int, useWeakReference:Bool)
 	{
-		#if (js && html5)
-		if (useWeakReference && supportsWeakReference)
-		{
-			this.weakRefCallback = untyped js.Syntax.code("new WeakRef({0})", callback);
-		}
-		else
-		{
-			this.callback = callback;
-		}
-		#else
 		this.callback = callback;
-		#end
 		this.useCapture = useCapture;
 		this.priority = priority;
 		this.useWeakReference = useWeakReference;
@@ -627,17 +560,6 @@ private class Listener
 	public function match(callback:Dynamic->Void, useCapture:Bool):Bool
 	{
 		var resolvedCallback = this.callback;
-
-		#if (js && html5)
-		if (weakRefCallback != null)
-		{
-			resolvedCallback = weakRefCallback.deref();
-			if (resolvedCallback == null)
-			{
-				return false;
-			}
-		}
-		#end
 
 		return (Reflect.compareMethods(resolvedCallback, callback) && this.useCapture == useCapture);
 	}

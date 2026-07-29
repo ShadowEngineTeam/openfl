@@ -1,7 +1,6 @@
 package openfl.display._internal;
 
 import openfl.display._internal.CairoGraphics;
-import openfl.display._internal.CanvasGraphics;
 import openfl.display._internal.DrawCommandReader;
 import openfl.utils._internal.Float32Array;
 import openfl.utils._internal.UInt16Array;
@@ -647,9 +646,7 @@ class Context3DGraphics
 				renderer.__softwareRenderer.__worldTransform = renderer.__worldTransform;
 			}
 
-			#if (js && html5)
-			CanvasGraphics.render(graphics, cast renderer.__softwareRenderer);
-			#elseif lime_cairo
+			#if lime_cairo
 			CairoGraphics.render(graphics, cast renderer.__softwareRenderer);
 			#end
 

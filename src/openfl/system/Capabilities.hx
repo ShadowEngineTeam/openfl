@@ -155,7 +155,7 @@ import sys.io.Process;
 		(`false`) support printing. The server string is
 		`PR`.
 	**/
-	public static var hasPrinting(default, null) = #if html5 true #else false #end;
+	public static var hasPrinting(default, null) = false;
 
 	/**
 		Specifies whether the system does (`true`) or does not
@@ -199,7 +199,7 @@ import sys.io.Process;
 		(`false`) encode a video stream, such as that coming from a web
 		camera. The server string is `VE`.
 	**/
-	public static var hasVideoEncoder(default, null) = #if html5 true #else false #end;
+	public static var hasVideoEncoder(default, null) = false;
 
 	/**
 		Specifies whether the system is a special debugging version
@@ -283,7 +283,7 @@ import sys.io.Process;
 
 		The server string is `LFD`.
 	**/
-	public static var localFileReadDisable(default, null) = #if web true #else false #end;
+	public static var localFileReadDisable(default, null) = false;
 
 	/**
 		Specifies the manufacturer of the running version of OpenFL, in the
@@ -309,7 +309,6 @@ import sys.io.Process;
 		highest level might not run with the highest quality. This property is
 		useful for servers trying to target a client's capabilities. Using this
 		property, a server can determine the level of video to send to the client.
-
 
 		The server string is `ML`.
 	**/
@@ -379,10 +378,10 @@ import sys.io.Process;
 		The server string is `PT`.
 
 		_OpenFL target support:_ On native targets that are considered Haxe
-		`sys` targets, returns `"Desktop"`. On the HTML5 target, returns
+		`sys` targets, returns `"Desktop"`. On the  target, returns
 		`"PlugIn"`. On all other targets, returns `"StandAlone"`.
 	**/
-	public static var playerType(default, null) = #if web "PlugIn" #elseif sys "Desktop" #else "StandAlone" #end;
+	public static var playerType(default, null) = #if sys "Desktop" #else "StandAlone" #end;
 
 	/**
 		Specifies the screen color. This property can have the value
@@ -620,7 +619,7 @@ import sys.io.Process;
 		var window = Lib.application != null ? Lib.application.window : null;
 		var screenDPI:Float;
 
-		#if (desktop || web)
+		#if desktop
 		screenDPI = 72;
 
 		if (window != null)
@@ -738,11 +737,7 @@ import sys.io.Process;
 		var value = "QNX";
 		#elseif firefox
 		var value = "MOZ";
-		#elseif html5
-		var value = "WEB";
-		#else
 		var value = "OFL";
-		#end
 
 		if (Compiler.getDefine("openfl") != null)
 		{

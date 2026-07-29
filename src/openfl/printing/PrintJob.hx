@@ -7,13 +7,6 @@ import openfl.geom.Rectangle;
 #if lime
 import lime._internal.graphics.ImageCanvasUtil; // TODO
 #end
-#if (js && html5)
-import js.html.DivElement;
-import js.html.Image;
-import js.html.StyleElement;
-import js.Browser;
-#end
-
 /**
 	The PrintJob class lets you create content and print it to one or more
 	pages. This class lets you render content that is visible, dynamic or
@@ -66,7 +59,7 @@ class PrintJob
 		Indicates whether the PrintJob class is supported on the current
 		platform (`true`) or not (`false`).
 	**/
-	public static var isSupported(default, null) = #if (js && html5) true #else false #end;
+	public static var isSupported(default, null) = false;
 
 	/**
 		The image orientation for printing. The acceptable values are defined
@@ -317,54 +310,7 @@ class PrintJob
 	{
 		if (!__started) return;
 
-		#if (js && html5)
-		var window = Browser.window.open("", "", "width=500,height=500");
-
-		if (window != null)
-		{
-			var style:StyleElement = cast window.document.createElement("style");
-			style.innerText = "@media all {
-					.page-break	{ display: none; }
-				}
-
-				@media print {
-					.page-break	{ display: block; page-break-before: always; }
-				}";
-
-			window.document.head.appendChild(style);
-
-			var div:DivElement;
-			var image:Image;
-			var bitmapData:BitmapData;
-
-			for (i in 0...__bitmapData.length)
-			{
-				bitmapData = __bitmapData[i];
-				ImageCanvasUtil.sync(bitmapData.image, false);
-
-				if (bitmapData.image.buffer.__srcCanvas != null)
-				{
-					if (i > 0)
-					{
-						div = cast window.document.createElement("div");
-						div.className = "page-break";
-						window.document.body.appendChild(div);
-					}
-
-					image = new Image();
-					image.src = bitmapData.image.buffer.__srcCanvas.toDataURL("image/png");
-					window.document.body.appendChild(image);
-				}
-			}
-
-			Timer.delay(function()
-			{
-				window.focus();
-				window.print();
-			}, 500);
 		}
-		#end
-	}
 
 	/**
 		Displays the operating system's Print dialog box and starts spooling.

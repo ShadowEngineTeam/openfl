@@ -270,11 +270,7 @@ class DisplayObjectRenderer extends EventDispatcher
 				{
 					if (#if !openfl_disable_gl_cacheasbitmap __shouldCacheHardware(displayObject, null) == false #else true #end)
 					{
-						#if (js && html5)
-						renderType = CANVAS;
-						#else
 						renderType = CAIRO;
-						#end
 					}
 				}
 				#end
@@ -544,12 +540,7 @@ class DisplayObjectRenderer extends EventDispatcher
 							displayObject.__cacheBitmap.__bitmapData = displayObject.__cacheBitmapData;
 						}
 
-						#if (js && html5)
-						ImageCanvasUtil.convertToCanvas(displayObject.__cacheBitmapData.image);
-						displayObject.__cacheBitmapRenderer = new CanvasRenderer(displayObject.__cacheBitmapData.image.buffer.__srcContext);
-						#else
 						displayObject.__cacheBitmapRenderer = new CairoRenderer(new Cairo(displayObject.__cacheBitmapData.getSurface()));
-						#end
 					}
 
 					displayObject.__cacheBitmapRenderer.__worldTransform = new Matrix();
@@ -736,11 +727,7 @@ class DisplayObjectRenderer extends EventDispatcher
 				}
 				else
 				{
-					#if (js && html5)
-					displayObject.__cacheBitmapData.__drawCanvas(displayObject, cast displayObject.__cacheBitmapRenderer);
-					#else
 					displayObject.__cacheBitmapData.__drawCairo(displayObject, cast displayObject.__cacheBitmapRenderer);
-					#end
 
 					if (hasFilters)
 					{
@@ -865,12 +852,6 @@ class DisplayObjectRenderer extends EventDispatcher
 		}
 		else if (displayObject.__cacheBitmap != null)
 		{
-			if (renderer.__type == DOM)
-			{
-				var domRenderer:DOMRenderer = cast renderer;
-				domRenderer.__renderDrawableClear(displayObject.__cacheBitmap);
-			}
-
 			displayObject.__cacheBitmap = null;
 			displayObject.__cacheBitmapData = null;
 			displayObject.__cacheBitmapData2 = null;

@@ -1,6 +1,5 @@
 package openfl.net;
 
-#if !html5
 import haxe.io.Bytes;
 import haxe.io.Error;
 import openfl.errors.ArgumentError;
@@ -11,12 +10,10 @@ import openfl.events.DatagramSocketDataEvent;
 import openfl.events.Event;
 import openfl.events.EventType;
 import openfl.events.EventDispatcher;
-#if !js
 import openfl.utils.ByteArray;
 import sys.net.Address;
 import sys.net.Host;
 import sys.net.UdpSocket;
-#end
 
 /**
 	The DatagramSocket class enables code to send and receive Universal Datagram Protocol (UDP) packets.
@@ -25,7 +22,7 @@ import sys.net.UdpSocket;
 	property.
 
 	_OpenFL target support:_ This feature is supported on all desktop operating
-	systems, on iOS, and on Android. This feature is not supported on the html5
+	systems, on iOS, and on Android. This feature is not supported on the 
 	target or other non-sys targets.
 
 	_Adobe AIR profile support:_ his feature is supported on all desktop
@@ -61,9 +58,8 @@ class DatagramSocket extends EventDispatcher
 	/**
 		Indicates whether or not DatagramSocket features are supported in the run-time environment.
 	**/
-	public static var isSupported(default, null):Bool = #if !js true #else false #end;
+	public static var isSupported(default, null):Bool = true;
 
-	#if !js
 	/**
 		Indicates whether this socket object is currently bound to a local address and port.
 	**/
@@ -445,4 +441,3 @@ class DatagramSocket extends EventDispatcher
 	}
 	#end
 }
-#end

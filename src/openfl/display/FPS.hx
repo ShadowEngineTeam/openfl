@@ -63,7 +63,7 @@ class FPS extends TextField
 		{
 			var newText = "FPS: " + currentFPS;
 
-			#if (gl_stats && !disable_cffi && (!html5 || !canvas))
+			#if (gl_stats && !disable_cffi)
 			newText += "\ntotalDC: " + Context3DStats.totalDrawCalls();
 			newText += "\nstageDC: " + Context3DStats.contextDrawCalls(DrawCallContext.STAGE);
 			newText += "\nstage3DDC: " + Context3DStats.contextDrawCalls(DrawCallContext.STAGE3D);

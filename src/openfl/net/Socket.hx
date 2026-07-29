@@ -18,11 +18,6 @@ import openfl.utils.ByteArray;
 import openfl.utils.Endian;
 import openfl.utils.IDataInput;
 import openfl.utils.IDataOutput;
-#if (js && html5)
-import js.lib.ArrayBuffer;
-import js.html.WebSocket;
-import js.Browser;
-#end
 #if sys
 import sys.net.Host;
 import sys.net.Socket as SysSocket;
@@ -40,7 +35,7 @@ import sys.net.Socket as SysSocket;
 	A socket transmits and receives data asynchronously.
 
 	_OpenFL target support:_ This feature is supported on all desktop operating
-	systems, on iOS, and on Android. On the html5 target, it uses web sockets
+	systems, on iOS, and on Android. On the  target, it uses web sockets
 	instead of raw unix-style sockets.
 
 	On some operating systems, flush() is called automatically between
@@ -358,9 +353,6 @@ class Socket extends EventDispatcher implements IDataInput implements IDataOutpu
 			throw new SecurityError("Invalid socket port number specified.");
 		}
 
-		#if (js && html5)
-		__timestamp = Timer.stamp();
-		#else
 		var h:Host = null;
 
 		try
@@ -374,7 +366,6 @@ class Socket extends EventDispatcher implements IDataInput implements IDataOutpu
 		}
 
 		__timestamp = Sys.time();
-		#end
 
 		__host = host;
 		__port = port;
@@ -385,25 +376,6 @@ class Socket extends EventDispatcher implements IDataInput implements IDataOutpu
 		__input = new ByteArray();
 		__input.endian = __endian;
 
-		#if (js && html5)
-		if (Browser.location.protocol == "https:")
-		{
-			secure = true;
-		}
-
-		var schema = secure ? "wss" : "ws";
-		var urlReg = ~/^(.*:\/\/)?([A-Za-z0-9\-\.]+)\/?(.*)/g;
-		urlReg.match(host);
-		var __webHost = urlReg.matched(2);
-		var __webPath = urlReg.matched(3);
-
-		__socket = new WebSocket(schema + "://" + __webHost + ":" + port + "/" + __webPath);
-		__socket.binaryType = "arraybuffer";
-		__socket.onopen = socket_onOpen;
-		__socket.onmessage = socket_onMessage;
-		__socket.onclose = socket_onClose;
-		__socket.onerror = socket_onError;
-		#else
 		try
 		{
 			__socket = new SysSocket();
@@ -421,7 +393,6 @@ class Socket extends EventDispatcher implements IDataInput implements IDataOutpu
 			__socket.setFastSend(true);
 		}
 		catch (e:Dynamic) {}
-		#end
 
 		Lib.current.addEventListener(Event.ENTER_FRAME, this_onEnterFrame);
 	}
@@ -449,13 +420,7 @@ class Socket extends EventDispatcher implements IDataInput implements IDataOutpu
 		{
 			try
 			{
-				#if (js && html5)
-				var buffer:ArrayBuffer = __output;
-				if (buffer.byteLength > __output.length) buffer = buffer.slice(0, __output.length);
-				__socket.send(buffer);
-				#else
 				__socket.output.writeBytes(__output, 0, __output.length);
-				#end
 				__output = new ByteArray();
 				__output.endian = __endian;
 			}
@@ -1054,43 +1019,6 @@ class Socket extends EventDispatcher implements IDataInput implements IDataOutpu
 
 	@:noCompletion private function socket_onMessage(msg:Dynamic):Void
 	{
-		#if (js && html5)
-		if (__input.position == __input.length)
-		{
-			__input.clear();
-		}
-
-		if ((msg.data is String))
-		{
-			__input.position = __input.length;
-			var cachePosition = __input.position;
-			__input.writeUTFBytes(msg.data);
-			__input.position = cachePosition;
-		}
-		else
-		{
-			var newData:ByteArray = (msg.data : ArrayBuffer);
-			newData.readBytes(__input, __input.length);
-		}
-
-		if (__input.bytesAvailable > 0)
-		{
-			#if openfl_pool_events
-			var socketDataEvent = ProgressEvent.__pool.get();
-			socketDataEvent.type = ProgressEvent.SOCKET_DATA;
-			socketDataEvent.bytesLoaded = __input.bytesAvailable;
-			socketDataEvent.bytesTotal = 0;
-			#else
-			var socketDataEvent = new ProgressEvent(ProgressEvent.SOCKET_DATA, false, false, __input.bytesAvailable, 0);
-			#end
-
-			dispatchEvent(socketDataEvent);
-
-			#if openfl_pool_events
-			ProgressEvent.__pool.release(socketDataEvent);
-			#end
-		}
-		#end
 	}
 
 	@:noCompletion private function socket_onOpen(_):Void
@@ -1113,12 +1041,6 @@ class Socket extends EventDispatcher implements IDataInput implements IDataOutpu
 
 	@:noCompletion private function this_onEnterFrame(event:Event):Void
 	{
-		#if (js && html5)
-		if (__socket != null)
-		{
-			flush();
-		}
-		#else
 		var doConnect = false;
 		var doClose = false;
 

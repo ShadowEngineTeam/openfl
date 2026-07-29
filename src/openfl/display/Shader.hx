@@ -387,7 +387,7 @@ class Shader
 	#if windows
 	// 0(5) : whatever
 	@:noCompletion private var __lineExtractor = ~/^\d+\((\d+)\) : (.+$)/;
-	#else // (html5 || macos || linux)
+	#else // (macos || linux)
 	// ERROR: 0:5:whatever
 	@:noCompletion private var __lineExtractor = ~/^\w+?: \d+:(\d+):(.+$)/;
 	#end

@@ -287,8 +287,6 @@ abstract ByteArray(ByteArrayData) from ByteArrayData to ByteArrayData
 
 		#if display
 		return null;
-		#elseif js
-		return ByteArrayData.fromBytes(Bytes.ofData(buffer));
 		#else
 		return ByteArrayData.fromBytes((buffer : Bytes));
 		#end
@@ -340,7 +338,7 @@ abstract ByteArray(ByteArrayData) from ByteArrayData to ByteArrayData
 		Creates a new ByteArray from a file path synchronously. This means that the
 		ByteArray will be returned immediately (if supported).
 
-		HTML5 and Flash do not support loading files synchronously, so these targets
+		 and Flash do not support loading files synchronously, so these targets
 		always return `null`.
 
 		In order to load files from a remote web address, use the `loadFromFile` method,
@@ -562,7 +560,7 @@ abstract ByteArray(ByteArrayData) from ByteArrayData to ByteArrayData
 		Reads a multibyte string of specified length from the byte stream using
 		the specified character set.
 
-		_OpenFL target support:_ Supported by the HTML5, Flash, and AIR targets.
+		_OpenFL target support:_ Supported by the , Flash, and AIR targets.
 		Not currently supported by native targets.
 
 		@param length  The number of bytes from the byte stream to read.
@@ -716,8 +714,6 @@ abstract ByteArray(ByteArrayData) from ByteArrayData to ByteArrayData
 	{
 		#if display
 		return null;
-		#elseif js
-		return (byteArray : ByteArrayData).getData();
 		#else
 		return (byteArray : ByteArrayData);
 		#end
@@ -843,7 +839,6 @@ abstract ByteArray(ByteArrayData) from ByteArrayData to ByteArrayData
 		Writes a byte to the byte stream.
 
 		The low 8 bits of the parameter are used. The high 24 bits are ignored.
-
 
 		@param value A 32-bit integer. The low 8 bits are written to the byte
 					 stream.
@@ -1136,11 +1131,7 @@ abstract ByteArray(ByteArrayData) from ByteArrayData to ByteArrayData
 		}
 		#end
 
-		#if js
-		super(bytes.b.buffer);
-		#else
 		super(length, bytes.getData());
-		#end
 
 		__allocated = length;
 
@@ -1158,17 +1149,6 @@ abstract ByteArray(ByteArrayData) from ByteArrayData to ByteArrayData
 	public function compress(algorithm:CompressionAlgorithm = ZLIB):Void
 	{
 		#if lime
-		#if js
-		if (__allocated > __length)
-		{
-			var cacheLength:Int = __length;
-			__length = __allocated;
-			var data:Bytes = Bytes.alloc(cacheLength);
-			data.blit(0, this, 0, cacheLength);
-			__setData(data);
-			__length = cacheLength;
-		}
-		#end
 
 		var limeBytes:LimeBytes = this;
 
@@ -1335,50 +1315,7 @@ abstract ByteArray(ByteArrayData) from ByteArrayData to ByteArrayData
 
 	public function readMultiByte(length:Int, charSet:String):String
 	{
-		#if js
-		if (position + length > __length)
-		{
-			throw new EOFError();
-		}
-		try
-		{
-			var decoder = new js.html.TextDecoder(charSet, {fatal: true});
-
-			// decode reads the full ArrayBuffer, so if we're starting from a
-			// greater than 0, or we need to read fewer characters than the
-			// total length of the existig buffer, we need to make a copy to
-			// pass to the TextDecoder
-			var arrayBuffer:ArrayBuffer = null;
-			if (position == 0)
-			{
-				arrayBuffer = (this : Bytes).getData();
-				// the ArrayBuffer may actually be longer than the length of the
-				// ByteArray, so we may still need to make a copy
-				if (arrayBuffer.byteLength > length)
-				{
-					arrayBuffer = arrayBuffer.slice(0, length);
-				}
-			}
-			else
-			{
-				arrayBuffer = new ArrayBuffer(length);
-				var int8Array = new Int8Array(arrayBuffer);
-				for (i in 0...length)
-				{
-					var byte = this.readByte();
-					int8Array[i] = byte;
-				}
-			}
-			return decoder.decode(arrayBuffer);
-		}
-		catch (e:Dynamic)
-		{
-			// when a charset isn't supported, fall back to UTF
-			return readUTFBytes(length);
-		}
-		#else
 		return readUTFBytes(length);
-		#end
 	}
 
 	public function readObject():Dynamic
@@ -1518,17 +1455,6 @@ abstract ByteArray(ByteArrayData) from ByteArrayData to ByteArrayData
 	public function uncompress(algorithm:CompressionAlgorithm = ZLIB):Void
 	{
 		#if lime
-		#if js
-		if (__allocated > __length)
-		{
-			var cacheLength:Int = __length;
-			__length = __allocated;
-			var data:Bytes = Bytes.alloc(cacheLength);
-			data.blit(0, this, 0, cacheLength);
-			__setData(data);
-			__length = cacheLength;
-		}
-		#end
 
 		var limeBytes:LimeBytes = this;
 
@@ -1795,9 +1721,6 @@ abstract ByteArray(ByteArrayData) from ByteArrayData to ByteArrayData
 
 		__allocated = bytes.length;
 
-		#if js
-		data = bytes.data;
-		#end
 	}
 
 	// Get & Set Methods

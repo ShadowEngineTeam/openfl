@@ -209,7 +209,7 @@ import haxe.macro.Compiler;
 		and response cookies are not remembered, but users can manage cookies
 		themselves by direct header manipulation.
 
-		**Note:** In OpenFL's HTML5 target, the 'Cookie' request header
+		**Note:** In OpenFL's  target, the 'Cookie' request header
 		cannot be added programatically, due to web browser security
 		restrictions. See
 		[MDN: Forbidden Request Headers](https://developer.mozilla.org/en-US/docs/Glossary/Forbidden_header_name)

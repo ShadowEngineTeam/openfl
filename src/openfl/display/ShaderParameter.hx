@@ -85,7 +85,7 @@ import openfl.display3D.Context3D;
 	parameters when the Shader instance is created.
 **/
 @:access(openfl.display3D.Context3D)
-#if (!js && !display)
+#if !display
 @:generic
 #end
 @:final class ShaderParameter<T> /*implements Dynamic*/

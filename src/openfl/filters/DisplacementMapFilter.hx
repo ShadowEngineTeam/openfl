@@ -220,12 +220,6 @@ import lime.math.Vector4;
 		#if lime
 		__updateMapMatrix();
 
-		#if (js && html5)
-		ImageCanvasUtil.convertToData(bitmapData.image);
-		ImageCanvasUtil.convertToData(sourceBitmapData.image);
-		ImageCanvasUtil.convertToData(__mapBitmap.image);
-		#end
-
 		ImageDataUtil.displaceMap(bitmapData.image, sourceBitmapData.image, __mapBitmap.image,
 
 			new Vector2(__mapPoint.x / __mapBitmap.width, __mapPoint.y / __mapBitmap.height),

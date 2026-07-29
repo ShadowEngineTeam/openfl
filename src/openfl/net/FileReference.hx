@@ -20,12 +20,6 @@ import lime.ui.FileDialogFilter;
 #if sys
 import sys.FileSystem;
 #end
-#if (js && html5)
-import js.html.FileReader;
-import js.html.InputElement;
-import js.Browser;
-#end
-
 /**
 	The FileReference class provides a means to upload and download files
 	between a user's computer and a server. An operating-system dialog box
@@ -479,11 +473,6 @@ class FileReference extends EventDispatcher
 	@:noCompletion private var __data:ByteArray;
 	@:noCompletion private var __path:String;
 	@:noCompletion private var __urlLoader:URLLoader;
-	#if (js && html5)
-	@:noCompletion private var __inputControl:InputElement;
-	@:noCompletion private var __pendingDownload:Bool = false;
-	@:noCompletion private var __pendingDefaultFileName:Null<String>;
-	#end
 
 	/**
 		Creates a new FileReference object. When populated, a FileReference
@@ -492,15 +481,6 @@ class FileReference extends EventDispatcher
 	public function new()
 	{
 		super();
-		#if (js && html5)
-		__inputControl = cast Browser.document.createElement("input");
-		__inputControl.setAttribute("type", "file");
-		__inputControl.onclick = function(e)
-		{
-			e.cancelBubble = true;
-			e.stopPropagation();
-		}
-		#end
 	}
 
 	/**
@@ -574,67 +554,7 @@ class FileReference extends EventDispatcher
 		__data = null;
 		__path = null;
 
-		#if (js && html5)
-		var filter:String = null;
-		if (typeFilter != null)
-		{
-			var filters:Array<String> = [];
-			for (type in typeFilter)
-			{
-				filters.push(StringTools.replace(StringTools.replace(type.extension, "*.", "."), ";", ","));
-			}
-			filter = filters.join(",");
-		}
-		if (filter != null)
-		{
-			__inputControl.setAttribute("accept", filter);
-		}
-		else
-		{
-			__inputControl.removeAttribute("accept");
-		}
-		__inputControl.onchange = function()
-		{
-			if (__inputControl.files.length == 0)
-			{
-				#if openfl_pool_events
-				var cancelEvent = Event.__pool.get();
-				cancelEvent.type = Event.CANCEL;
-				#else
-				var cancelEvent = new Event(Event.CANCEL);
-				#end
-
-				dispatchEvent(cancelEvent);
-
-				#if openfl_pool_events
-				Event.__pool.release(cancelEvent);
-				#end
-				return;
-			}
-			var file = __inputControl.files[0];
-			modificationDate = Date.fromTime(file.lastModified);
-			creationDate = modificationDate;
-			size = file.size;
-			type = "." + Path.extension(file.name);
-			name = Path.withoutDirectory(file.name);
-			__path = file.name;
-
-			#if openfl_pool_events
-			var selectEvent = Event.__pool.get();
-			selectEvent.type = Event.SELECT;
-			#else
-			var selectEvent = new Event(Event.SELECT);
-			#end
-
-			dispatchEvent(selectEvent);
-
-			#if openfl_pool_events
-			Event.__pool.release(selectEvent);
-			#end
-		}
-		__inputControl.click();
-		return true;
-		#elseif (lime && !macro)
+		#if (lime && !macro)
 		FileDialog.openFile(Lib.current.stage.window, function(paths:Array<String>, filter):Void
 		{
 			if (paths.length > 0)
@@ -885,10 +805,6 @@ class FileReference extends EventDispatcher
 		}, filters, defaultFileName);
 		#end
 
-		#if (js && html5)
-		__pendingDownload = true;
-		__pendingDefaultFileName = defaultFileName;
-		#end
 	}
 
 	/**
@@ -981,19 +897,6 @@ class FileReference extends EventDispatcher
 			data = Bytes.fromFile(__path);
 			dispatchEvent(new Event(Event.COMPLETE));
 		}
-		#elseif (js && html5)
-		var file = __inputControl.files[0];
-		var reader = new FileReader();
-		reader.onload = function(evt)
-		{
-			data = ByteArray.fromArrayBuffer(cast evt.target.result);
-			dispatchEvent(new Event(Event.COMPLETE));
-		}
-		reader.onerror = function(evt)
-		{
-			dispatchEvent(new IOErrorEvent(IOErrorEvent.IO_ERROR));
-		}
-		reader.readAsArrayBuffer(file);
 		#end
 	}
 
@@ -1378,19 +1281,6 @@ class FileReference extends EventDispatcher
 			return;
 		}
 		__uploadFileBytes(request, uploadDataFieldName, fileBytes);
-		#elseif (js && html5)
-		var file = __inputControl.files[0];
-		var reader = new FileReader();
-		reader.onload = function(evt)
-		{
-			var fileBytes = ByteArray.fromArrayBuffer(cast evt.target.result);
-			__uploadFileBytes(request, uploadDataFieldName, fileBytes);
-		}
-		reader.onerror = function(evt)
-		{
-			dispatchEvent(new IOErrorEvent(IOErrorEvent.IO_ERROR));
-		}
-		#else
 		openfl.utils._internal.Lib.notImplemented();
 		#end
 	}
@@ -1614,7 +1504,6 @@ class FileReference extends EventDispatcher
 		}
 		#end
 
-		// #if (js && html5)
 		// #if (lime && !macro)
 		// if (__pendingDownload)
 		// {
@@ -1669,14 +1558,6 @@ class FileReference extends EventDispatcher
 
 	@:noCompletion private function urlLoader_onIOError(event:IOErrorEvent):Void
 	{
-		#if (js && html5)
-		if (__pendingDownload)
-		{
-			__pendingDownload = false;
-			__pendingDefaultFileName = null;
-		}
-		#end
-
 		dispatchEvent(event);
 	}
 

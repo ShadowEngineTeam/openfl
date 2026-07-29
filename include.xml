@@ -43,15 +43,7 @@
 
 	</section>
 
-	<section if="html5">
-
-		<set name="openfl-html5" />
-		<haxedef name="openfl-html5" />
-		<haxeflag name="--remap" value="flash:openfl" />
-
-	</section>
-
-	<set name="openfl-has-default-fonts" if="windows || mac || linux || ios || android || html5" />
+	<set name="openfl-has-default-fonts" if="windows || mac || linux || ios || android" />
 
 	<assets path="assets/fonts" unless="openfl-has-default-fonts || openfl-no-default-fonts" />
 

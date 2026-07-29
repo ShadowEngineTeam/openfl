@@ -32,7 +32,7 @@ import lime.graphics.opengl.GL;
 import lime.graphics.Image;
 import lime.graphics.ImageBuffer;
 import lime.graphics.RenderContext;
-import lime.graphics.WebGLRenderContext;
+import lime.graphics.OpenGLES2RenderContext;
 import lime.math.Rectangle as LimeRectangle;
 import lime.math.Vector2;
 #end
@@ -150,7 +150,7 @@ import lime.math.Vector2;
 	/**
 		Indicates if Context3D supports video texture.
 	**/
-	public static var supportsVideoTexture(default, null):Bool = #if (js && html5) true #else false #end;
+	public static var supportsVideoTexture(default, null):Bool = false;
 
 	/**
 		Specifies the height of the back buffer, which can be changed by a successful
@@ -259,7 +259,7 @@ import lime.math.Vector2;
 	@:noCompletion private static var __glMemoryTotalAvailable:Int = -1;
 	@:noCompletion private static var __glTextureMaxAnisotropy:Int = -1;
 
-	@:noCompletion private var gl:#if lime WebGLRenderContext #else Dynamic #end;
+	@:noCompletion private var gl:#if lime OpenGLES2RenderContext #else Dynamic #end;
 	@:noCompletion private var __backBufferAntiAlias:Int;
 	@:noCompletion private var __backBufferTexture:RectangleTexture;
 	@:noCompletion private var __backBufferWantsBestResolution:Bool;
@@ -292,11 +292,7 @@ import lime.math.Vector2;
 		__stage3D = stage3D;
 
 		__context = stage.window.context;
-		#if (js && html5 && dom)
-		gl = GL.context;
-		#else
-		gl = __context.webgl;
-		#end
+		gl = __context.gl;
 
 		if (__contextState == null) __contextState = new Context3DState();
 		__state = new Context3DState();
@@ -310,11 +306,7 @@ import lime.math.Vector2;
 
 		if (__glMaxViewportDims == -1)
 		{
-			#if (js && html5)
-			__glMaxViewportDims = gl.getParameter(gl.MAX_VIEWPORT_DIMS);
-			#else
 			__glMaxViewportDims = 16384;
-			#end
 		}
 
 		maxBackBufferWidth = __glMaxViewportDims;
@@ -323,13 +315,6 @@ import lime.math.Vector2;
 		if (__glMaxTextureMaxAnisotropy == -1)
 		{
 			var extension:Dynamic = gl.getExtension("EXT_texture_filter_anisotropic");
-
-			#if (js && html5)
-			if (extension == null
-				|| !Reflect.hasField(extension, "MAX_TEXTURE_MAX_ANISOTROPY_EXT")) extension = gl.getExtension("MOZ_EXT_texture_filter_anisotropic");
-			if (extension == null
-				|| !Reflect.hasField(extension, "MAX_TEXTURE_MAX_ANISOTROPY_EXT")) extension = gl.getExtension("WEBKIT_EXT_texture_filter_anisotropic");
-			#end
 
 			if (extension != null)
 			{
@@ -346,9 +331,6 @@ import lime.math.Vector2;
 		#if lime
 		if (__glDepthStencil == -1)
 		{
-			#if (js && html5)
-			__glDepthStencil = gl.DEPTH_STENCIL;
-			#else
 			if (__context.type == OPENGLES && Std.parseFloat(__context.version) >= 3)
 			{
 				__glDepthStencil = __context.gles3.DEPTH24_STENCIL8;
@@ -373,7 +355,6 @@ import lime.math.Vector2;
 					}
 				}
 			}
-			#end
 		}
 
 		if (__glMemoryTotalAvailable == -1)
@@ -999,48 +980,6 @@ import lime.math.Vector2;
 	public function createVertexBuffer(numVertices:Int, data32PerVertex:Int, bufferUsage:Context3DBufferUsage = STATIC_DRAW):VertexBuffer3D
 	{
 		return new VertexBuffer3D(this, numVertices, data32PerVertex, bufferUsage);
-	}
-
-	/**
-		Creates a VideoTexture object.
-
-		Use a VideoTexture object to obtain video frames as texture from NetStream object
-		or Camera object and to upload the video frames to the rendering context.
-
-		The VideoTexture object cannot be created with the VideoTexture constructor; use
-		this method instead. After creating a VideoTexture object, attach NetStream
-		object or Camera Object to get the video frames with the VideoTexture
-		`attachNetStream()` or `attachCamera()` methods.
-
-		Note that this method returns null if the system doesn't support this feature.
-
-		VideoTexture does not contain mipmaps. If VideoTexture is used with a sampler
-		that uses mip map filtering or repeat wrapping, the drawTriangles call will fail.
-		VideoTexture can be treated as BGRA texture by the shaders. The attempt to
-		instantiate the VideoTexture Object will fail if the Context3D was requested
-		with sotfware rendering mode.
-
-		A maximum of 4 VideoTexture objects are available per Context3D instance. On
-		mobile the actual number of supported VideoTexture objects may be less than 4
-		due to platform limitations.
-
-		@return	A new VideoTexture object
-		@throws	Error	Object Disposed: if this Context3D object has been disposed by a
-		calling `dispose()` or because the underlying rendering hardware has been lost.
-		@throws	Error	Resource Limit Exceeded: if too many Texture objects are created
-		or the amount of memory allocated to textures is exceeded.
-		@throws	Error	Texture Creation Failed: if the Texture object could not be
-		created by the rendering context (but information about the reason is not
-		available).
-	**/
-	public function createVideoTexture():VideoTexture
-	{
-		#if (js && html5)
-		return new VideoTexture(this);
-		#else
-		throw new Error("Video textures are not supported on this platform");
-		return null;
-		#end
 	}
 
 	/**

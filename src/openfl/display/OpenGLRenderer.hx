@@ -19,7 +19,7 @@ import openfl.geom.Matrix;
 import openfl.geom.Rectangle;
 #if lime
 import lime.graphics.opengl.ext.KHR_debug;
-import lime.graphics.WebGLRenderContext;
+import lime.graphics.OpenGLES2RenderContext;
 import lime.math.Matrix4;
 #end
 
@@ -69,7 +69,7 @@ class OpenGLRenderer extends DisplayObjectRenderer
 		The current OpenGL render context
 	**/
 	@SuppressWarnings("checkstyle:Dynamic")
-	public var gl:#if lime WebGLRenderContext #else Dynamic #end;
+	public var gl:#if lime OpenGLES2RenderContext #else Dynamic #end;
 
 	@:noCompletion private static var __staticDefaultDisplayShader:DisplayObjectShader;
 	@:noCompletion private static var __staticDefaultGraphicsShader:GraphicsShader;
@@ -89,7 +89,7 @@ class OpenGLRenderer extends DisplayObjectRenderer
 	@:noCompletion private var __displayHeight:Int;
 	@:noCompletion private var __displayWidth:Int;
 	@:noCompletion private var __flipped:Bool;
-	@SuppressWarnings("checkstyle:Dynamic") @:noCompletion private var __gl:#if lime WebGLRenderContext #else Dynamic #end;
+	@SuppressWarnings("checkstyle:Dynamic") @:noCompletion private var __gl:#if lime OpenGLES2RenderContext #else Dynamic #end;
 	@:noCompletion private var __height:Int;
 	@:noCompletion private var __maskShader:Context3DMaskShader;
 	@SuppressWarnings("checkstyle:Dynamic") @:noCompletion private var __matrix:#if lime Matrix4 #else Dynamic #end;
@@ -115,7 +115,7 @@ class OpenGLRenderer extends DisplayObjectRenderer
 		__context3D = context;
 		__context = context.__context;
 
-		gl = context.__context.webgl;
+		gl = context.__context.gl;
 		__gl = gl;
 
 		this.__defaultRenderTarget = defaultRenderTarget;
@@ -173,11 +173,7 @@ class OpenGLRenderer extends DisplayObjectRenderer
 			__standardDerivativesSupported = exts.contains("OES_standard_derivatives");
 		}
 
-		#if (js && html5)
-		__softwareRenderer = new CanvasRenderer(null);
-		#else
 		__softwareRenderer = new CairoRenderer(null);
-		#end
 
 		#if lime
 		__type = OPENGL;

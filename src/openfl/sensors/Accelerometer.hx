@@ -30,7 +30,7 @@ import lime.system.SensorType;
 	then Accelerometer support currently exists.
 
 	_OpenFL target support:_ This feature is supported on mobile targets,
-	including iOS and Android, and on the html5 target in browsers that
+	including iOS and Android, and on the  target in browsers that
 	support the devicemotion event. This feature is not supported on desktop
 	targets.
 
@@ -48,8 +48,6 @@ import lime.system.SensorType;
 				  updates from the accelerometer sensor. The event is
 				  dispatched in the following circumstances:
 
-
-
 				   * When a new listener function is attached through
 				  `addEventListener()`, this event is delivered once
 				  to all the registered listeners for providing the current
@@ -59,7 +57,6 @@ import lime.system.SensorType;
 				   * Whenever the application misses a change in the
 				  accelerometer (for example, the runtime is resuming after
 				  being idle).
-
 
 	@see [Accelerometer input](https://books.openfl.org/openfl-developers-guide/accelerometer-input/)
 **/

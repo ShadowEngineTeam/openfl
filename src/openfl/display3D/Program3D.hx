@@ -660,7 +660,7 @@ import lime.utils.BytePointer;
 				}
 				else
 				{
-					throw new IllegalOperationError("!!! TODO: uniform location on webgl");
+					throw new IllegalOperationError("!!! TODO: uniform location");
 				}
 			}
 
@@ -672,7 +672,7 @@ import lime.utils.BytePointer;
 				}
 				else
 				{
-					throw new IllegalOperationError("!!! TODO: uniform location on webgl");
+					throw new IllegalOperationError("!!! TODO: uniform location");
 				}
 			}
 		}
@@ -950,31 +950,11 @@ import lime.utils.BytePointer;
 	public function flush():Void
 	{
 		#if lime
-		#if (js && html5)
-		var gl = context.gl;
-		#else
 		var gl = context.__context.gles2;
-		#end
 
 		var index:Int = regIndex * 4;
 		switch (type)
 		{
-			#if (js && html5)
-			case GL.FLOAT_MAT2:
-				gl.uniformMatrix2fv(location, false, __getUniformRegisters(index, size * 2 * 2));
-			case GL.FLOAT_MAT3:
-				gl.uniformMatrix3fv(location, false, __getUniformRegisters(index, size * 3 * 3));
-			case GL.FLOAT_MAT4:
-				gl.uniformMatrix4fv(location, false, __getUniformRegisters(index, size * 4 * 4));
-			case GL.FLOAT_VEC2:
-				gl.uniform2fv(location, __getUniformRegisters(index, regCount * 2));
-			case GL.FLOAT_VEC3:
-				gl.uniform3fv(location, __getUniformRegisters(index, regCount * 3));
-			case GL.FLOAT_VEC4:
-				gl.uniform4fv(location, __getUniformRegisters(index, regCount * 4));
-			default:
-				gl.uniform4fv(location, __getUniformRegisters(index, regCount * 4));
-			#else
 			case GL.FLOAT_MAT2:
 				gl.uniformMatrix2fv(location, size, false, __getUniformRegisters(index, size * 2 * 2));
 			case GL.FLOAT_MAT3:
@@ -989,17 +969,11 @@ import lime.utils.BytePointer;
 				gl.uniform4fv(location, regCount, __getUniformRegisters(index, regCount * 4));
 			default:
 				gl.uniform4fv(location, regCount, __getUniformRegisters(index, regCount * 4));
-			#end
 		}
 		#end
 	}
 
-	#if (js && html5)
-	@:noCompletion private inline function __getUniformRegisters(index:Int, size:Int):Float32Array
-	{
-		return regData.subarray(index, index + size);
-	}
-	#elseif lime
+	#if lime
 	@:noCompletion private inline function __getUniformRegisters(index:Int, size:Int):BytePointer
 	{
 		regDataPointer.set(regData, index * 4);

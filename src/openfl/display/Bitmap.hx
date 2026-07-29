@@ -2,9 +2,6 @@ package openfl.display;
 
 import openfl.geom.Matrix;
 import openfl.geom.Rectangle;
-#if (js && html5)
-import js.html.ImageElement;
-#end
 
 /**
 	The Bitmap class represents display objects that represent bitmap images.
@@ -88,9 +85,6 @@ class Bitmap extends DisplayObject
 	**/
 	public var smoothing:Bool;
 
-	#if (js && html5)
-	@:noCompletion private var __image:ImageElement;
-	#end
 	@:noCompletion private var __bitmapData:BitmapData;
 	@:noCompletion private var __imageVersion:Int;
 

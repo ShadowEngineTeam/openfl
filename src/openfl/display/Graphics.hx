@@ -1,7 +1,6 @@
 package openfl.display;
 
 import openfl.display._internal.CairoGraphics;
-import openfl.display._internal.CanvasGraphics;
 import openfl.display._internal.Context3DBuffer;
 import openfl.display._internal.DrawCommandBuffer;
 import openfl.display._internal.DrawCommandReader;
@@ -17,10 +16,6 @@ import openfl.utils.ObjectPool;
 import openfl.Vector;
 #if lime
 import lime.graphics.cairo.Cairo;
-#end
-#if (js && html5)
-import js.html.CanvasElement;
-import js.html.CanvasRenderingContext2D;
 #end
 
 /**
@@ -86,12 +81,7 @@ import js.html.CanvasRenderingContext2D;
 	@:noCompletion private var __owner:DisplayObject;
 	@:noCompletion private var __width:Int;
 	@:noCompletion private var __worldTransform:Matrix;
-	#if (js && html5)
-	@:noCompletion private var __canvas:CanvasElement;
-	@:noCompletion private var __context:#if lime CanvasRenderingContext2D #else Dynamic #end;
-	#else
 	@SuppressWarnings("checkstyle:Dynamic") @:noCompletion private var __cairo:#if lime Cairo #else Dynamic #end;
-	#end
 	@:noCompletion private var __bitmap:BitmapData;
 	@:noCompletion private var __bitmapScaleX:Float;
 	@:noCompletion private var __bitmapScaleY:Float;
@@ -115,9 +105,6 @@ import js.html.CanvasRenderingContext2D;
 
 		__shaderBufferPool = new ObjectPool<ShaderBuffer>(function() return new ShaderBuffer());
 
-		#if (js && html5)
-		moveTo(0, 0);
-		#end
 	}
 
 	/**
@@ -426,9 +413,6 @@ import js.html.CanvasRenderingContext2D;
 		__positionX = 0;
 		__positionY = 0;
 
-		#if (js && html5)
-		moveTo(0, 0);
-		#end
 	}
 
 	/**
@@ -1166,7 +1150,6 @@ import js.html.CanvasRenderingContext2D;
 		`lineStyle()` or `lineGradientStyle()` methods, or
 		the `lineBitmapStyle()` method again with different parameters.
 
-
 		You can call the `lineBitmapStyle()` method in the middle of
 		drawing a path to specify different styles for different line segments
 		within a path.
@@ -1625,14 +1608,14 @@ import js.html.CanvasRenderingContext2D;
 	}
 
 	@:noCompletion
-	private #if !js inline #end function __calculateBezierCubicPoint(t:Float, p1:Float, p2:Float, p3:Float, p4:Float):Float
+	private inline function __calculateBezierCubicPoint(t:Float, p1:Float, p2:Float, p3:Float, p4:Float):Float
 	{
 		var iT = 1 - t;
 		return p1 * (iT * iT * iT) + 3 * p2 * t * (iT * iT) + 3 * p3 * iT * (t * t) + p4 * (t * t * t);
 	}
 
 	@:noCompletion
-	private #if !js inline #end function __calculateBezierQuadPoint(t:Float, p1:Float, p2:Float, p3:Float):Float
+	private inline function __calculateBezierQuadPoint(t:Float, p1:Float, p2:Float, p3:Float):Float
 	{
 		var iT = 1 - t;
 		return iT * iT * p1 + 2 * iT * t * p2 + t * t * p3;
@@ -1640,38 +1623,15 @@ import js.html.CanvasRenderingContext2D;
 
 	@:noCompletion private function __cleanup():Void
 	{
-		#if (js && html5)
-		if (__bounds != null && __canvas != null)
-		{
-			__dirty = true;
-			__transformDirty = true;
-		}
-		#else
 		if (__bounds != null)
 		{
 			__dirty = true;
 			__transformDirty = true;
 		}
-		#end
 
 		__bitmap = null;
 
-		#if (js && html5)
-		if (__canvas != null)
-		{
-			__canvas.width = 0;
-			__canvas.height = 0;
-			__canvas = null;
-		}
-
-		if (__context != null)
-		{
-			__context.clearRect(0, 0, 0, 0);
-			__context = null;
-		}
-		#else
 		__cairo = null;
-		#end
 	}
 
 	@:noCompletion private function __getBounds(rect:Rectangle, matrix:Matrix):Void
@@ -1695,9 +1655,7 @@ import js.html.CanvasRenderingContext2D;
 		{
 			if (shapeFlag)
 			{
-				#if (js && html5)
-				return CanvasGraphics.hitTest(this, px, py);
-				#elseif (lime_cffi)
+				#if (lime_cffi)
 				return CairoGraphics.hitTest(this, px, py);
 				#end
 			}

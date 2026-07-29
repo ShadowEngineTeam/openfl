@@ -583,28 +583,11 @@ class Security
 
 	private static function get_pageDomain():String
 	{
-		#if (js && html5)
-		var jsWindow = cast(js.Lib.global, js.html.Window);
-		return jsWindow.location.origin;
-		#else
 		return "undefined";
-		#end
 	}
 
 	private static function get_sandboxType():String
 	{
-		#if (js && html5)
-		var jsWindow = cast(js.Lib.global, js.html.Window);
-		if (jsWindow.location.protocol == "file:")
-		{
-			// it isn't necessarily exactly equivalent to Flash's localWithFile.
-			// however, it seems like a decently closest option to indicate that
-			// there are reduced permissions when using the file: protocol.
-			return Security.LOCAL_WITH_FILE;
-		}
-		return Security.REMOTE;
-		#else
 		return Security.APPLICATION;
-		#end
 	}
 }

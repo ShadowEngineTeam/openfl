@@ -425,14 +425,6 @@ class SimpleButton extends InteractiveObject
 		{
 			value.parent.removeChild(value);
 		}
-
-		#if (js && html5)
-		if (DisplayObject.__supportDOM && __previousStates == null)
-		{
-			__previousStates = new Vector<DisplayObject>();
-		}
-		#end
-
 		if (value != __currentState)
 		{
 			#if (js && html5)
@@ -513,3 +505,4 @@ class SimpleButton extends InteractiveObject
 		}
 	}
 }
+

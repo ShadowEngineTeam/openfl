@@ -51,18 +51,6 @@ import openfl.utils.ByteArray;
 		var image = __getImage(source);
 		if (image == null) return;
 
-		#if (js && html5)
-		if (image.buffer != null && image.buffer.data == null && image.buffer.src != null)
-		{
-			var gl = __context.gl;
-
-			__context.__bindGLTexture2D(__textureID);
-			gl.texImage2D(__textureTarget, 0, __internalFormat, __format, gl.UNSIGNED_BYTE, image.buffer.src);
-			__context.__bindGLTexture2D(null);
-			return;
-		}
-		#end
-
 		uploadFromTypedArray(image.data);
 		#end
 	}
@@ -86,14 +74,6 @@ import openfl.utils.ByteArray;
 	public function uploadFromByteArray(data:ByteArray, byteArrayOffset:UInt):Void
 	{
 		#if lime
-		#if (js && !display)
-		if (byteArrayOffset == 0)
-		{
-			uploadFromTypedArray(@:privateAccess (data : ByteArrayData).b);
-			return;
-		}
-		#end
-
 		uploadFromTypedArray(new UInt8Array(data.toArrayBuffer(), byteArrayOffset));
 		#end
 	}

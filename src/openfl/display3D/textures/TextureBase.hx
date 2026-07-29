@@ -67,11 +67,9 @@ class TextureBase extends EventDispatcher
 			__textureInternalFormat = gl.RGBA;
 
 			var bgraExtension:Dynamic = null;
-			#if (!js || !html5)
 			bgraExtension = gl.getExtension("EXT_bgra");
 			if (bgraExtension == null) bgraExtension = gl.getExtension("EXT_texture_format_BGRA8888");
 			if (bgraExtension == null) bgraExtension = gl.getExtension("APPLE_texture_format_BGRA8888");
-			#end
 
 			if (bgraExtension != null)
 			{
@@ -204,36 +202,7 @@ class TextureBase extends EventDispatcher
 			return null;
 		}
 
-		#if (js && html5)
-		ImageCanvasUtil.sync(image, false);
-		#end
-
-		#if (js && html5)
-		var gl = __context.gl;
-
-		if (image.type != DATA && !image.premultiplied)
-		{
-			gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, 1);
-		}
-		else if (!image.premultiplied && image.transparent)
-		{
-			gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, 0);
-			image = image.clone();
-			image.premultiplied = true;
-		}
-
-		// TODO: Some way to support BGRA on WebGL?
-
-		if (image.format != RGBA32)
-		{
-			image = image.clone();
-			image.format = RGBA32;
-			image.buffer.premultiplied = true;
-			#if openfl_power_of_two
-			image.powerOfTwo = true;
 			#end
-		}
-		#else
 		if (#if openfl_power_of_two !image.powerOfTwo || #end (!image.premultiplied && image.transparent))
 		{
 			image = image.clone();
@@ -242,7 +211,6 @@ class TextureBase extends EventDispatcher
 			image.powerOfTwo = true;
 			#end
 		}
-		#end
 
 		return image;
 	}
@@ -363,27 +331,7 @@ class TextureBase extends EventDispatcher
 
 		__context.__bindGLTexture2D(__textureID);
 
-		#if (js && html5)
-		if (image.type != DATA && !image.premultiplied)
-		{
-			gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, 1);
-		}
-		else if (!image.premultiplied && image.transparent)
-		{
-			gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, 1);
-		}
-
-		if (image.type == DATA)
-		{
-			__uploadTexture2D(__textureTarget, image.buffer.width, image.buffer.height, internalFormat, format, image.data);
-		}
-		else
-		{
-			gl.texImage2D(__textureTarget, 0, internalFormat, format, gl.UNSIGNED_BYTE, image.src);
-		}
-		#else
 		__uploadTexture2D(__textureTarget, image.buffer.width, image.buffer.height, internalFormat, format, image.data);
-		#end
 
 		__context.__bindGLTexture2D(null);
 

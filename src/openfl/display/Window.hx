@@ -38,15 +38,6 @@ class Window #if lime extends LimeWindow #end
 		#end
 
 		#if !macro
-		#if commonjs
-		if (Reflect.hasField(attributes, "stage"))
-		{
-			stage = Reflect.field(attributes, "stage");
-			stage.window = this;
-			Reflect.deleteField(attributes, "stage");
-		}
-		else
-		#end
 		stage = new Stage(this, Reflect.hasField(attributes.context, "background") ? attributes.context.background : 0xFFFFFF);
 
 		if (Reflect.hasField(attributes, "parameters"))

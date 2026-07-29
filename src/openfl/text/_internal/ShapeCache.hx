@@ -7,7 +7,7 @@ import haxe.ds.StringMap;
 @SuppressWarnings("checkstyle:FieldDocComment")
 class ShapeCache
 {
-	private var __shortWordMap:StringMap<StringMap< #if (html5 && js) Array<Float> #else Array<GlyphPosition> #end>>;
+	private var __shortWordMap:StringMap<StringMap<Array<GlyphPosition>>>;
 	private var __longWordMap:StringMap<IntMap<CacheMeasurement>>;
 
 	public function new()
@@ -29,17 +29,14 @@ class ShapeCache
 	}
 
 	public function cache(formatRange:TextFormatRange,
-			getPositions:#if (js && html5) Void->Array<Float>,
-		wordKey:String = null #else TextLayout #end):#if (js && html5) Array<Float> #else Array<GlyphPosition> #end
+			getPositions:TextLayout):Array<GlyphPosition>
 	{
 		var formatKey:String = formatRange.format.__cacheKey;
 		if (formatKey == null)
 		{
 			formatKey = formatRange.format.__toCacheKey();
 		}
-		#if (!(js && html5))
 		var wordKey:String = getPositions.text;
-		#end
 		if (wordKey.length > 15)
 		{
 			return __cacheLongWord(wordKey, formatKey, getPositions);
@@ -50,8 +47,7 @@ class ShapeCache
 		}
 	}
 
-	private function __cacheShortWord(wordKey:String, formatKey:String, getPositions:#if (js && html5) Void->
-		Array<Float>):Array<Float> #else TextLayout):Array<GlyphPosition> #end
+	private function __cacheShortWord(wordKey:String, formatKey:String, getPositions:TextLayout):Array<GlyphPosition>
 		{
 			if
 			(__shortWordMap.exists(formatKey))
@@ -67,27 +63,22 @@ class ShapeCache
 			else
 				{
 					formatMap.set
-					(wordKey, #if (js && html5) getPositions() #else getPositions.positions #end);
+					(wordKey, getPositions.positions);
 				}
 			}
 		else
 			{
 				var formatMap = new StringMap();
 				formatMap.set
-				(wordKey, #if (js && html5) getPositions() #else getPositions.positions #end);
+				(wordKey, getPositions.positions);
 				__shortWordMap.set
 				(formatKey, formatMap);
 			}
 			return
-			#if (js && html5)
-			getPositions()
-			#else
 			cast getPositions.positions
-			#end
 			;
 		}
-		private function __cacheLongWord(wordKey : String, formatKey : String, getPositions : #if (js && html5) Void->
-			Array<Float>):Array<Float> #else TextLayout):Array<GlyphPosition> #end
+		private function __cacheLongWord(wordKey : String, formatKey : String, getPositions : TextLayout):Array<GlyphPosition>
 			{
 				var hash = hashFunction(wordKey);
 				if (__longWordMap.exists(formatKey))
@@ -102,23 +93,23 @@ class ShapeCache
 						}
 						else
 						{
-							measurement.set(wordKey, #if (js && html5) getPositions() #else getPositions.positions #end);
+							measurement.set(wordKey, getPositions.positions);
 						}
 					}
 					else
 					{
-						var measurement = new CacheMeasurement(wordKey, #if (js && html5) getPositions() #else getPositions.positions #end);
+						var measurement = new CacheMeasurement(wordKey, getPositions.positions);
 						formatMap.set(hash, measurement);
 					}
 				}
 				else
 				{
 					var formatMap = new IntMap();
-					var measurement = new CacheMeasurement(wordKey, #if (js && html5) getPositions() #else getPositions.positions #end);
+					var measurement = new CacheMeasurement(wordKey, getPositions.positions);
 					measurement.hash = hash;
 					formatMap.set(hash, measurement);
 					__longWordMap.set(formatKey, formatMap);
 				}
-				return #if (js && html5) getPositions() #else getPositions.positions #end;
+				return getPositions.positions;
 			}
 	}

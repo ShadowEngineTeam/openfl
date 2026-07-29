@@ -49,12 +49,6 @@ import lime.system.Orientation;
 #if gl_stats
 import openfl.display._internal.stats.Context3DStats;
 #end
-#if (js && html5)
-import js.html.Element;
-import js.Browser;
-#elseif js
-typedef Element = Dynamic;
-#end
 #if sys
 import sys.FileSystem;
 import sys.io.File;
@@ -84,7 +78,6 @@ using StringTools;
 	These properties may always be read, but since they cannot be set, they
 	will always contain default values.
 
-
 	* `accessibilityProperties`
 	* `alpha`
 	* `blendMode`
@@ -108,7 +101,6 @@ using StringTools;
 	* `visible`
 	* `x`
 	* `y`
-
 
 	Some events that you might expect to be a part of the Stage class, such
 	as `enterFrame`, `exitFrame`,
@@ -389,7 +381,6 @@ class Stage extends DisplayObjectContainer #if lime implements IModule #end
 		* `StageDisplayState.NORMAL` Sets the OpenFL application back to
 		the standard stage display mode.
 
-
 		The scaling behavior of the movie in full-screen mode is determined by
 		the `scaleMode` setting (set using the
 		`Stage.scaleMode` property or the SWF file's `embed`
@@ -405,7 +396,6 @@ class Stage extends DisplayObjectContainer #if lime implements IModule #end
 		The following restrictions apply to SWF files that play within an HTML
 		page (not those using the stand-alone Flash Player or not running in the
 		AIR runtime):
-
 
 		* To enable full-screen mode, add the `allowFullScreen`
 		parameter to the `object` and `embed` tags in the
@@ -462,13 +452,6 @@ class Stage extends DisplayObjectContainer #if lime implements IModule #end
 							  `true` throws a security error.
 	**/
 	public var displayState(get, set):StageDisplayState;
-
-	#if commonjs
-	/**
-		The parent HTML element where this Stage is embedded.
-	**/
-	public var element:Element;
-	#end
 
 	/**
 		The interactive object with keyboard focus; or `null` if focus
@@ -625,7 +608,6 @@ class Stage extends DisplayObjectContainer #if lime implements IModule #end
 		`true` slows performance significantly and is not a recommended
 		setting).
 
-
 		Higher quality settings produce better rendering of scaled bitmaps.
 		However, higher quality settings are computationally more expensive. In
 		particular, when rendering scaled video, using higher quality settings can
@@ -676,7 +658,6 @@ class Stage extends DisplayObjectContainer #if lime implements IModule #end
 		fixed, so that it remains unchanged even as the size of the player window
 		changes. Cropping might occur if the player window is smaller than the
 		content.
-
 
 		@throws SecurityError Calling the `scaleMode` property of a
 							  Stage object throws an exception for any caller that
@@ -981,9 +962,6 @@ class Stage extends DisplayObjectContainer #if lime implements IModule #end
 	@:noCompletion private var __colorString:String;
 	@:noCompletion private var __contentsScaleFactor:Float;
 	@:noCompletion private var __currentTabOrderIndex:Int;
-	#if (commonjs && !nodejs)
-	@:noCompletion private var __cursor:LimeMouseCursor;
-	#end
 	@:noCompletion private var __deltaTime:Float;
 	@:noCompletion private var __dirty:Bool;
 	@:noCompletion private var __displayMatrix:Matrix;
@@ -1031,8 +1009,7 @@ class Stage extends DisplayObjectContainer #if lime implements IModule #end
 	#end
 	private var __oldStageOrientation:StageOrientation = UNKNOWN;
 
-	public function new(#if commonjs width:Dynamic = 0, height:Dynamic = 0, color:Null<Int> = null, documentClass:Class<Dynamic> = null,
-		windowAttributes:Dynamic = null #else window:Window, color:Null<Int> = null #end)
+	public function new(window:Window, color:Null<Int> = null)
 	{
 		super();
 
@@ -1076,8 +1053,6 @@ class Stage extends DisplayObjectContainer #if lime implements IModule #end
 
 		#if mac
 		__macKeyboard = true;
-		#elseif (js && html5)
-		__macKeyboard = untyped js.Syntax.code("/AppleWebKit/.test (navigator.userAgent) && /Mobile\\/\\w+/.test (navigator.userAgent) || /Mac/.test (navigator.platform)");
 		#end
 
 		__clearBeforeRender = true;
@@ -1096,79 +1071,9 @@ class Stage extends DisplayObjectContainer #if lime implements IModule #end
 		// TODO: Do not rely on Lib.current
 		__uncaughtErrorEvents = Lib.current.__loaderInfo.uncaughtErrorEvents;
 
-		#if commonjs
-		if (windowAttributes == null) windowAttributes = {};
-		var app:OpenFLApplication = null;
-
-		if (!Math.isNaN(width))
-		{
-			var resizable = (width == 0 && width == 0);
-
-			#if (js && html5)
-			if (windowAttributes.element != null)
-			{
-				element = windowAttributes.element;
-			}
-			else
-			{
-				element = Browser.document.createElement("div");
-			}
-
-			if (resizable)
-			{
-				element.style.width = "100%";
-				element.style.height = "100%";
-			}
-			#else
-			element = null;
-			#end
-
-			windowAttributes.width = width;
-			windowAttributes.height = height;
-			windowAttributes.element = element;
-			windowAttributes.resizable = resizable;
-
-			windowAttributes.stage = this;
-
-			if (!Reflect.hasField(windowAttributes, "context")) windowAttributes.context = {};
-			var contextAttributes = windowAttributes.context;
-			if (Reflect.hasField(windowAttributes, "renderer"))
-			{
-				var type = Std.string(windowAttributes.renderer);
-				if (type == "webgl1")
-				{
-					contextAttributes.type = RenderContextType.WEBGL;
-					contextAttributes.version = "1";
-				}
-				else if (type == "webgl2")
-				{
-					contextAttributes.type = RenderContextType.WEBGL;
-					contextAttributes.version = "2";
-				}
-				else
-				{
-					Reflect.setField(contextAttributes, "type", windowAttributes.renderer);
-				}
-			}
-			if (!Reflect.hasField(contextAttributes, "stencil")) contextAttributes.stencil = true;
-			if (!Reflect.hasField(contextAttributes, "depth")) contextAttributes.depth = true;
-			if (!Reflect.hasField(contextAttributes, "background")) contextAttributes.background = null;
-
-			app = new OpenFLApplication();
-			window = app.createWindow(windowAttributes);
-
-			this.color = color;
-		}
-		else
-		{
-			this.window = cast width;
-			this.color = height;
-		}
-		#else
 		this.application = window.application;
 		this.window = window;
 		this.color = color;
-		#end
 
 		__contentsScaleFactor = window.scale;
 		__wasFullscreen = window.fullscreen;
@@ -1180,21 +1085,6 @@ class Stage extends DisplayObjectContainer #if lime implements IModule #end
 			stage.addChild(Lib.current);
 		}
 
-		#if commonjs
-		if (documentClass != null)
-		{
-			DisplayObject.__initStage = this;
-			var sprite:Sprite = cast Type.createInstance(documentClass, []);
-			// addChild (sprite); // done by init stage
-			sprite.dispatchEvent(new Event(Event.ADDED_TO_STAGE, false, false));
-		}
-
-		if (app != null)
-		{
-			app.addModule(this);
-			app.exec();
-		}
-		#end
 	}
 
 	/**
@@ -1288,7 +1178,6 @@ class Stage extends DisplayObjectContainer #if lime implements IModule #end
 			for (dispatcher in dispatchers)
 			{
 				// TODO: Way to resolve dispatching occurring if object not on stage
-				// and there are multiple stage objects running in HTML5?
 
 				if (dispatcher.stage == this || dispatcher.stage == null)
 				{
@@ -1320,8 +1209,8 @@ class Stage extends DisplayObjectContainer #if lime implements IModule #end
 
 		switch (window.context.type)
 		{
-			case OPENGL, OPENGLES, WEBGL:
-				#if (!disable_cffi && (!html5 || !canvas))
+			case OPENGL, OPENGLES:
+				#if !disable_cffi
 				context3D = new Context3D(this);
 				#if openfl_dpi_aware
 				context3D.configureBackBuffer(windowWidth, windowHeight, 0, true, true, true);
@@ -1330,16 +1219,6 @@ class Stage extends DisplayObjectContainer #if lime implements IModule #end
 				#end
 				context3D.present();
 				__renderer = new OpenGLRenderer(context3D);
-				#end
-
-			case CANVAS:
-				#if (js && html5)
-				__renderer = new CanvasRenderer(window.context.canvas2D);
-				#end
-
-			case DOM:
-				#if (js && html5)
-				__renderer = new DOMRenderer(window.context.dom);
 				#end
 
 			case CAIRO:
@@ -1358,10 +1237,6 @@ class Stage extends DisplayObjectContainer #if lime implements IModule #end
 			__renderer.__pixelRatio = #if openfl_disable_hdpi 1 #else window.scale #end;
 			__renderer.__worldTransform = __displayMatrix;
 			__renderer.__stage = this;
-
-			#if (js && html5 && dom && !openfl_disable_hdpi)
-			__renderer.__pixelRatio = Browser.window.devicePixelRatio;
-			#end
 
 			__renderer.__resize(windowWidth, windowHeight);
 		}
@@ -1643,27 +1518,6 @@ class Stage extends DisplayObjectContainer #if lime implements IModule #end
 
 			#if cpp
 			untyped __cpp__("throw e");
-			#elseif js
-			try
-			{
-				#if (haxe >= "4.1.0")
-				var exc = e;
-				#else
-				var exc = @:privateAccess haxe.CallStack.lastException;
-				#end
-				if (exc != null && Reflect.hasField(exc, "stack") && exc.stack != null && exc.stack != "")
-				{
-					untyped js.Syntax.code("console.log")(exc.stack);
-					e.stack = exc.stack;
-				}
-				else
-				{
-					var msg = CallStack.toString(CallStack.callStack());
-					untyped js.Syntax.code("console.log")(msg);
-				}
-			}
-			catch (e2:Dynamic) {}
-			untyped js.Syntax.code("throw e");
 			#else
 			throw e;
 			#end
@@ -1917,8 +1771,6 @@ class Stage extends DisplayObjectContainer #if lime implements IModule #end
 						if (nextObject != null) focus = nextObject;
 						if (cancelTab)
 						{
-							// ensure that the html5 target does not lose focus
-							// to the browser every time that tab is pressed
 							window.onKeyDown.cancel();
 						}
 
@@ -2317,7 +2169,7 @@ class Stage extends DisplayObjectContainer #if lime implements IModule #end
 			#end
 		}
 
-		#if (openfl_enable_experimental_update_queue && !dom)
+		#if openfl_enable_experimental_update_queue
 		__updateQueue(false, true);
 		#else
 		__update(false, true);
@@ -3766,7 +3618,7 @@ class Stage extends DisplayObjectContainer #if lime implements IModule #end
 		#end
 	}
 
-	#if (openfl_enable_experimental_update_queue && !dom)
+	#if openfl_enable_experimental_update_queue
 	@:noCompletion private function __updateQueue(transformOnly:Bool, updateChildren:Bool):Void
 	{
 		var updateFix:Array<DisplayObjectContainer> = [];
@@ -3823,9 +3675,6 @@ class Stage extends DisplayObjectContainer #if lime implements IModule #end
 					// __dirty = false;
 				}
 			}
-			/*
-				#if dom
-			**/
 			else if (!__renderDirty && __wasDirty)
 			{
 				// If we were dirty last time, we need at least one more
@@ -3838,9 +3687,6 @@ class Stage extends DisplayObjectContainer #if lime implements IModule #end
 					__wasDirty = false;
 				}
 			}
-			/*
-				#end
-			**/
 		}
 	}
 	#end

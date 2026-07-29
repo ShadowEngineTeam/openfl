@@ -39,9 +39,6 @@ import lime.graphics.RenderContext;
 import lime.math.ARGB;
 import lime.math.Vector2;
 #end
-#if (js && html5)
-import js.html.CanvasElement;
-#end
 #if gl_stats
 import openfl.display._internal.stats.Context3DStats;
 import openfl.display._internal.stats.DrawCallContext;
@@ -252,11 +249,6 @@ class BitmapData implements IBitmapDrawable
 
 		this.transparent = transparent;
 
-		#if (js && html5)
-		width = width == null ? 0 : width;
-		height = height == null ? 0 : height;
-		#end
-
 		width = width < 0 ? 0 : width;
 		height = height < 0 ? 0 : height;
 
@@ -295,20 +287,6 @@ class BitmapData implements IBitmapDrawable
 			{
 				image.fillRect(image.rect, fillColor);
 			}
-			// #elseif (js && html5)
-			// var buffer = new ImageBuffer (null, width, height);
-			// var canvas:CanvasElement = cast Browser.document.createElement ("canvas");
-			// buffer.__srcCanvas = canvas;
-			// buffer.__srcContext = canvas.getContext ("2d");
-			//
-			// image = new Image (buffer, 0, 0, width, height);
-			// image.type = CANVAS;
-			//
-			// if (fillColor != 0) {
-			//
-			// image.fillRect (image.rect, fillColor);
-			//
-			// }
 			#else
 			image = new Image(null, 0, 0, width, height, fillColor);
 			#end
@@ -605,7 +583,6 @@ class BitmapData implements IBitmapDrawable
 		* `BitmapDataChannel.BLUE`
 		* `BitmapDataChannel.ALPHA`
 
-
 		@param sourceBitmapData The input bitmap image to use. The source image
 								can be a different BitmapData object or it can
 								refer to the current BitmapData object.
@@ -730,7 +707,6 @@ class BitmapData implements IBitmapDrawable
 		and height of the image are set to 0. All subsequent calls to methods or
 		properties of this BitmapData instance fail, and an exception is thrown.
 
-
 		`BitmapData.dispose()` releases the memory occupied by the
 		actual bitmap data, immediately (a bitmap can consume up to 64 MB of
 		memory). After using `BitmapData.dispose()`, the BitmapData
@@ -744,32 +720,6 @@ class BitmapData implements IBitmapDrawable
 	**/
 	public function dispose():Void
 	{
-		#if (js && html5)
-		// if this BitmapData was created with Assets.getBitmapData(), then
-		// don't destroy the underlying image buffer.
-		// on html5, images are loaded asynchronously, and cloning is too
-		// expensive, so Lime's asset manager reuses the same Image instance
-		// every time that you call Assets.getImage() with the same asset ID.
-		if (image != null && image.type == CANVAS && !__asset)
-		{
-			var canvas = image.buffer.__srcCanvas;
-			var context = image.buffer.__srcContext;
-
-			if (canvas != null)
-			{
-				canvas.width = 0;
-				canvas.height = 0;
-				canvas = null;
-			}
-
-			if (context != null)
-			{
-				context.clearRect(0, 0, 0, 0);
-				context = null;
-			}
-		}
-		#end
-
 		image = null;
 
 		width = 0;
@@ -997,7 +947,7 @@ class BitmapData implements IBitmapDrawable
 		}
 		else
 		{
-			#if ((js && html5) || lime_cairo)
+			#if lime_cairo
 			if (colorTransform != null)
 			{
 				var bounds = Rectangle.__pool.get();
@@ -1027,12 +977,7 @@ class BitmapData implements IBitmapDrawable
 				Matrix.__pool.release(boundsMatrix);
 			}
 
-			#if (js && html5)
-			ImageCanvasUtil.convertToCanvas(image);
-			var renderer = new CanvasRenderer(image.buffer.__srcContext);
-			#else
-			var renderer = new CairoRenderer(new Cairo(getSurface()));
-			#end
+		var renderer = new CairoRenderer(new Cairo(getSurface()));
 
 			renderer.__allowSmoothing = smoothing;
 			renderer.__overrideBlendMode = blendMode;
@@ -1046,11 +991,7 @@ class BitmapData implements IBitmapDrawable
 				renderer.__pushMaskRect(clipRect, clipMatrix);
 			}
 
-			#if (js && html5)
-			__drawCanvas(source, renderer);
-			#else
 			__drawCairo(source, renderer);
-			#end
 
 			if (clipRect != null)
 			{
@@ -1259,16 +1200,15 @@ class BitmapData implements IBitmapDrawable
 		#end
 	}
 
-	#if (!openfl_doc_gen || (!js && !html5 && !flash_doc_gen))
+	#if (!openfl_doc_gen || !flash_doc_gen)
 	/**
 		Creates a new BitmapData instance from Base64-encoded data
-		synchronously. This means that the BitmapData will be returned
-		immediately (if supported). The bytes must be of a supported bitmap file
+		synchronously. The bytes must be of a supported bitmap file
 		format, such as PNG or JPG. To use raw ARGB pixel data, call
 		`setPixels` or `setVector` instead.
 
-		HTML5 and Flash do not support creating BitmapData synchronously, so these targets
-		always return `null`. Other targets will return `null` if decoding was unsuccessful.
+		Flash does not support creating BitmapData synchronously, so that target
+		always returns `null`. Other targets will return `null` if decoding was unsuccessful.
 
 		@param	base64	Base64-encoded data
 		@param	type	The MIME-type for the encoded data ("image/jpeg", etc)
@@ -1276,26 +1216,21 @@ class BitmapData implements IBitmapDrawable
 	**/
 	public static function fromBase64(base64:String, type:String):BitmapData
 	{
-		#if (js && html5)
-		return null;
-		#else
 		var bitmapData = new BitmapData(0, 0, true, 0);
 		bitmapData.__fromBase64(base64, type);
 		return bitmapData;
-		#end
-	}
+}
 	#end
 
-	#if (!openfl_doc_gen || (!js && !html5 && !flash_doc_gen))
+	#if (!openfl_doc_gen || !flash_doc_gen)
 	/**
 		Creates a new BitmapData from bytes (a `haxe.io.Bytes` or
-		`openfl.utils.ByteArray`) synchronously. This means that the BitmapData
-		will be returned immediately (if supported). The bytes must be of a
+		`openfl.utils.ByteArray`) synchronously. The bytes must be of a
 		supported bitmap file format, such as PNG or JPG. To use raw ARGB pixel
 		data, call `setPixels` or `setVector` instead.
 
-		HTML5 and Flash do not support creating BitmapData synchronously, so these targets
-		always return `null`. Other targets will return `null` if decoding was unsuccessful.
+		Flash does not support creating BitmapData synchronously, so that target
+		always returns `null`. Other targets will return `null` if decoding was unsuccessful.
 
 		The optional `rawAlpha` parameter makes it easier to process images that have alpha
 		data stored separately.
@@ -1306,21 +1241,6 @@ class BitmapData implements IBitmapDrawable
 	**/
 	public static function fromBytes(bytes:ByteArray, rawAlpha:ByteArray = null):BitmapData
 	{
-		#if (js && html5)
-		var bitmapData = new BitmapData(0, 0, true, 0);
-		loadFromBytes(bytes, rawAlpha).onComplete(function(decoded:BitmapData)
-		{
-			if (decoded != null)
-			{
-				bitmapData.__fromImage(decoded.image);
-				bitmapData.width = decoded.width;
-				bitmapData.height = decoded.height;
-				bitmapData.image = decoded.image;
-				bitmapData.readable = true;
-			}
-		});
-		return bitmapData;
-		#else
 		if (ASTCTexture.isBytesASTC(bytes) || BCTexture.isBytesBC(bytes))
 		{
 			var texture = BCTexture.isBytesBC(bytes) ? Lib.current.stage.context3D.createBCTexture(bytes) : Lib.current.stage.context3D.createASTCTexture(bytes);
@@ -1332,39 +1252,15 @@ class BitmapData implements IBitmapDrawable
 			bitmapData.__fromBytes(bytes, rawAlpha);
 			return bitmapData;
 		}
-		#end
 	}
 	#end
 
-	#if (js && html5)
+	#if (!openfl_doc_gen || !flash_doc_gen)
 	/**
-		Creates a new BitmapData from an HTML5 canvas element immediately.
+		Creates a new BitmapData from a file path synchronously.
 
-		All targets except from HTML5 targets will return `null`.
-
-		@param	canvas	An HTML5 canvas element
-		@param	transparent	Whether the new BitmapData object should be considered
-		transparent
-		@returns	A new BitmapData if successful, or `null` if unsuccessful
-	**/
-	public static function fromCanvas(canvas:CanvasElement, transparent:Bool = true):BitmapData
-	{
-		if (canvas == null) return null;
-
-		var bitmapData = new BitmapData(0, 0, transparent, 0);
-		bitmapData.__fromImage(Image.fromCanvas(canvas));
-		bitmapData.image.transparent = transparent;
-		return bitmapData;
-	}
-	#end
-
-	#if (!openfl_doc_gen || (!js && !html5 && !flash_doc_gen))
-	/**
-		Creates a new BitmapData from a file path synchronously. This means that the
-		BitmapData will be returned immediately (if supported).
-
-		HTML5 and Flash do not support creating BitmapData synchronously, so these targets
-		always return `null`.
+		Flash does not support creating BitmapData synchronously, so that target
+		always returns `null`.
 
 		In order to load files from a remote web address, use the `loadFromFile` method,
 		which supports asynchronous loading.
@@ -1374,13 +1270,9 @@ class BitmapData implements IBitmapDrawable
 	**/
 	public static function fromFile(path:String):BitmapData
 	{
-		#if (js && html5)
-		return null;
-		#else
 		var bitmapData = new BitmapData(0, 0, true, 0);
 		bitmapData.__fromFile(path);
 		return bitmapData.image != null ? bitmapData : null;
-		#end
 	}
 	#end
 
@@ -2301,10 +2193,6 @@ class BitmapData implements IBitmapDrawable
 		}
 
 		#if lime
-		#if (js && html5)
-		ImageCanvasUtil.sync(image, false);
-		#end
-
 		if (image != null && image.version > __textureVersion)
 		{
 			if (__surface != null)
@@ -2314,17 +2202,6 @@ class BitmapData implements IBitmapDrawable
 
 			var textureImage = image;
 
-			#if (js && html5)
-			if (#if openfl_power_of_two true || #end (!TextureBase.__supportsBGRA && textureImage.format != RGBA32))
-			{
-				textureImage = textureImage.clone();
-				textureImage.format = RGBA32;
-				// textureImage.buffer.premultiplied = true;
-				#if openfl_power_of_two
-				textureImage.powerOfTwo = true;
-				#end
-			}
-			#else
 			if (#if openfl_power_of_two !textureImage.powerOfTwo || #end (!textureImage.premultiplied && textureImage.transparent))
 			{
 				textureImage = textureImage.clone();
@@ -2333,7 +2210,6 @@ class BitmapData implements IBitmapDrawable
 				textureImage.powerOfTwo = true;
 				#end
 			}
-			#end
 
 			__texture.__uploadFromImage(textureImage);
 
@@ -3153,10 +3029,6 @@ class BitmapData implements IBitmapDrawable
 
 	@:noCompletion private function __applyAlpha(alpha:ByteArray):Void
 	{
-		#if (js && html5)
-		ImageCanvasUtil.convertToCanvas(image);
-		ImageCanvasUtil.createImageData(image);
-		#end
 
 		var data = image.buffer.data;
 
@@ -3189,24 +3061,6 @@ class BitmapData implements IBitmapDrawable
 		image.dirty = true;
 		image.version++;
 		#end
-	}
-
-	@:noCompletion private function __drawCanvas(source:IBitmapDrawable, renderer:CanvasRenderer):Void
-	{
-		var buffer = image.buffer;
-
-		if (!renderer.__allowSmoothing) renderer.applySmoothing(buffer.__srcContext, false);
-
-		renderer.__render(source);
-
-		if (!renderer.__allowSmoothing) renderer.applySmoothing(buffer.__srcContext, true);
-
-		buffer.__srcContext.setTransform(1, 0, 0, 1, 0, 0);
-		buffer.__srcImageData = null;
-		buffer.data = null;
-
-		image.dirty = true;
-		image.version++;
 	}
 
 	@:noCompletion private function __drawGL(source:IBitmapDrawable, renderer:OpenGLRenderer):Void
@@ -3482,9 +3336,6 @@ class BitmapData implements IBitmapDrawable
 
 	@:noCompletion private function __sync():Void
 	{
-		#if (js && html5)
-		ImageCanvasUtil.sync(image, false);
-		#end
 	}
 
 	@:noCompletion private function __update(transformOnly:Bool, updateChildren:Bool):Void

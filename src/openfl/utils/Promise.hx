@@ -41,9 +41,7 @@ package openfl.utils;
 	```
 **/
 @:allow(lime.app.Future)
-#if !js
 @:generic
-#end
 class Promise<T>
 {
 	/**
@@ -65,17 +63,6 @@ class Promise<T>
 		This will be `false` if the `Promise` has not been resolved with a completion or error state.
 	**/
 	public var isError(get, never):Bool;
-
-	#if commonjs
-	private static function __init__()
-	{
-		var p = untyped Promise.prototype;
-		untyped Object.defineProperties(p, {
-			"isComplete": {get: p.get_isComplete},
-			"isError": {get: p.get_isError}
-		});
-	}
-	#end
 
 	/**
 		Create a new `Promise` instance

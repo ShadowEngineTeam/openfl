@@ -15,9 +15,6 @@ import openfl.net.URLRequest;
 #if lime
 import lime.system.System;
 #end
-#if (js && html5)
-import js.Browser;
-#end
 
 @:access(openfl.display.Stage)
 @:access(openfl.events.UncaughtErrorEvents)
@@ -433,15 +430,7 @@ class Lib
 		}
 	}
 
-	public static function preventDefaultTouchMove():Void
-	{
-		#if (js && html5)
-		Browser.document.addEventListener("touchmove", function(evt:js.html.Event):Void
-		{
-			evt.preventDefault();
-		}, false);
-		#end
-	}
+	public static function preventDefaultTouchMove():Void {}
 
 	/**
 		Sends a URL request to a server, but ignores any response.

@@ -514,7 +514,7 @@ class TouchEvent extends Event
 		__updateAfterEventFlag = true;
 	}
 
-	@:noCompletion private static function __create(type:String, /*event:lime.ui.TouchEvent,*/ touch:Dynamic /*js.html.Touch*/, stageX:Float, stageY:Float,
+	@:noCompletion private static function __create(type:String, /*event:lime.ui.TouchEvent,*/ touch:Dynamic, stageX:Float, stageY:Float,
 			local:Point, target:InteractiveObject):TouchEvent
 	{
 		var evt = new TouchEvent(type, true, false, 0, true, local.x, local.y, 1, 1, 1);

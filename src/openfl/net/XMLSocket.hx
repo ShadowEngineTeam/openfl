@@ -99,9 +99,7 @@ class XMLSocket extends EventDispatcher
 	**/
 	public var timeout:Int;
 
-	#if !js
 	@:noCompletion private var __inputBuffer:ByteArray;
-	#end
 	@:noCompletion private var __socket:Socket;
 
 	/**
@@ -135,9 +133,7 @@ class XMLSocket extends EventDispatcher
 	{
 		super();
 
-		#if !js
 		__inputBuffer = new ByteArray();
-		#end
 
 		if (host != null)
 		{
@@ -297,7 +293,6 @@ class XMLSocket extends EventDispatcher
 
 	@:noCompletion private function __onSocketData(_):Void
 	{
-		#if !js
 		var bytesAvailable = __socket.bytesAvailable;
 		var byte:Int;
 		var data:String;
@@ -318,8 +313,5 @@ class XMLSocket extends EventDispatcher
 				dispatchEvent(new DataEvent(DataEvent.DATA, false, false, data));
 			}
 		}
-		#else
-		dispatchEvent(new DataEvent(DataEvent.DATA, false, false, __socket.readUTFBytes(__socket.bytesAvailable)));
-		#end
 	}
 }

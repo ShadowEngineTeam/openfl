@@ -27,9 +27,7 @@ class ApplicationMain
 
 		lime.system.System.__registerEntryPoint("::APP_FILE::", create);
 
-		#if !html5
 		create(null);
-		#end
 	}
 
 	public static function create(config):Void
@@ -141,7 +139,7 @@ class ApplicationMain
 
 		var result = app.exec();
 
-		#if (sys && !ios && !nodejs)
+		#if (sys && !ios)
 		lime.system.System.exit(result);
 		#end
 	}

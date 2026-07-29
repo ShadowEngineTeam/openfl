@@ -59,15 +59,9 @@ package openfl.globalization;
 		}
 		if (requestedLocaleIDName == DEFAULT)
 		{
-			#if html5
-			// Lime's Locale.currentLocale uses navigator.language, which may
-			// not be the right choice when using JS Intl types
-			requestedLocaleIDName = untyped Intl.DateTimeFormat().resolvedOptions().locale;
-			#elseif lime
 			requestedLocaleIDName = lime.system.Locale.currentLocale;
 			#else
 			requestedLocaleIDName = openfl.system.Capabilities.language;
-			#end
 		}
 		// A Unicode CLDR locale identifier can be converted to a valid
 		// BCP47 language tag (which is also a Unicode BCP 47 locale
@@ -152,13 +146,6 @@ package openfl.globalization;
 		{
 			try
 			{
-				#if html5
-				var intlLocale = untyped js.Syntax.code('new Intl.Locale')(name).maximize();
-				this.name = Reflect.field(intlLocale, "baseName");
-				language = Reflect.field(intlLocale, "language");
-				region = Reflect.field(intlLocale, "region");
-				script = Reflect.field(intlLocale, "script");
-				#else
 				this.name = normalizeRequestedLocaleIDName(name);
 				var parts = this.name.split("-");
 				language = parts.shift();
@@ -184,7 +171,6 @@ package openfl.globalization;
 						region = "";
 					}
 				}
-				#end
 				rtl = RTL_LANGUAGES.indexOf(language) != -1;
 				this.lastOperationStatus = NO_ERROR;
 			}

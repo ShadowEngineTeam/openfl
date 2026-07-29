@@ -15,12 +15,6 @@ import openfl.Vector;
 import lime.graphics.opengl.GL;
 import lime.graphics.RenderContext;
 #end
-#if (js && html5)
-import js.html.webgl.RenderingContext;
-import js.html.CanvasElement;
-import js.html.CSSStyleDeclaration;
-import js.Browser;
-#end
 
 /**
 	The Stage3D class provides a display area and a programmable rendering
@@ -109,12 +103,6 @@ class Stage3D extends EventDispatcher
 	@:noCompletion private var __width:Int;
 	@:noCompletion private var __x:Float;
 	@:noCompletion private var __y:Float;
-	#if (js && html5)
-	@:noCompletion private var __canvas:CanvasElement;
-	@:noCompletion private var __renderContext:RenderContext;
-	@:noCompletion private var __style:CSSStyleDeclaration;
-	@:noCompletion private var __webgl:RenderingContext;
-	#end
 
 	@:noCompletion private function new(stage:Stage)
 	{
@@ -301,82 +289,6 @@ class Stage3D extends EventDispatcher
 			#end
 			__dispatchCreate();
 		}
-		else if (renderer.__type == DOM)
-		{
-			// TODO: Do not set Stage.context3D, create separate canvas elements for each Context3D
-
-			#if (js && html5)
-			if (stage.context3D == null)
-			{
-				__canvas = cast Browser.document.createElement("canvas");
-				__canvas.width = stage.stageWidth;
-				__canvas.height = stage.stageHeight;
-
-				var window = stage.window;
-				var attributes = stage.window.context.attributes;
-
-				var transparentBackground = Reflect.hasField(attributes, "background") && attributes.background == null;
-				var colorDepth = Reflect.hasField(attributes, "colorDepth") ? attributes.colorDepth : 32;
-
-				var options = {
-					alpha: (transparentBackground || colorDepth > 16) ? true : false,
-					antialias: Reflect.hasField(attributes, "antialiasing") ? attributes.antialiasing > 0 : false,
-					depth: true,
-					premultipliedAlpha: true,
-					stencil: true,
-					preserveDrawingBuffer: false
-				};
-
-				__webgl = cast __canvas.getContextWebGL(options);
-
-				if (__webgl != null)
-				{
-					#if webgl_debug
-					__webgl = untyped WebGLDebugUtils.makeDebugContext(__webgl);
-					#end
-
-					if (GL.context == null)
-					{
-						GL.context = cast __webgl;
-						GL.type = WEBGL;
-						// GL.version = isWebGL2 ? 2 : 1;
-						GL.version = 1;
-						// stage.window.context.webgl = GL.context;
-					}
-
-					stage.context3D = new Context3D(stage);
-					stage.context3D.configureBackBuffer(stage.window.width, stage.window.height, 0, true, true, true);
-					stage.context3D.present();
-
-					var renderer:DOMRenderer = cast renderer;
-					renderer.element.appendChild(__canvas);
-
-					__style = __canvas.style;
-					__style.setProperty("position", "absolute", null);
-					__style.setProperty("top", "0", null);
-					__style.setProperty("left", "0", null);
-					__style.setProperty(renderer.__transformOriginProperty, "0 0 0", null);
-					__style.setProperty("z-index", "-1", null);
-				}
-
-				if (stage.context3D != null)
-				{
-					#if openfl_share_context
-					context3D = stage.context3D;
-					#else
-					context3D = new Context3D(stage, stage.context3D.__contextState, this);
-					#end
-				}
-
-				__dispatchCreate();
-				// __dispatchError();
-			}
-			else
-			{
-				__dispatchError();
-			}
-			#end
-		}
 		#end
 	}
 
@@ -422,14 +334,6 @@ class Stage3D extends EventDispatcher
 	{
 		if (width != __width || height != __height)
 		{
-			#if (js && html5)
-			if (__canvas != null)
-			{
-				__canvas.width = width;
-				__canvas.height = height;
-			}
-			#end
-
 			__projectionTransform.copyRawDataFrom(new Vector<Float>([
 				2.0 / (width > 0 ? width : 1),
 				0.0,

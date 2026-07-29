@@ -35,7 +35,7 @@ import lime.system.BackgroundWorker;
 
 	The File class extends the FileReference class. The FileReference class represents a
 	pointer to a file, but the File class adds properties and methods that are not exposed
-	in Flash or HTML5.
+	in Flash or .
 
 	The File class includes static properties that let you reference commonly used directory
 	locations. These static properties include:

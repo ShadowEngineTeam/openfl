@@ -9,10 +9,6 @@ import openfl.events.ProgressEvent;
 import openfl.net.URLRequest;
 import openfl.utils.ByteArray;
 import openfl.utils.Future;
-#if (js && html5)
-import lime.media.AudioManager;
-import lime.media.WebAudioContext;
-#end
 #if lime_openal
 import lime.media.AudioManager;
 import lime.media.OpenALAudioContext;
@@ -51,7 +47,6 @@ import lime.media.AudioSource;
 
 	When you use this class, consider the following security model:
 
-
 	* Loading and playing a sound is not allowed if the calling file is in
 	a network sandbox and the sound file to be loaded is local.
 	* By default, loading and playing a sound is not allowed if the calling
@@ -64,7 +59,6 @@ import lime.media.AudioSource;
 	`SoundMixer.computeSpectrum()`,
 	`SoundMixer.bufferTime`, and the `SoundTransform`
 	class.
-
 
 	However, in Adobe AIR, content in the `application` security
 	sandbox (content installed with the AIR application) are not restricted by
@@ -247,12 +241,6 @@ class Sound extends EventDispatcher
 	@:noCompletion private var __buffer:AudioBuffer;
 	#end
 
-	#if (js && html5)
-	public var sampleRate(get, never):Int;
-
-	private var __webAudioContext:WebAudioContext = null;
-	#end
-
 	#if lime_openal
 	public var sampleRate(get, never):Int;
 
@@ -294,17 +282,6 @@ class Sound extends EventDispatcher
 		{
 			load(stream, context);
 		}
-		#if (js && html5)
-		if (stream == null && AudioManager.context != null)
-		{
-			switch (AudioManager.context.type)
-			{
-				case WEB:
-					__webAudioContext = AudioManager.context.web;
-				default:
-			}
-		}
-		#end
 		#if lime_openal
 		if (stream == null && AudioManager.context != null)
 		{
@@ -461,7 +438,6 @@ class Sound extends EventDispatcher
 		server must provide a URL policy file that permits cross-domain
 		access.
 
-
 		Also, for any multipart Content-Type, the syntax must be valid
 		(according to the RFC2046 standards). If the syntax appears to be invalid,
 		the POST operation is subject to the security rules applied to
@@ -516,27 +492,6 @@ class Sound extends EventDispatcher
 		Event.__pool.release(openEvent);
 		#end
 
-		#if (js && html5)
-		var defaultLibrary = lime.utils.Assets.getLibrary("default"); // TODO: Improve this
-
-		if (defaultLibrary != null && defaultLibrary.cachedAudioBuffers.exists(url))
-		{
-			var audioBuffer = defaultLibrary.cachedAudioBuffers.get(url);
-			var byteLength = (audioBuffer != null && audioBuffer.data != null) ? audioBuffer.data.byteLength : 0;
-			AudioBuffer_onURLProgress(byteLength, byteLength);
-			AudioBuffer_onURLLoad(audioBuffer);
-		}
-		else
-		{
-			AudioBuffer.loadFromFile(url)
-				.onProgress(AudioBuffer_onURLProgress)
-				.onComplete(AudioBuffer_onURLLoad)
-				.onError(function(_)
-				{
-					AudioBuffer_onURLLoad(null);
-				});
-		}
-		#else
 		AudioBuffer.loadFromFile(url)
 			.onProgress(AudioBuffer_onURLProgress)
 			.onComplete(AudioBuffer_onURLLoad)
@@ -544,7 +499,6 @@ class Sound extends EventDispatcher
 			{
 				AudioBuffer_onURLLoad(null);
 			});
-		#end
 		#end
 	}
 
@@ -826,12 +780,6 @@ class Sound extends EventDispatcher
 		}
 		else if (__buffer == null)
 		{
-			#if (js && html5)
-			if (__webAudioContext != null)
-			{
-				soundChannel.__startSampleData();
-			}
-			#end
 			#if lime_openal
 			if (__alAudioContext != null)
 			{
@@ -844,13 +792,6 @@ class Sound extends EventDispatcher
 		return null;
 		#end
 	}
-
-	#if (js && html5)
-	private function get_sampleRate():Int
-	{
-		return Std.int(__webAudioContext.sampleRate);
-	}
-	#end
 
 	#if lime_openal
 	private function get_sampleRate():Int
@@ -870,19 +811,6 @@ class Sound extends EventDispatcher
 		#if lime
 		if (__buffer != null)
 		{
-			#if (js && html5 && lime_howlerjs)
-			if (__buffer.__srcHowlerDefaultSprite != null)
-			{
-				var sprite = untyped __buffer.src._sprite[__buffer.__srcHowlerDefaultSprite];
-
-				if (sprite != null)
-				{
-					return sprite[1];
-				}
-			}
-
-			return __buffer.src.duration() * 1000;
-			#else
 			if (__buffer.data != null)
 			{
 				var bytesPerFrame = __buffer.channels * (__buffer.bitsPerSample / 8.0);
@@ -894,7 +822,6 @@ class Sound extends EventDispatcher
 			{
 				return 0;
 			}
-			#end
 		}
 		#end
 

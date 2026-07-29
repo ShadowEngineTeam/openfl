@@ -6,11 +6,11 @@ import haxe.ds.IntMap;
 class CacheMeasurement
 {
 	private var __collisions:Array<String>;
-	private var __wordMap:IntMap< #if (js && html5) Array<Float> #else Array<GlyphPosition> #end>;
+	private var __wordMap:IntMap< Array<GlyphPosition>>;
 
 	public var hash:Int;
 
-	public function new(wordKey:String, positions:#if (js && html5) Array<Float> #else Array<GlyphPosition> #end)
+	public function new(wordKey:String, positions:Array<GlyphPosition>)
 	{
 		// We create a collection of collisions to store our measurements in case 2 hashes collide.
 		__collisions = [];
@@ -19,12 +19,12 @@ class CacheMeasurement
 		set(wordKey, positions);
 	}
 
-	public function set(wordKey:String, positions:#if (js && html5) Array<Float> #else Array<GlyphPosition> #end):Void
+	public function set(wordKey:String, positions:Array<GlyphPosition>):Void
 	{
 		__addCollision(wordKey, positions);
 	}
 
-	public function get(wordKey:String):#if (js && html5) Array<Float> #else Array<GlyphPosition> #end
+	public function get(wordKey:String):Array<GlyphPosition>
 	{
 		// If collision exists, do a slow lookup, else do a fast lookup.
 		if (__collisions.length > 1)
@@ -34,7 +34,7 @@ class CacheMeasurement
 		return __wordMap.get(0);
 	}
 
-	private function __addCollision(wordKey:String, positions:#if (js && html5) Array<Float> #else Array<GlyphPosition> #end):Void
+	private function __addCollision(wordKey:String, positions:Array<GlyphPosition>):Void
 	{
 		// If the collision represents a unique value, add it to the collection
 		if (!exists(wordKey))

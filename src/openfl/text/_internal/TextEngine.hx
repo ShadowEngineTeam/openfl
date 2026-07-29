@@ -20,13 +20,6 @@ import lime.system.System;
 #if sys
 import sys.io.Process;
 #end
-#if (js && html5)
-import js.html.CanvasElement;
-import js.html.CanvasRenderingContext2D;
-import js.html.Element;
-import js.Browser;
-#end
-
 @:access(openfl.text.Font)
 @:access(openfl.text.TextField)
 @:access(openfl.text.TextFormat)
@@ -39,11 +32,6 @@ class TextEngine
 	private static inline var UTF8_SPACE:Int = 32;
 	private static inline var UTF8_HYPHEN:Int = 0x2D;
 	private static var __defaultFonts:Map<String, DefaultFontSet>;
-	#if (js && html5)
-	private static var __context:CanvasRenderingContext2D;
-	private static var __div:Element;
-	#end
-
 	public var antiAliasType:AntiAliasType;
 	public var autoSize:TextFieldAutoSize;
 	public var background:Bool;
@@ -146,24 +134,6 @@ class TextEngine
 		layoutGroups = new Vector();
 		textFormatRanges = new Vector();
 
-		#if (js && html5)
-		if (__context == null)
-		{
-			__context = (cast Browser.document.createElement("canvas") : CanvasElement).getContext("2d");
-		}
-
-		#if (js && html5 && openfl_measuretext_div)
-		if (__div == null)
-		{
-			__div = cast Browser.document.createElement("div");
-			__div.style.setProperty("pointer-events", "none", null);
-			__div.style.setProperty("white-space", "nowrap", null);
-			__div.style.position = "absolute";
-			__div.style.top = "110%"; // position off-screen!
-			Browser.document.body.appendChild(__div);
-		}
-		#end
-		#end
 	}
 
 	private function createRestrictRegexp(restrict:String):EReg
@@ -201,9 +171,6 @@ class TextEngine
 
 	private static function findFont(name:String):Font
 	{
-		#if (js && html5)
-		return Font.__fontByName.get(name);
-		#elseif lime_cffi
 		for (registeredFont in Font.__registeredFonts)
 		{
 			if (registeredFont == null) continue;
@@ -231,7 +198,6 @@ class TextEngine
 			Font.__fontByName[font.fontName] = font;
 			return font;
 		}
-		#end
 
 		return null;
 	}
@@ -285,10 +251,6 @@ class TextEngine
 
 		if (x >= width) x = 2;
 		if (y >= height) y = 2;
-
-		#if (js && html5)
-		var textHeight = textHeight * 1.185; // measurement isn't always accurate, add padding
-		#end
 
 		// don't add 4 to bounds.width and bounds.height here because the + 4
 		// is already included from a previous calculation
@@ -493,14 +455,6 @@ class TextEngine
 	{
 		var ascent:Float, descent:Float, leading:Int;
 
-		#if (js && html5)
-		var font = getFont(format);
-		__context.font = font;
-		#if openfl_measuretext_div
-		__div.style.setProperty("font", font, null);
-		#end
-		#end
-
 		var font = getFontInstance(format);
 
 		if (format.__ascent != null)
@@ -589,9 +543,7 @@ class TextEngine
 
 	public static function getFontInstance(format:TextFormat):Font
 	{
-		#if (js && html5)
-		return findFontVariant(format);
-		#elseif lime_cffi
+		#if lime_cffi
 		var instance:Font = null;
 
 		if (format != null && format.font != null)
@@ -865,10 +817,7 @@ class TextEngine
 		var textIndex = 0;
 		var lineIndex = 0;
 
-		#if !js
-		inline
-		#end
-		function getPositions(text:UTF8String, startIndex:Int, endIndex:Int):Array< #if (js && html5) Float #else GlyphPosition #end>
+		inline function getPositions(text:UTF8String, startIndex:Int, endIndex:Int):Array< GlyphPosition>
 		{
 			// TODO: optimize
 
@@ -879,76 +828,7 @@ class TextEngine
 				letterSpacing = formatRange.format.letterSpacing;
 			}
 
-			#if (js && html5)
-			function html5Positions():Array<Float>
-			{
-				var positions:Array<Float> = [];
-
-				if (__useIntAdvances == null)
-				{
-					__useIntAdvances = ~/Trident\/7.0/.match(Browser.navigator.userAgent); // IE
-				}
-
-				if (__useLetterSpacing == null)
-				{
-					__useLetterSpacing = js.Lib.typeof(untyped __context.letterSpacing) != "undefined";
-				}
-
-				if (__useIntAdvances)
-				{
-					// slower, but more accurate if browser returns Int measurements
-
-					var previousWidth = 0.0;
-					var width:Float;
-
-					for (i in startIndex...endIndex)
-					{
-						width = measureText(text.substring(startIndex, i + 1));
-						// if (i > 0) width += letterSpacing;
-
-						positions.push(width - previousWidth);
-
-						previousWidth = width;
-					}
-				}
-				else
-				{
-					for (i in startIndex...endIndex)
-					{
-						var advance:Float;
-
-						if (i < text.length - 1)
-						{
-							// Advance can be less for certain letter combinations, e.g. 'Yo' vs. 'Do'
-							var nextWidth = measureText(text.charAt(i + 1));
-							var twoWidths = measureText(text.substr(i, 2));
-							advance = twoWidths - nextWidth;
-						}
-						else
-						{
-							advance = __context.measureText(text.charAt(i)).width;
-						}
-
-						if (__useLetterSpacing && i > 0) advance += letterSpacing;
-
-						positions.push(advance);
-					}
-				}
-
-				return positions;
-			}
-			// TODO: Smarter caching for justify
-			if (currentFormat.align == JUSTIFY)
-			{
-				return html5Positions();
-			}
-
-			#if openfl_disable_text_measurement_cache
-			return html5Positions();
-			#else
-			return __shapeCache.cache(formatRange, html5Positions, text.substring(startIndex, endIndex));
 			#end
-			#else
 			if (__textLayout == null)
 			{
 				__textLayout = new TextLayout();
@@ -983,30 +863,22 @@ class TextEngine
 			#else
 			return __shapeCache.cache(formatRange, __textLayout);
 			#end
-			#end
-		} #if !js inline #end function getPositionsWidth(positions:#if (js && html5) Array<Float> #else Array<GlyphPosition> #end):Float
+		} inline function getPositionsWidth(positions:Array<GlyphPosition>):Float
 
 		{
 			var width = 0.0;
 
 			for (position in positions)
 			{
-				#if (js && html5)
-				width += position;
-				#else
 				width += position.advance.x;
-				#end
 			}
 
 			return width;
 		}
 
-		#if !js inline #end function getTextWidth(text:String):Float
+		inline function getTextWidth(text:String):Float
 
 		{
-			#if (js && html5)
-			return measureText(text);
-			#else
 			if (__textLayout == null)
 			{
 				__textLayout = new TextLayout();
@@ -1033,24 +905,23 @@ class TextEngine
 			}
 
 			return width;
-			#end
 		}
 
-		#if !js inline #end function getBaseX():Float
+		inline function getBaseX():Float
 
 		{
 			// TODO: swap margins in RTL
 			return GUTTER + leftMargin + blockIndent + (firstLineOfParagraph ? indent : 0);
 		}
 
-		#if !js inline #end function getWrapWidth():Float
+		inline function getWrapWidth():Float
 
 		{
 			// TODO: swap margins in RTL
 			return width - GUTTER - rightMargin - getBaseX();
 		}
 
-		#if !js inline #end function nextLayoutGroup(startIndex, endIndex):Void
+		inline function nextLayoutGroup(startIndex, endIndex):Void
 
 		{
 			if (layoutGroup == null || layoutGroup.startIndex != layoutGroup.endIndex)
@@ -1066,7 +937,7 @@ class TextEngine
 			}
 		}
 
-		#if !js inline #end function setLineMetrics():Void
+		inline function setLineMetrics():Void
 
 		{
 			if (currentFormat.__ascent != null)
@@ -1102,7 +973,7 @@ class TextEngine
 			}
 		}
 
-		#if !js inline #end function setParagraphMetrics():Void
+		inline function setParagraphMetrics():Void
 
 		{
 			firstLineOfParagraph = true;
@@ -1124,7 +995,7 @@ class TextEngine
 			}
 		}
 
-		#if !js inline #end function nextFormatRange():Bool
+		inline function nextFormatRange():Bool
 
 		{
 			if (rangeIndex < textFormatRanges.length - 1)
@@ -1133,12 +1004,6 @@ class TextEngine
 				formatRange = textFormatRanges[rangeIndex];
 				currentFormat.__merge(formatRange.format);
 
-				#if (js && html5)
-				var fontString = getFont(currentFormat);
-				__context.font = fontString;
-				#if openfl_measuretext_div
-				__div.style.setProperty("font", fontString, null);
-				#end
 				#end
 
 				font = getFontInstance(currentFormat);
@@ -1149,7 +1014,7 @@ class TextEngine
 			return false;
 		}
 
-		#if !js inline #end function setFormattedPositions(startIndex:Int, endIndex:Int)
+		inline function setFormattedPositions(startIndex:Int, endIndex:Int)
 
 		{
 			// sets the positions of the text from start to end, including format changes if there are any
@@ -1205,7 +1070,7 @@ class TextEngine
 			}
 		}
 
-		#if !js inline #end function placeFormattedText(endIndex:Int):Void
+		inline function placeFormattedText(endIndex:Int):Void
 
 		{
 			if (endIndex <= formatRange.end)
@@ -1283,7 +1148,7 @@ class TextEngine
 			textIndex = endIndex;
 		}
 
-		#if !js inline #end function alignBaseline():Void
+		inline function alignBaseline():Void
 
 		{
 			// aligns the baselines of all characters in a single line
@@ -1314,7 +1179,7 @@ class TextEngine
 			firstLineOfParagraph = false; // TODO: need to thoroughly test this
 		}
 
-		#if !js inline #end function breakLongWords(endIndex:Int):Void
+		inline function breakLongWords(endIndex:Int):Void
 
 		{
 			// breaks up words that are too long to fit in a single line
@@ -1323,7 +1188,7 @@ class TextEngine
 			var bufferCount:Int;
 			var placeIndex:Int;
 			var positionWidth:Float;
-			var currentPosition:#if (js && html5) Float #else GlyphPosition #end;
+			var currentPosition:GlyphPosition;
 
 			var tempWidth = getPositionsWidth(remainingPositions);
 			var i = remainingPositions.length - 1;
@@ -1339,11 +1204,7 @@ class TextEngine
 					break;
 				}
 				var position = remainingPositions[i];
-				#if (js && html5)
-				tempWidth -= position;
-				#else
 				tempWidth -= position.advance.x;
-				#end
 				i--;
 			}
 
@@ -1356,7 +1217,7 @@ class TextEngine
 				{
 					currentPosition = remainingPositions[i];
 
-					if (#if (js && html5) currentPosition #else currentPosition.advance.x #end == 0.0)
+					if (currentPosition.advance.x == 0.0)
 					{
 						// skip Unicode character buffer positions
 						i++;
@@ -1364,7 +1225,7 @@ class TextEngine
 					}
 					else
 					{
-						positionWidth += #if (js && html5) currentPosition #else currentPosition.advance.x #end;
+						positionWidth += currentPosition.advance.x;
 						i++;
 					}
 				}
@@ -1415,7 +1276,7 @@ class TextEngine
 			// positions only contains the final unbroken line at the end
 		}
 
-		#if !js inline #end function placeText(endIndex:Int):Void
+		inline function placeText(endIndex:Int):Void
 
 		{
 			if (width >= GUTTER * 2 && wordWrap)
@@ -1520,7 +1381,7 @@ class TextEngine
 							// Trim left space of this word
 							textIndex++;
 
-							var spaceWidth = #if (js && html5) positions.shift() #else positions.shift().advance.x #end;
+							var spaceWidth = positions.shift().advance.x;
 							widthValue -= spaceWidth;
 							offsetX += spaceWidth;
 						}
@@ -1530,7 +1391,7 @@ class TextEngine
 							// Trim right space of this word
 							endIndex--;
 
-							var spaceWidth = #if (js && html5) positions.pop() #else positions.pop().advance.x #end;
+							var spaceWidth = positions.pop().advance.x;
 							widthValue -= spaceWidth;
 						}
 					}
@@ -1546,7 +1407,7 @@ class TextEngine
 								// if last letter is a space, avoid word wrap if possible
 								// TODO: Handle multiple spaces
 								var lastPosition = positions[positions.length - 1];
-								var spaceWidth = #if (js && html5) lastPosition #else lastPosition.advance.x #end;
+								var spaceWidth = lastPosition.advance.x;
 
 								if (offsetX + widthValue - spaceWidth <= getWrapWidth())
 								{
@@ -1697,7 +1558,7 @@ class TextEngine
 						if (breakIndex - layoutGroup.startIndex - layoutGroup.positions.length < 0)
 						{
 							// Newline has no size
-							layoutGroup.positions.push(#if (js && html5) 0.0 #else null #end);
+							layoutGroup.positions.push(null);
 						}
 
 						textIndex = breakIndex + 1;
@@ -1752,17 +1613,7 @@ class TextEngine
 		#end
 	}
 
-	#if (js && html5)
-	private function measureText(text:String):Float
-	{
-		#if openfl_measuretext_div
-		__div.innerHTML = StringTools.replace(text, " ", "&nbsp;");
-		return __div.clientWidth;
-		#else
-		return __context.measureText(text).width;
 		#end
-	}
-	#end
 
 	public function restrictText(value:UTF8String):UTF8String
 	{

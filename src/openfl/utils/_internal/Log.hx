@@ -17,11 +17,7 @@ class Log
 	{
 		if (level >= LogLevel.DEBUG)
 		{
-			#if js
-			untyped js.Syntax.code("console").debug("[" + info.className + "] " + message);
-			#else
 			println("[" + info.className + "] " + Std.string(message));
-			#end
 		}
 	}
 
@@ -37,11 +33,7 @@ class Log
 			}
 			else
 			{
-				#if js
-				untyped js.Syntax.code("console").error(message);
-				#else
 				println(message);
-				#end
 			}
 		}
 	}
@@ -50,20 +42,14 @@ class Log
 	{
 		if (level >= LogLevel.INFO)
 		{
-			#if js
-			untyped js.Syntax.code("console").info("[" + info.className + "] " + message);
-			#else
 			println("[" + info.className + "] " + Std.string(message));
-			#end
 		}
 	}
 
 	public static inline function print(message:Dynamic):Void
 	{
-		#if sys
+	#if sys
 		Sys.print(Std.string(message));
-		#elseif js
-		untyped js.Syntax.code("console").log(message);
 		#else
 		@SuppressWarnings("checkstyle:Trace") trace(message);
 		#end
@@ -71,10 +57,8 @@ class Log
 
 	public static inline function println(message:Dynamic):Void
 	{
-		#if sys
+	#if sys
 		Sys.println(Std.string(message));
-		#elseif js
-		untyped js.Syntax.code("console").log(message);
 		#else
 		@SuppressWarnings("checkstyle:Trace") trace(Std.string(message));
 		#end
@@ -92,11 +76,7 @@ class Log
 	{
 		if (level >= LogLevel.WARN)
 		{
-			#if js
-			untyped js.Syntax.code("console").warn("[" + info.className + "] WARNING: " + message);
-			#else
 			println("[" + info.className + "] WARNING: " + Std.string(message));
-			#end
 		}
 	}
 
@@ -124,17 +104,6 @@ class Log
 		}
 		#end
 
-		#if js
-		if (untyped js.Syntax.code("typeof console") == "undefined")
-		{
-			untyped js.Syntax.code("console = {}");
-		}
-		var _console = untyped js.Syntax.code("console");
-		if (_console.log == null)
-		{
-			_console.log = function() {};
-		}
-		#end
 	}
 }
 

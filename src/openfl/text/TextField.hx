@@ -29,10 +29,6 @@ import lime.system.Clipboard;
 import lime.ui.KeyCode;
 import lime.ui.KeyModifier;
 #end
-#if (js && html5)
-import js.html.DivElement;
-#end
-
 /**
 	The TextField class is used to create display objects for text display and
 	input.
@@ -718,11 +714,6 @@ class TextField extends InteractiveObject
 	@:noCompletion private var __htmlText:UTF8String;
 	@:noCompletion private var __textEngine:TextEngine;
 	@:noCompletion private var __textFormat:TextFormat;
-	#if (js && html5)
-	@:noCompletion private var __div:DivElement;
-	@:noCompletion private var __renderedOnCanvasWhileOnDOM:Bool = false;
-	@:noCompletion private var __forceCachedBitmapUpdate:Bool = false;
-	#end
 
 	/**
 		Creates a new TextField instance. After you create the TextField instance,
@@ -743,13 +734,6 @@ class TextField extends InteractiveObject
 		__displayAsPassword = false;
 		__passwordChar = "*";
 		__graphics = new Graphics(this);
-		#if (js && html5)
-		// Graphics adds an implicit moveTo(0, 0) for HTML Canvas, but we need
-		// an empty command buffer for TextField or it won't render correctly.
-		// calling clear() adds moveTo(0, 0) as the first command again, so just
-		// clear the command buffer directly.
-		__graphics.__commands.clear();
-		#end
 		__textEngine = new TextEngine(this);
 		__layoutDirty = true;
 		__offsetX = 0;
@@ -1740,11 +1724,7 @@ class TextField extends InteractiveObject
 
 	@:noCompletion private inline function __getAdvance(position):Float
 	{
-		#if (js && html5)
-		return position;
-		#else
 		return position.advance.x;
-		#end
 	}
 
 	@:noCompletion private override function __getBounds(rect:Rectangle, matrix:Matrix):Void
@@ -2206,7 +2186,7 @@ class TextField extends InteractiveObject
 			__selectionIndex = __caretIndex;
 		}
 
-		var enableInput = #if (js && html5) (DisplayObject.__supportDOM ? __renderedOnCanvasWhileOnDOM : true) #else true #end;
+		var enableInput = true;
 
 		if (enableInput)
 		{
@@ -2232,7 +2212,7 @@ class TextField extends InteractiveObject
 
 	@:noCompletion private function __stopTextInput():Void
 	{
-		var disableInput = #if (js && html5) (DisplayObject.__supportDOM ? __renderedOnCanvasWhileOnDOM : true) #else true #end;
+		var disableInput = true;
 
 		if (disableInput)
 		{
@@ -2453,12 +2433,6 @@ class TextField extends InteractiveObject
 
 	@:noCompletion private function __updateText(value:String):Void
 	{
-		#if (js && html5)
-		if (DisplayObject.__supportDOM && __renderedOnCanvasWhileOnDOM)
-		{
-			__forceCachedBitmapUpdate = __text != value;
-		}
-		#end
 
 		// applies maxChars and restrict on text
 
@@ -2493,7 +2467,7 @@ class TextField extends InteractiveObject
 			}
 		}
 
-		if (!__displayAsPassword #if (js && html5) || (DisplayObject.__supportDOM && !__renderedOnCanvasWhileOnDOM) #end)
+		if (!__displayAsPassword )
 		{
 			__textEngine.text = __text;
 		}
@@ -2758,38 +2732,7 @@ class TextField extends InteractiveObject
 
 		value = HTMLParser.parse(value, multiline, __styleSheet, __textFormat, __textEngine.textFormatRanges);
 
-		#if (js && html5)
-		// if (DisplayObject.__supportDOM)
-		// {
-		// 	// TODO: Why is this parsing text format ranges, only to ignore them?
-		// 	// Should this skip the parser entirely?
-		// 	if (__textEngine.textFormatRanges.length > 1)
-		// 	{
-		// 		__textEngine.textFormatRanges.splice(1, __textEngine.textFormatRanges.length - 1);
-		// 	}
-
-		// 	var range = __textEngine.textFormatRanges[0];
-		// 	range.format = __textFormat;
-		// 	range.start = 0;
-
-		// 	if (__renderedOnCanvasWhileOnDOM)
-		// 	{
-		// 		range.end = value.length;
-		// 		__updateText(value);
-		// 	}
-		// 	else
-		// 	{
-		// 		range.end = __htmlText.length;
-		// 		__updateText(__htmlText);
-		// 	}
-		// }
-		// else
-		{
-			__updateText(value);
-		}
-		#else
 		__updateText(value);
-		#end
 
 		return value;
 	}
@@ -3276,17 +3219,6 @@ class TextField extends InteractiveObject
 
 				var setDirty = true;
 
-				#if (js && html5)
-				if (DisplayObject.__supportDOM)
-				{
-					if (__renderedOnCanvasWhileOnDOM)
-					{
-						__forceCachedBitmapUpdate = true;
-					}
-					setDirty = false;
-				}
-				#end
-
 				if (setDirty)
 				{
 					__dirty = true;
@@ -3339,12 +3271,6 @@ class TextField extends InteractiveObject
 				__stopCursorTimer();
 				__startCursorTimer();
 
-				#if (js && html5)
-				if (DisplayObject.__supportDOM && __renderedOnCanvasWhileOnDOM)
-				{
-					__forceCachedBitmapUpdate = true;
-				}
-				#end
 			}
 		}
 	}
@@ -3464,7 +3390,7 @@ class TextField extends InteractiveObject
 	@:noCompletion private function window_onKeyDown(key:KeyCode, modifier:KeyModifier):Void
 	{
 		inline function isModifierPressed()
-			return #if mac modifier.metaKey #elseif js(modifier.metaKey || modifier.ctrlKey) #else (modifier.ctrlKey && !modifier.altKey) #end;
+			return (modifier.ctrlKey && !modifier.altKey);
 
 		switch (key)
 		{
@@ -3702,7 +3628,6 @@ class TextField extends InteractiveObject
 				}
 				#end
 
-			#if !js
 			case V:
 				#if lime
 				if (#if mac modifier.metaKey #else modifier.ctrlKey && !modifier.altKey #end)

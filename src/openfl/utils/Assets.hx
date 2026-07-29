@@ -480,7 +480,7 @@ class Assets
 
 	@:noCompletion private static function isValidSound(sound:Sound):Bool
 	{
-		#if ((tools && !display) && (cpp || nodejs))
+		#if ((tools && !display) && cpp)
 		return true;
 		// return (sound.__handle != null && sound.__handle != 0);
 		#else
@@ -694,7 +694,6 @@ class Assets
 		if (useCache == null) useCache = true;
 
 		#if lime
-		#if !html5
 		var promise = new Promise<Sound>();
 
 		LimeAssets.loadAudioBuffer(id, useCache)
@@ -719,10 +718,6 @@ class Assets
 			.onError(promise.error)
 			.onProgress(promise.progress);
 		return promise.future;
-		#else
-		var future = new Future<Sound>(function() return getMusic(id, useCache));
-		return future;
-		#end
 		#else
 		return Future.withValue(getMusic(id, useCache));
 		#end

@@ -7,10 +7,6 @@ import openfl.events.ProgressEvent;
 import openfl.events.UncaughtErrorEvents;
 import openfl.system.ApplicationDomain;
 import openfl.utils.ByteArray;
-#if (js && html5)
-import js.Browser;
-#end
-
 /**
 	The LoaderInfo class provides information about a loaded SWF file or a
 	loaded image file(JPEG, GIF, or PNG). LoaderInfo objects are available for
@@ -110,7 +106,7 @@ import js.Browser;
 @:access(openfl.events.Event)
 class LoaderInfo extends EventDispatcher
 {
-	@:noCompletion private static var __rootURL:String = #if (js && html5) (Browser.supported ? Browser.document.URL : "") #else "" #end;
+	@:noCompletion private static var __rootURL:String = "";
 
 	// @:noCompletion @:dox(hide) public var actionScriptVersion (default, never):openfl.display.ActionScriptVersion;
 

@@ -19,15 +19,11 @@ import openfl.Vector;
 	gesture events. The API for handling user interaction with these gesture
 	events includes the following classes:
 
-
-
 	* openfl.events.TouchEvent
 	* openfl.events.GestureEvent
 	* openfl.events.GesturePhase
 	* openfl.events.TransformGestureEvent
 	* openfl.events.PressAndTapGestureEvent
-
-
 
 	Use the listed classes to write code that handles touch events. Use the
 	Multitouch class to determine the current environment's support for touch
@@ -114,14 +110,7 @@ import openfl.Vector;
 	// Getters & Setters
 	@:noCompletion private static function get_supportsTouchEvents():Bool
 	{
-		#if (js && html5)
-		if (untyped js.Syntax.code("('ontouchstart' in document.documentElement) || (window.DocumentTouch && document instanceof DocumentTouch)"))
-		{
-			return true;
-		}
-
-		return false;
-		#elseif !mac
+		#if !mac
 		return true;
 		#else
 		return false;

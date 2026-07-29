@@ -172,7 +172,7 @@ import cpp.vm.Gc;
 
 		_OpenFL target support:_ This feature is supported on all desktop
 		operating systems, on iOS, and on Android. This feature is not supported
-		on the html5 target.
+		on this target.
 
 		For Adobe Flash Player, the `System.gc()` method is only enabled in
 		the debugger version of the runtime.
@@ -247,8 +247,6 @@ import cpp.vm.Gc;
 	{
 		#if cpp
 		return untyped __global__.__hxcpp_gc_used_bytes();
-		#elseif (js && html5)
-		return untyped js.Syntax.code("(window.performance && window.performance.memory) ? window.performance.memory.usedJSHeapSize : 0");
 		#else
 		return 0;
 		#end

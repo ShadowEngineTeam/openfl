@@ -199,7 +199,7 @@ class Font #if lime extends LimeFont #end
 
 	/**
 		Creates a new Font from a font name asynchronously. This feature should work
-		for embedded CSS fonts on the HTML5 target, but is not implemented for
+		for embedded CSS fonts on the  target, but is not implemented for
 		registered OS fonts on native targets currently. The file
 		load and font decoding will occur in the background.
 		Progress, completion and error callbacks will be dispatched in the current

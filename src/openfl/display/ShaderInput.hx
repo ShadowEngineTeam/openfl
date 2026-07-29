@@ -49,7 +49,7 @@ import openfl.display3D.Context3D;
 	Shader instance is created.
 **/
 @:access(openfl.display3D.Context3D)
-#if (!js && !display)
+#if !display
 @:generic
 #end
 @:final class ShaderInput<T> /*implements Dynamic*/

@@ -11,9 +11,6 @@ import openfl.utils.Object;
 import lime.app.Application;
 import lime.system.System;
 #end
-#if (js && html5)
-import js.Browser;
-#end
 #if sys
 import sys.io.File;
 import sys.FileSystem;
@@ -29,7 +26,6 @@ import sys.FileSystem;
 	Server.
 
 	Use shared objects to do the following:
-
 
 	* **Maintain local persistence**. This is the simplest way to use a
 	shared object, and does not require Flash Media Server. For example, you
@@ -61,7 +57,6 @@ import sys.FileSystem;
 	to all clients connected to the object. When a user enters or leaves the
 	chat room, the object is updated and all clients that are connected to the
 	object see the revised list of chat room users.
-
 
 	 To create a local shared object, call
 	`SharedObject.getLocal()`. To create a remote shared object,
@@ -104,8 +99,6 @@ import sys.FileSystem;
 	space for locally saved information. Thereafter, the `netStatus`
 	event is dispatched with an information object indicating whether the flush
 	failed or succeeded.
-
-
 
 	If your SWF file attempts to create or modify local shared objects, make
 	sure that your SWF file is at least 215 pixels wide and at least 138 pixels
@@ -313,21 +306,12 @@ class SharedObject extends EventDispatcher
 
 		try
 		{
-			#if (js && html5)
-			var storage = Browser.getLocalStorage();
-
-			if (storage != null)
-			{
-				storage.removeItem(__localPath + ":" + __name);
-			}
-			#else
 			var path = __getPath(__localPath, __name);
 
 			if (FileSystem.exists(path))
 			{
 				FileSystem.deleteFile(path);
 			}
-			#end
 		}
 		catch (e:Dynamic) {}
 	}
@@ -398,7 +382,6 @@ class SharedObject extends EventDispatcher
 		looks for the number of bytes passed to `minDiskSpace`, instead
 		of looking for enough space to save the shared object at its current size.
 
-
 		For example, if you expect a shared object to grow to a maximum size of
 		500 bytes, even though it might start out much smaller, pass 500 for
 		`minDiskSpace`. If Flash asks the user to allot disk space for
@@ -448,15 +431,6 @@ class SharedObject extends EventDispatcher
 
 		try
 		{
-			#if (js && html5)
-			var storage = Browser.getLocalStorage();
-
-			if (storage != null)
-			{
-				storage.removeItem(__localPath + ":" + __name);
-				storage.setItem(__localPath + ":" + __name, encodedData);
-			}
-			#else
 			var path = __getPath(__localPath, __name);
 			var directory = Path.directory(path);
 
@@ -468,7 +442,6 @@ class SharedObject extends EventDispatcher
 			var output = File.write(path, false);
 			output.writeString(encodedData);
 			output.close();
-			#end
 		}
 		catch (e:Dynamic)
 		{
@@ -598,7 +571,6 @@ class SharedObject extends EventDispatcher
 						 from or written to by SWF files delivered over non-HTTPS
 						 connections.
 
-
 						 If your SWF file is delivered over a non-HTTPS
 						 connection and you try to set this parameter to
 						 `true`, the creation of a new shared object
@@ -670,26 +642,6 @@ class SharedObject extends EventDispatcher
 
 			try
 			{
-				#if (js && html5)
-				var storage = Browser.getLocalStorage();
-
-				if (localPath == null)
-				{
-					// Check old default path, first
-					if (storage != null)
-					{
-						encodedData = storage.getItem(Browser.window.location.href + ":" + name);
-						storage.removeItem(Browser.window.location.href + ":" + name);
-					}
-
-					localPath = Browser.window.location.pathname;
-				}
-
-				if (storage != null && encodedData == null)
-				{
-					encodedData = storage.getItem(localPath + ":" + name);
-				}
-				#else
 				if (localPath == null) localPath = "";
 
 				var path = __getPath(localPath, name);

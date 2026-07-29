@@ -22,11 +22,6 @@ import openfl.Vector;
 #if lime
 import lime.graphics.cairo.Cairo;
 #end
-#if (js && html5)
-import js.html.CanvasElement;
-import js.html.CanvasRenderingContext2D;
-import js.html.CSSStyleDeclaration;
-#end
 
 /**
 	The DisplayObject class is the base class for all objects that can be
@@ -193,7 +188,7 @@ import js.html.CSSStyleDeclaration;
 @:access(openfl.geom.Transform)
 class DisplayObject extends EventDispatcher implements IBitmapDrawable
 {
-	#if (openfl_enable_experimental_update_queue && !dom)
+	#if openfl_enable_experimental_update_queue
 	@:noCompletion private static var updateQueue:Array<DisplayObject> = [];
 	#end
 
@@ -202,7 +197,7 @@ class DisplayObject extends EventDispatcher implements IBitmapDrawable
 	@:noCompletion private static var __instanceCount:Int = 0;
 
 	@:noCompletion
-	private static #if !js inline #end var __supportDOM:Bool #if !js = false #end;
+	private static inline var __supportDOM:Bool = false;
 
 	@:noCompletion private static var __tempStack:ObjectPool<Vector<DisplayObject>> = new ObjectPool<Vector<DisplayObject>>(function() return
 		new Vector<DisplayObject>(), function(stack) stack.length = 0);
@@ -1016,11 +1011,6 @@ class DisplayObject extends EventDispatcher implements IBitmapDrawable
 	@:noCompletion private var __worldVisibleChanged:Bool;
 	@:noCompletion private var __worldTransformInvalid:Bool;
 	@:noCompletion private var __worldZ:Int;
-	#if (js && html5)
-	@:noCompletion private var __canvas:CanvasElement;
-	@:noCompletion private var __context:CanvasRenderingContext2D;
-	@:noCompletion private var __style:CSSStyleDeclaration;
-	#end
 
 	@:noCompletion private function new()
 	{
@@ -1345,21 +1335,6 @@ class DisplayObject extends EventDispatcher implements IBitmapDrawable
 	{
 		__cairo = null;
 
-		#if (js && html5)
-		if (__canvas != null)
-		{
-			__canvas.width = 0;
-			__canvas.height = 0;
-			__canvas = null;
-		}
-
-		if (__context != null)
-		{
-			__context.clearRect(0, 0, 0, 0);
-			__context = null;
-		}
-		#end
-
 		if (__graphics != null)
 		{
 			__graphics.__cleanup();
@@ -1665,7 +1640,7 @@ class DisplayObject extends EventDispatcher implements IBitmapDrawable
 		}
 	}
 
-	#if (openfl_enable_experimental_update_queue && !dom)
+	#if openfl_enable_experimental_update_queue
 	@:noCompletion private var _updateQueueFlag:Bool = false;
 
 	@:noCompletion inline private function __setUpdateQueueFlag(add:Bool = true):Void
@@ -1693,7 +1668,7 @@ class DisplayObject extends EventDispatcher implements IBitmapDrawable
 			__renderDirty = true;
 			__setParentRenderDirty();
 		}
-		#if (openfl_enable_experimental_update_queue && !dom)
+		#if openfl_enable_experimental_update_queue
 		__setUpdateQueueFlag();
 		#end
 	}
@@ -1712,7 +1687,7 @@ class DisplayObject extends EventDispatcher implements IBitmapDrawable
 			__setWorldTransformInvalid();
 			__setParentRenderDirty();
 		}
-		#if (openfl_enable_experimental_update_queue && !dom)
+		#if openfl_enable_experimental_update_queue
 		__setUpdateQueueFlag();
 		#end
 	}
@@ -1731,7 +1706,7 @@ class DisplayObject extends EventDispatcher implements IBitmapDrawable
 		__renderable = (__visible && __scaleX != 0 && __scaleY != 0 && !__isMask && (renderParent == null || !renderParent.__isMask));
 		__updateTransforms();
 
-		#if (openfl_enable_experimental_update_queue && !dom)
+		#if openfl_enable_experimental_update_queue
 		transformOnly = false;
 		#end
 

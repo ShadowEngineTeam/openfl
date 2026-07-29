@@ -242,12 +242,6 @@ class Video extends DisplayObject
 	{
 		__stream = netStream;
 
-		#if (js && html5)
-		if (__stream != null && __stream.__video != null && !__stream.__closed)
-		{
-			__stream.__video.play();
-		}
-		#end
 	}
 
 	/**
@@ -261,12 +255,6 @@ class Video extends DisplayObject
 
 	@:noCompletion private override function __enterFrame(deltaTime:Float):Void
 	{
-		#if (js && html5)
-		if (__renderable && __stream != null)
-		{
-			__setRenderDirty();
-		}
-		#end
 	}
 
 	@:noCompletion private override function __getBounds(rect:Rectangle, matrix:Matrix):Void
@@ -282,7 +270,7 @@ class Video extends DisplayObject
 
 	@:noCompletion private function __getIndexBuffer(context:Context3D):IndexBuffer3D
 	{
-		#if (lime || js)
+		#if lime
 		var gl = context.gl;
 
 		if (__indexBuffer == null || __indexBufferContext != context.__context)
@@ -308,35 +296,12 @@ class Video extends DisplayObject
 
 	@:noCompletion private function __getTexture(context:Context3D):RectangleTexture
 	{
-		#if (js && html5)
-		if (__stream == null || __stream.__video == null) return null;
-
-		var gl = context.__context.webgl;
-		var internalFormat = gl.RGBA;
-		var format = gl.RGBA;
-
-		if (!__stream.__closed && __stream.__video.currentTime != __textureTime)
-		{
-			if (__texture == null)
-			{
-				__texture = context.createRectangleTexture(__stream.__video.videoWidth, __stream.__video.videoHeight, BGRA, false);
-			}
-
-			context.__bindGLTexture2D(__texture.__textureID);
-			gl.texImage2D(gl.TEXTURE_2D, 0, internalFormat, format, gl.UNSIGNED_BYTE, __stream.__video);
-
-			__textureTime = __stream.__video.currentTime;
-		}
-
-		return __texture;
-		#else
 		return null;
-		#end
 	}
 
 	@:noCompletion private function __getVertexBuffer(context:Context3D):VertexBuffer3D
 	{
-		#if (lime || js)
+		#if lime
 		var gl = context.gl;
 
 		if (__vertexBuffer == null
@@ -444,24 +409,12 @@ class Video extends DisplayObject
 
 	@:noCompletion private function get_videoHeight():Int
 	{
-		#if (js && html5)
-		if (__stream != null && __stream.__video != null)
-		{
-			return Std.int(__stream.__video.videoHeight);
-		}
-		#end
 
 		return 0;
 	}
 
 	@:noCompletion private function get_videoWidth():Int
 	{
-		#if (js && html5)
-		if (__stream != null && __stream.__video != null)
-		{
-			return Std.int(__stream.__video.videoWidth);
-		}
-		#end
 
 		return 0;
 	}

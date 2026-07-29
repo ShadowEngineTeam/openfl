@@ -132,27 +132,6 @@ import openfl.utils.ByteArray;
 
 		// TODO: Improve handling of miplevels with canvas src
 
-		#if (js && html5)
-		if (miplevel == 0 && image.buffer != null && image.buffer.data == null && image.buffer.src != null)
-		{
-			var gl = __context.gl;
-
-			var width = __width >> miplevel;
-			var height = __height >> miplevel;
-
-			if (width == 0 && height == 0) return;
-
-			if (width == 0) width = 1;
-			if (height == 0) height = 1;
-
-			__context.__bindGLTexture2D(__textureID);
-			gl.texImage2D(__textureTarget, miplevel, __internalFormat, __format, gl.UNSIGNED_BYTE, image.buffer.src);
-			__context.__bindGLTexture2D(null);
-
-			return;
-		}
-		#end
-
 		uploadFromTypedArray(image.data, miplevel);
 		#end
 	}
@@ -184,14 +163,6 @@ import openfl.utils.ByteArray;
 	public function uploadFromByteArray(data:ByteArray, byteArrayOffset:UInt, miplevel:UInt = 0):Void
 	{
 		#if lime
-		#if (js && !display)
-		if (byteArrayOffset == 0)
-		{
-			uploadFromTypedArray(@:privateAccess (data : ByteArrayData).b, miplevel);
-			return;
-		}
-		#end
-
 		uploadFromTypedArray(new UInt8Array(data.toArrayBuffer(), byteArrayOffset), miplevel);
 		#end
 	}

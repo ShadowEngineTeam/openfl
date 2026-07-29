@@ -35,44 +35,16 @@ class AssetsMacro
 
 	macro public static function embedBitmap():Array<Field>
 	{
-		#if html5
-		var fields = embedData(":bitmap", true);
-		#else
 		var fields = embedData(":bitmap");
-		#end
 
 		if (fields != null)
 		{
 			var constructor = macro
 				{
-					#if html5
-					super(0, 0, transparent, fillRGBA);
-
-					if (preload != null)
-					{
-						__fromImage(preload);
-					}
-					else
-					{
-						__loadFromBase64(haxe.Resource.getString(resourceName), resourceType).onComplete(function(b)
-						{
-							if (preload == null)
-							{
-								preload = b.image;
-							}
-
-							if (onload != null && Reflect.isFunction(onload))
-							{
-								onload(b);
-							}
-						});
-					}
-					#else
 					super(0, 0, transparent, fillRGBA);
 
 					var byteArray = openfl.utils.ByteArray.fromBytes(haxe.Resource.getBytes(resourceName));
 					__fromBytes(byteArray);
-					#end
 				};
 
 			var args = [
@@ -101,23 +73,6 @@ class AssetsMacro
 					value: macro 0xFFFFFFFF
 				}
 			];
-
-			#if html5
-			args.push({
-				name: "onload",
-				opt: true,
-				type: macro :Dynamic,
-				value: null
-			});
-			fields.push({
-				kind: FVar(macro :lime.graphics.Image, null),
-				name: "preload",
-				doc: null,
-				meta: [],
-				access: [APublic, AStatic],
-				pos: Context.currentPos()
-			});
-			#end
 
 			fields.push({
 				name: "new",
@@ -280,10 +235,6 @@ class AssetsMacro
 
 		if (path != null && path != "")
 		{
-			#if html5
-			Sys.command("haxelib", ["run", "openfl", "generate", "-font-hash", sys.FileSystem.fullPath(path)]);
-			path += ".hash";
-			#end
 
 			var bytes = File.getBytes(path);
 			var resourceName = "NME_font_" + (classType.pack.length > 0 ? classType.pack.join("_") + "_" : "") + classType.name;
@@ -321,7 +272,6 @@ class AssetsMacro
 		if (fields != null)
 		{
 			// CFFILoader.h(248) : NOT Implemented:api_buffer_data
-			#if (!html5)
 			var constructor = macro
 				{
 					super();
@@ -355,7 +305,6 @@ class AssetsMacro
 				}),
 				pos: Context.currentPos()
 			});
-			#end
 		}
 
 		return fields;

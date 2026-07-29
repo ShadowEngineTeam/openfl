@@ -1,6 +1,5 @@
 package openfl.utils;
 
-#if !js
 import haxe.ds.StringMap;
 import haxe.ds.IntMap;
 import haxe.ds.ObjectMap;
@@ -590,4 +589,3 @@ abstract Dictionary<K, V>(Dynamic)
 		return values.iterator();
 	}
 }
-#end
