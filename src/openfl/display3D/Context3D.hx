@@ -253,7 +253,7 @@ import lime.math.Vector2;
 
 	@:noCompletion private static var __driverInfo:String;
 	@:noCompletion private static var __glDepthStencil:Int = -1;
-	@:noCompletion private static var __glMaxTextureMaxAnisotropy:Int = -1;
+	@:noCompletion private static var __glMaxTextureMaxAnisotropy:Float = -1;
 	@:noCompletion private static var __glMaxViewportDims:Int = -1;
 	@:noCompletion private static var __glMemoryCurrentAvailable:Int = -1;
 	@:noCompletion private static var __glMemoryTotalAvailable:Int = -1;

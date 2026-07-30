@@ -104,7 +104,7 @@ import openfl.utils.ByteArray;
 
 			if (Context3D.__glMaxTextureMaxAnisotropy != 0)
 			{
-				var aniso = switch (state.filter)
+				var aniso:Float = switch (state.filter)
 				{
 					case ANISOTROPIC2X: 2;
 					case ANISOTROPIC4X: 4;
