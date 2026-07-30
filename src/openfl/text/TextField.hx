@@ -3664,7 +3664,6 @@ class TextField extends InteractiveObject
 					__textEngine.textFormatRanges[__textEngine.textFormatRanges.length - 1].end = __text.length;
 				}
 				#end
-			#end
 
 			case A if (selectable):
 				if (isModifierPressed())
