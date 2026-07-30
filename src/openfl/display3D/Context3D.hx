@@ -319,7 +319,7 @@ import lime.math.Vector2;
 			if (extension != null)
 			{
 				__glTextureMaxAnisotropy = extension.TEXTURE_MAX_ANISOTROPY_EXT;
-				__glMaxTextureMaxAnisotropy = gl.getParameter(extension.MAX_TEXTURE_MAX_ANISOTROPY_EXT);
+				__glMaxTextureMaxAnisotropy = gl.getFloat(extension.MAX_TEXTURE_MAX_ANISOTROPY_EXT);
 			}
 			else
 			{
@@ -370,10 +370,10 @@ import lime.math.Vector2;
 
 		if (__driverInfo == null)
 		{
-			var vendor = gl.getParameter(gl.VENDOR);
-			var version = gl.getParameter(gl.VERSION);
-			var renderer = gl.getParameter(gl.RENDERER);
-			var glslVersion = gl.getParameter(gl.SHADING_LANGUAGE_VERSION);
+			var vendor = gl.getString(gl.VENDOR);
+			var version = gl.getString(gl.VERSION);
+			var renderer = gl.getString(gl.RENDERER);
+			var glslVersion = gl.getString(gl.SHADING_LANGUAGE_VERSION);
 
 			__driverInfo = "OpenGL Vendor=" + vendor + " Version=" + version + " Renderer=" + renderer + " GLSL=" + glslVersion;
 		}
@@ -488,7 +488,7 @@ import lime.math.Vector2;
 				__contextState.depthMask = true;
 			}
 
-			gl.clearDepth(depth);
+			gl.clearDepthf(depth);
 		}
 
 		if (mask & Context3DClearMask.STENCIL != 0)
@@ -1494,7 +1494,7 @@ import lime.math.Vector2;
 				data[i] = matrix.rawData[i];
 			}
 
-			gl.uniformMatrix4fv(cast firstRegister, transposedMatrix, data);
+			gl.uniformMatrix4fv(cast firstRegister, 1, transposedMatrix, data);
 		}
 		else
 		{
@@ -2751,13 +2751,13 @@ import lime.math.Vector2;
 		return __enableErrorChecking = value;
 	}
 
-	@:noCompletion private function get_totalGPUMemory():Int
+		@:noCompletion private function get_totalGPUMemory():Int
 	{
 		if (__glMemoryCurrentAvailable != -1)
 		{
 			// TODO: Return amount used by this application only
-			var current = gl.getParameter(__glMemoryCurrentAvailable);
-			var total = gl.getParameter(__glMemoryTotalAvailable);
+			var current = gl.getInteger(__glMemoryCurrentAvailable);
+			var total = gl.getInteger(__glMemoryTotalAvailable);
 
 			if (total > 0)
 			{

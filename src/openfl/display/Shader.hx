@@ -371,7 +371,7 @@ class Shader
 		gl.compileShader(shader);
 		var shaderInfoLog = gl.getShaderInfoLog(shader);
 		var hasInfoLog = shaderInfoLog != null && StringTools.trim(shaderInfoLog) != "";
-		var isError = gl.getShaderParameter(shader, gl.COMPILE_STATUS) == 0;
+		var isError = gl.getShaderi(shader, gl.COMPILE_STATUS) == 0;
 
 		if (hasInfoLog || isError)
 		{
@@ -479,7 +479,7 @@ class Shader
 		gl.attachShader(program, fragmentShader);
 		gl.linkProgram(program);
 
-		if (gl.getProgramParameter(program, gl.LINK_STATUS) == 0)
+		if (gl.getProgrami(program, gl.LINK_STATUS) == 0)
 		{
 			var message = "Unable to initialize the shader program";
 			message += "\n" + gl.getProgramInfoLog(program);
@@ -1045,7 +1045,7 @@ class Shader
 			// Log.verbose ("bind param data buffer (length: " + shaderBuffer.paramData.length + ") (" + shaderBuffer.paramCount + ")");
 
 			__context.__bindGLArrayBuffer(shaderBuffer.paramDataBuffer);
-			gl.bufferData(gl.ARRAY_BUFFER, shaderBuffer.paramData, gl.DYNAMIC_DRAW);
+			gl.bufferData(gl.ARRAY_BUFFER, shaderBuffer.paramData.byteLength, shaderBuffer.paramData, gl.DYNAMIC_DRAW);
 		}
 		else
 		{

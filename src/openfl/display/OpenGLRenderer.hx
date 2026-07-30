@@ -123,7 +123,7 @@ class OpenGLRenderer extends DisplayObjectRenderer
 
 		if (Graphics.maxTextureWidth == null)
 		{
-			Graphics.maxTextureWidth = Graphics.maxTextureHeight = __gl.getParameter(__gl.MAX_TEXTURE_SIZE);
+			Graphics.maxTextureWidth = Graphics.maxTextureHeight = __gl.getInteger(__gl.MAX_TEXTURE_SIZE);
 		}
 
 		#if lime

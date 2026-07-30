@@ -124,19 +124,6 @@ class DisplayObjectRenderer extends EventDispatcher
 				case CAIRO:
 					displayObject.__customRenderEvent.type = RenderEvent.RENDER_CAIRO;
 
-				case DOM:
-					if (displayObject.stage != null && displayObject.__worldVisible)
-					{
-						displayObject.__customRenderEvent.type = RenderEvent.RENDER_DOM;
-					}
-					else
-					{
-						displayObject.__customRenderEvent.type = RenderEvent.CLEAR_DOM;
-					}
-
-				case CANVAS:
-					displayObject.__customRenderEvent.type = RenderEvent.RENDER_CANVAS;
-
 				default:
 					return;
 			}
@@ -274,7 +261,7 @@ class DisplayObjectRenderer extends EventDispatcher
 				}
 				#end
 
-				if (softwareDirty && (renderType == CANVAS || renderType == CAIRO)) needRender = true;
+				if (softwareDirty && renderType == CAIRO) needRender = true;
 				if (hardwareDirty && renderType == OPENGL) needRender = true;
 			}
 
@@ -282,7 +269,7 @@ class DisplayObjectRenderer extends EventDispatcher
 			var hasFilters = #if !openfl_disable_filters displayObject.__filters != null #else false #end;
 
 			#if !openfl_enable_cacheasbitmap
-			if (renderer.__type == DOM && !hasFilters)
+			if (false)
 			{
 				return false;
 			}

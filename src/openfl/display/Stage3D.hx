@@ -274,7 +274,7 @@ class Stage3D extends EventDispatcher
 		var stage = __stage;
 		var renderer = stage.__renderer;
 
-		if (renderer.__type == CAIRO || renderer.__type == CANVAS)
+		if (renderer.__type == CAIRO)
 		{
 			__dispatchError();
 			return;

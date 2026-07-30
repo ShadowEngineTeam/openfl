@@ -487,7 +487,7 @@ import lime.utils.BytePointer;
 		__agalSamplerUsageMask = 0;
 
 		var numActive = 0;
-		numActive = gl.getProgramParameter(__glProgram, gl.ACTIVE_UNIFORMS);
+		numActive = gl.getProgrami(__glProgram, gl.ACTIVE_UNIFORMS);
 
 		var vertexUniforms = new List<Uniform>();
 		var fragmentUniforms = new List<Uniform>();
@@ -836,7 +836,7 @@ import lime.utils.BytePointer;
 		if (__agalPositionScale != null)
 		{
 			var gl = __context.gl;
-			gl.uniform4fv(__agalPositionScale.location, positionScale);
+			gl.uniform4fv(__agalPositionScale.location, 1, positionScale);
 		}
 	}
 
@@ -856,7 +856,7 @@ import lime.utils.BytePointer;
 		gl.shaderSource(__glVertexShader, vertexShaderSource);
 		gl.compileShader(__glVertexShader);
 
-		if (gl.getShaderParameter(__glVertexShader, gl.COMPILE_STATUS) == 0)
+		if (gl.getShaderi(__glVertexShader, gl.COMPILE_STATUS) == 0)
 		{
 			var message = "Error compiling vertex shader";
 			message += "\n" + gl.getShaderInfoLog(__glVertexShader);
@@ -868,7 +868,7 @@ import lime.utils.BytePointer;
 		gl.shaderSource(__glFragmentShader, fragmentShaderSource);
 		gl.compileShader(__glFragmentShader);
 
-		if (gl.getShaderParameter(__glFragmentShader, gl.COMPILE_STATUS) == 0)
+		if (gl.getShaderi(__glFragmentShader, gl.COMPILE_STATUS) == 0)
 		{
 			var message = "Error compiling fragment shader";
 			message += "\n" + gl.getShaderInfoLog(__glFragmentShader);
@@ -910,7 +910,7 @@ import lime.utils.BytePointer;
 		gl.attachShader(__glProgram, __glFragmentShader);
 		gl.linkProgram(__glProgram);
 
-		if (gl.getProgramParameter(__glProgram, gl.LINK_STATUS) == 0)
+		if (gl.getProgrami(__glProgram, gl.LINK_STATUS) == 0)
 		{
 			var message = "Unable to initialize the shader program";
 			message += "\n" + gl.getProgramInfoLog(__glProgram);

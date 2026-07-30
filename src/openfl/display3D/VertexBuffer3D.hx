@@ -123,9 +123,9 @@ class VertexBuffer3D
 		var gl = __context.gl;
 
 		__context.__bindGLArrayBuffer(__id);
-		if (__memoryUsage == data.byteLength) gl.bufferSubData(gl.ARRAY_BUFFER, 0, data);
+		if (__memoryUsage == data.byteLength) gl.bufferSubData(gl.ARRAY_BUFFER, 0, data.byteLength, data);
 		else
-			gl.bufferData(gl.ARRAY_BUFFER, data, __usage);
+			gl.bufferData(gl.ARRAY_BUFFER, data.byteLength, data, __usage);
 		__memoryUsage = data.byteLength;
 	}
 
