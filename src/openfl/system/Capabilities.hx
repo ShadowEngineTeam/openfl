@@ -733,11 +733,9 @@ import sys.io.Process;
 		var value = "IOS";
 		#elseif android
 		var value = "AND";
-		#elseif blackberry
-		var value = "QNX";
-		#elseif firefox
-		var value = "MOZ";
+		#else
 		var value = "OFL";
+		#end
 
 		if (Compiler.getDefine("openfl") != null)
 		{

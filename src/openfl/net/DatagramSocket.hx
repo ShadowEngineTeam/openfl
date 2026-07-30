@@ -439,5 +439,4 @@ class DatagramSocket extends EventDispatcher
 		}
 		return 0;
 	}
-	#end
 }

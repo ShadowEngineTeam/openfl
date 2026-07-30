@@ -1226,7 +1226,6 @@ class Socket extends EventDispatcher implements IDataInput implements IDataOutpu
 				dispatchEvent(new IOErrorEvent(IOErrorEvent.IO_ERROR, true, false, e.message));
 			}
 		}
-		#end
 	}
 
 	// Get & Set Methods

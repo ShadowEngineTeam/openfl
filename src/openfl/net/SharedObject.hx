@@ -650,7 +650,6 @@ class SharedObject extends EventDispatcher
 				{
 					encodedData = File.getContent(path);
 				}
-				#end
 			}
 			catch (e:Dynamic) {}
 
