@@ -828,7 +828,6 @@ class TextEngine
 				letterSpacing = formatRange.format.letterSpacing;
 			}
 
-			#end
 			if (__textLayout == null)
 			{
 				__textLayout = new TextLayout();
@@ -908,21 +907,18 @@ class TextEngine
 		}
 
 		inline function getBaseX():Float
-
 		{
 			// TODO: swap margins in RTL
 			return GUTTER + leftMargin + blockIndent + (firstLineOfParagraph ? indent : 0);
 		}
 
 		inline function getWrapWidth():Float
-
 		{
 			// TODO: swap margins in RTL
 			return width - GUTTER - rightMargin - getBaseX();
 		}
 
 		inline function nextLayoutGroup(startIndex, endIndex):Void
-
 		{
 			if (layoutGroup == null || layoutGroup.startIndex != layoutGroup.endIndex)
 			{
@@ -938,7 +934,6 @@ class TextEngine
 		}
 
 		inline function setLineMetrics():Void
-
 		{
 			if (currentFormat.__ascent != null)
 			{
@@ -974,7 +969,6 @@ class TextEngine
 		}
 
 		inline function setParagraphMetrics():Void
-
 		{
 			firstLineOfParagraph = true;
 
@@ -996,7 +990,6 @@ class TextEngine
 		}
 
 		inline function nextFormatRange():Bool
-
 		{
 			if (rangeIndex < textFormatRanges.length - 1)
 			{
@@ -1015,7 +1008,6 @@ class TextEngine
 		}
 
 		inline function setFormattedPositions(startIndex:Int, endIndex:Int)
-
 		{
 			// sets the positions of the text from start to end, including format changes if there are any
 			if (startIndex >= endIndex)
@@ -1071,7 +1063,6 @@ class TextEngine
 		}
 
 		inline function placeFormattedText(endIndex:Int):Void
-
 		{
 			if (endIndex <= formatRange.end)
 			{
@@ -1149,7 +1140,6 @@ class TextEngine
 		}
 
 		inline function alignBaseline():Void
-
 		{
 			// aligns the baselines of all characters in a single line
 
@@ -1180,7 +1170,6 @@ class TextEngine
 		}
 
 		inline function breakLongWords(endIndex:Int):Void
-
 		{
 			// breaks up words that are too long to fit in a single line
 
@@ -1277,7 +1266,6 @@ class TextEngine
 		}
 
 		inline function placeText(endIndex:Int):Void
-
 		{
 			if (width >= GUTTER * 2 && wordWrap)
 			{
@@ -1612,8 +1600,6 @@ class TextEngine
 		}
 		#end
 	}
-
-		#end
 
 	public function restrictText(value:UTF8String):UTF8String
 	{
