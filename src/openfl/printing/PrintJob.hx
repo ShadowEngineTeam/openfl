@@ -5,7 +5,6 @@ import openfl.display.BitmapData;
 import openfl.display.Sprite;
 import openfl.geom.Rectangle;
 #if lime
-import lime._internal.graphics.ImageCanvasUtil; // TODO
 #end
 /**
 	The PrintJob class lets you create content and print it to one or more

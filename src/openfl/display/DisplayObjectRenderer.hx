@@ -13,7 +13,6 @@ import openfl.geom.Point;
 import openfl.geom.Rectangle;
 import openfl.text.TextField;
 #if lime
-import lime._internal.graphics.ImageCanvasUtil; // TODO
 import lime.graphics.cairo.Cairo;
 import lime.graphics.RenderContext;
 import lime.graphics.RenderContextType;

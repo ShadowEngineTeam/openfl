@@ -27,7 +27,6 @@ import openfl.utils.Object;
 import openfl.Lib;
 import openfl.Vector;
 #if lime
-import lime._internal.graphics.ImageCanvasUtil; // TODO
 import lime.app.Application;
 import lime.graphics.cairo.CairoImageSurface;
 import lime.graphics.cairo.CairoSurface;

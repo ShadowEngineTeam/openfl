@@ -10,7 +10,6 @@ import openfl.errors.Error;
 import openfl.utils._internal.ArrayBufferView;
 import openfl.utils._internal.Log;
 #if lime
-import lime._internal.graphics.ImageCanvasUtil;
 import lime.graphics.Image;
 import lime.graphics.RenderContext;
 #end
