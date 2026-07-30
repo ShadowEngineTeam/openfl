@@ -378,7 +378,7 @@ import sys.io.Process;
 		The server string is `PT`.
 
 		_OpenFL target support:_ On native targets that are considered Haxe
-		`sys` targets, returns `"Desktop"`. On the  target, returns
+		`sys` targets, returns `"Desktop"`. Otherwise, returns
 		`"PlugIn"`. On all other targets, returns `"StandAlone"`.
 	**/
 	public static var playerType(default, null) = #if sys "Desktop" #else "StandAlone" #end;

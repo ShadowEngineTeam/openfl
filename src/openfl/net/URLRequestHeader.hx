@@ -5,7 +5,7 @@ package openfl.net;
 	consists of a name/value pair. URLRequestHeader objects are used in the
 	`requestHeaders` property of the URLRequest class.
 
-	In OpenFL's  target, a number of request headers cannot be used, due
+	In OpenFL, a number of request headers cannot be used, due
 	to web browser security restrictions. See
 	[MDN: Forbidden Request Headers](https://developer.mozilla.org/en-US/docs/Glossary/Forbidden_header_name)
 	for details.

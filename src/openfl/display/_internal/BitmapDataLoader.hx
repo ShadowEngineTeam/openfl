@@ -9,7 +9,6 @@ import openfl.events.ProgressEvent;
 import openfl.net.URLLoader;
 import openfl.net.URLLoaderDataFormat;
 import openfl.net.URLRequest;
-import openfl.net.URLRequestMethod;
 import openfl.system.LoaderContext;
 import openfl.utils.ByteArray;
 import openfl.utils.Future;
@@ -21,20 +20,6 @@ class BitmapDataLoader implements IDisplayObjectLoader
 	public function load(request:URLRequest, context:LoaderContext, contentLoaderInfo:LoaderInfo):Future<DisplayObject>
 	{
 		// Will attempt to load any request, regardless of contentType
-
-		#if (js && html5)
-		if (contentLoaderInfo.contentType.indexOf("image/") > -1
-			&& request.method == URLRequestMethod.GET
-			&& (request.requestHeaders == null || request.requestHeaders.length == 0)
-			&& request.userAgent == null)
-		{
-			return BitmapData.loadFromFile(request.url).then(function(bitmapData)
-			{
-				var content:DisplayObject = new Bitmap(bitmapData);
-				return Future.withValue(content);
-			});
-		}
-		#end
 
 		var promise = new Promise<DisplayObject>();
 
