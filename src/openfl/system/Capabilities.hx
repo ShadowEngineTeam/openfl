@@ -283,7 +283,7 @@ import sys.io.Process;
 
 		The server string is `LFD`.
 	**/
-	public static var localFileReadDisable(default, null) = false;
+	public static var localFileReadDisable(default, null) = #if web true #else false #end;
 
 	/**
 		Specifies the manufacturer of the running version of OpenFL, in the
@@ -381,7 +381,7 @@ import sys.io.Process;
 		`sys` targets, returns `"Desktop"`. Otherwise, returns
 		`"PlugIn"`. On all other targets, returns `"StandAlone"`.
 	**/
-	public static var playerType(default, null) = #if sys "Desktop" #else "StandAlone" #end;
+	public static var playerType(default, null) = #if web "PlugIn" #elseif sys "Desktop" #else "StandAlone" #end;
 
 	/**
 		Specifies the screen color. This property can have the value
