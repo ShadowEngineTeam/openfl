@@ -997,8 +997,6 @@ class TextEngine
 				formatRange = textFormatRanges[rangeIndex];
 				currentFormat.__merge(formatRange.format);
 
-				#end
-
 				font = getFontInstance(currentFormat);
 
 				return true;
