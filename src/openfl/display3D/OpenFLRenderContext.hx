@@ -335,11 +335,6 @@ abstract OpenFLRenderContext(Dynamic) from Dynamic to Dynamic
 	public var RENDERBUFFER_BINDING(get, never):Int;
 	public var MAX_RENDERBUFFER_SIZE(get, never):Int;
 	public var INVALID_FRAMEBUFFER_OPERATION(get, never):Int;
-	public var UNPACK_FLIP_Y_WEBGL(get, never):Int;
-	public var UNPACK_PREMULTIPLY_ALPHA_WEBGL(get, never):Int;
-	public var CONTEXT_LOST_WEBGL(get, never):Int;
-	public var UNPACK_COLORSPACE_CONVERSION_WEBGL(get, never):Int;
-	public var BROWSER_DEFAULT_WEBGL(get, never):Int;
 	public var READ_BUFFER(get, never):Int;
 	public var UNPACK_ROW_LENGTH(get, never):Int;
 	public var UNPACK_SKIP_ROWS(get, never):Int;
@@ -602,7 +597,6 @@ abstract OpenFLRenderContext(Dynamic) from Dynamic to Dynamic
 	public var DEPTH32F_STENCIL8(get, never):Int;
 	public var INVALID_INDEX(get, never):Int;
 	public var TIMEOUT_IGNORED(get, never):Int;
-	public var MAX_CLIENT_WAIT_TIMEOUT_WEBGL(get, never):Int;
 
 	@:noCompletion private inline function get_DEPTH_BUFFER_BIT():Int
 	{
@@ -2054,31 +2048,6 @@ abstract OpenFLRenderContext(Dynamic) from Dynamic to Dynamic
 		return this.INVALID_FRAMEBUFFER_OPERATION;
 	}
 
-	@:noCompletion private inline function get_UNPACK_FLIP_Y_WEBGL():Int
-	{
-		return this.UNPACK_FLIP_Y_WEBGL;
-	}
-
-	@:noCompletion private inline function get_UNPACK_PREMULTIPLY_ALPHA_WEBGL():Int
-	{
-		return this.UNPACK_PREMULTIPLY_ALPHA_WEBGL;
-	}
-
-	@:noCompletion private inline function get_CONTEXT_LOST_WEBGL():Int
-	{
-		return this.CONTEXT_LOST_WEBGL;
-	}
-
-	@:noCompletion private inline function get_UNPACK_COLORSPACE_CONVERSION_WEBGL():Int
-	{
-		return this.UNPACK_COLORSPACE_CONVERSION_WEBGL;
-	}
-
-	@:noCompletion private inline function get_BROWSER_DEFAULT_WEBGL():Int
-	{
-		return this.BROWSER_DEFAULT_WEBGL;
-	}
-
 	@:noCompletion private inline function get_READ_BUFFER():Int
 	{
 		return this.READ_BUFFER;
@@ -3387,11 +3356,6 @@ abstract OpenFLRenderContext(Dynamic) from Dynamic to Dynamic
 	@:noCompletion private inline function get_TIMEOUT_IGNORED():Int
 	{
 		return this.TIMEOUT_IGNORED;
-	}
-
-	@:noCompletion private inline function get_MAX_CLIENT_WAIT_TIMEOUT_WEBGL():Int
-	{
-		return this.MAX_CLIENT_WAIT_TIMEOUT_WEBGL;
 	}
 
 	public inline function activeTexture(texture:Int):Void
