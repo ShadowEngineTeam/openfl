@@ -105,7 +105,7 @@ import openfl.display3D.Context3D;
 
 		var bytes:Bytes = cast data;
 		var textureBytes = new UInt8Array(bytes, IMAGE_DATA_OFFSET, imageSize);
-		gl.compressedTexImage2D(__textureTarget, 0, __internalFormat, __width, __height, 0, textureBytes.byteLength, textureBytes);
+		gl.compressedTexImage2D(__textureTarget, 0, __internalFormat, __width, __height, 0, textureBytes);
 		gl.texParameteri(__textureTarget, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
 		gl.texParameteri(__textureTarget, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
 

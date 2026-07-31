@@ -19,7 +19,7 @@ import openfl.geom.Matrix;
 import openfl.geom.Rectangle;
 #if lime
 import lime.graphics.opengl.ext.KHR_debug;
-import lime.graphics.OpenGLES2RenderContext;
+import openfl.display3D.OpenFLRenderContext;
 import lime.math.Matrix4;
 #end
 
@@ -69,7 +69,7 @@ class OpenGLRenderer extends DisplayObjectRenderer
 		The current OpenGL render context
 	**/
 	@SuppressWarnings("checkstyle:Dynamic")
-	public var gl:#if lime OpenGLES2RenderContext #else Dynamic #end;
+	public var gl:#if lime openfl.display3D.OpenFLRenderContext #else Dynamic #end;
 
 	@:noCompletion private static var __staticDefaultDisplayShader:DisplayObjectShader;
 	@:noCompletion private static var __staticDefaultGraphicsShader:GraphicsShader;
@@ -89,7 +89,7 @@ class OpenGLRenderer extends DisplayObjectRenderer
 	@:noCompletion private var __displayHeight:Int;
 	@:noCompletion private var __displayWidth:Int;
 	@:noCompletion private var __flipped:Bool;
-	@SuppressWarnings("checkstyle:Dynamic") @:noCompletion private var __gl:#if lime OpenGLES2RenderContext #else Dynamic #end;
+	@SuppressWarnings("checkstyle:Dynamic") @:noCompletion private var __gl:#if lime openfl.display3D.OpenFLRenderContext #else Dynamic #end;
 	@:noCompletion private var __height:Int;
 	@:noCompletion private var __maskShader:Context3DMaskShader;
 	@SuppressWarnings("checkstyle:Dynamic") @:noCompletion private var __matrix:#if lime Matrix4 #else Dynamic #end;
@@ -123,7 +123,7 @@ class OpenGLRenderer extends DisplayObjectRenderer
 
 		if (Graphics.maxTextureWidth == null)
 		{
-			Graphics.maxTextureWidth = Graphics.maxTextureHeight = __gl.getInteger(__gl.MAX_TEXTURE_SIZE);
+			Graphics.maxTextureWidth = Graphics.maxTextureHeight = __gl.getParameter(__gl.MAX_TEXTURE_SIZE);
 		}
 
 		#if lime

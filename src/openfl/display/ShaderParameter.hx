@@ -219,7 +219,7 @@ import openfl.display3D.Context3D;
 						{
 							__uniformMatrix[i] = floatValue[i];
 						}
-						gl.uniformMatrix2fv(index, 1, false, __uniformMatrix);
+						gl.uniformMatrix2fv(index, false, __uniformMatrix);
 
 					// case MATRIX2X3:
 					// case MATRIX2X4:
@@ -230,7 +230,7 @@ import openfl.display3D.Context3D;
 						{
 							__uniformMatrix[i] = floatValue[i];
 						}
-						gl.uniformMatrix3fv(index, 1, false, __uniformMatrix);
+						gl.uniformMatrix3fv(index, false, __uniformMatrix);
 
 					// case MATRIX3X4:
 					// case MATRIX4X2:
@@ -241,7 +241,7 @@ import openfl.display3D.Context3D;
 						{
 							__uniformMatrix[i] = floatValue[i];
 						}
-						gl.uniformMatrix4fv(index, 1, false, __uniformMatrix);
+						gl.uniformMatrix4fv(index, false, __uniformMatrix);
 
 					case INT:
 						gl.uniform1i(index, intValue[0]);
@@ -281,7 +281,7 @@ import openfl.display3D.Context3D;
 						{
 							__uniformMatrix[i] = 0;
 						}
-						gl.uniformMatrix2fv(index, 1, false, __uniformMatrix);
+						gl.uniformMatrix2fv(index, false, __uniformMatrix);
 
 					// case MATRIX2X3:
 					// case MATRIX2X4:
@@ -292,7 +292,7 @@ import openfl.display3D.Context3D;
 						{
 							__uniformMatrix[i] = 0;
 						}
-						gl.uniformMatrix3fv(index, 1, false, __uniformMatrix);
+						gl.uniformMatrix3fv(index, false, __uniformMatrix);
 
 					// case MATRIX3X4:
 					// case MATRIX4X2:
@@ -303,7 +303,7 @@ import openfl.display3D.Context3D;
 						{
 							__uniformMatrix[i] = 0;
 						}
-						gl.uniformMatrix4fv(index, 1, false, __uniformMatrix);
+						gl.uniformMatrix4fv(index, false, __uniformMatrix);
 
 					default:
 				}
@@ -450,7 +450,7 @@ import openfl.display3D.Context3D;
 						{
 							__uniformMatrix[i] = buffer[position + i];
 						}
-						gl.uniformMatrix2fv(index, 1, false, __uniformMatrix);
+						gl.uniformMatrix2fv(index, false, __uniformMatrix);
 
 					// case MATRIX2X3:
 					// case MATRIX2X4:
@@ -461,7 +461,7 @@ import openfl.display3D.Context3D;
 						{
 							__uniformMatrix[i] = buffer[position + i];
 						}
-						gl.uniformMatrix3fv(index, 1, false, __uniformMatrix);
+						gl.uniformMatrix3fv(index, false, __uniformMatrix);
 
 					// case MATRIX3X4:
 					// case MATRIX4X2:
@@ -472,7 +472,7 @@ import openfl.display3D.Context3D;
 						{
 							__uniformMatrix[i] = buffer[position + i];
 						}
-						gl.uniformMatrix4fv(index, 1, false, __uniformMatrix);
+						gl.uniformMatrix4fv(index, false, __uniformMatrix);
 
 					default:
 				}

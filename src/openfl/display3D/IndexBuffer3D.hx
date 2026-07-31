@@ -91,9 +91,9 @@ import openfl.Vector;
 		if (data == null) return;
 		var gl = __context.gl;
 		__context.__bindGLElementArrayBuffer(__id);
-		if (__memoryUsage == data.byteLength) gl.bufferSubData(gl.ELEMENT_ARRAY_BUFFER, 0, data.byteLength, data);
+		if (__memoryUsage == data.byteLength) gl.bufferSubData(gl.ELEMENT_ARRAY_BUFFER, 0, data);
 		else
-			gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, data.byteLength, data, __usage);
+			gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, data, __usage);
 		__memoryUsage = data.byteLength;
 	}
 
