@@ -205,7 +205,10 @@ class DisplayObjectRenderer extends EventDispatcher
 				// TODO: Handle filters without an intermediate draw
 				if (bitmap.__bitmapData == null
 					|| (bitmap.__filters == null #if lime && renderer.__type == OPENGL #end && bitmap.__cacheBitmap == null)) return false;
-				force = (bitmap.__bitmapData.image != null && bitmap.__bitmapData.image.version != bitmap.__imageVersion);
+				force = (bitmap.__bitmapData.image != null && bitmap.__bitmapData.image.version != bitmap.__imageVersion)
+					|| (bitmap.__bitmapData.__texture != null
+						&& !bitmap.__bitmapData.readable
+						&& bitmap.bitmapData.__textureVersion != bitmap.__imageVersion);
 
 			case TEXT_FIELD:
 				var textField:TextField = cast displayObject;
@@ -267,13 +270,6 @@ class DisplayObjectRenderer extends EventDispatcher
 
 			var updateTransform = (needRender || !displayObject.__cacheBitmap.__worldTransform.equals(displayObject.__worldTransform));
 			var hasFilters = #if !openfl_disable_filters displayObject.__filters != null #else false #end;
-
-			#if !openfl_enable_cacheasbitmap
-			if (false)
-			{
-				return false;
-			}
-			#end
 
 			if (hasFilters && !needRender)
 			{

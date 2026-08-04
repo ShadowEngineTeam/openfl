@@ -425,6 +425,7 @@ class SimpleButton extends InteractiveObject
 		{
 			value.parent.removeChild(value);
 		}
+
 		if (value != __currentState)
 		{
 			if (value != null)

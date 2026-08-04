@@ -196,9 +196,6 @@ class DisplayObject extends EventDispatcher implements IBitmapDrawable
 	@:noCompletion private static var __initStage:Stage;
 	@:noCompletion private static var __instanceCount:Int = 0;
 
-	@:noCompletion
-	private static inline var __supportDOM:Bool = false;
-
 	@:noCompletion private static var __tempStack:ObjectPool<Vector<DisplayObject>> = new ObjectPool<Vector<DisplayObject>>(function() return
 		new Vector<DisplayObject>(), function(stack) stack.length = 0);
 
@@ -1066,7 +1063,7 @@ class DisplayObject extends EventDispatcher implements IBitmapDrawable
 					dispatchers.push(this);
 				}
 
-			case RenderEvent.CLEAR_DOM, RenderEvent.RENDER_CAIRO, RenderEvent.RENDER_CANVAS, RenderEvent.RENDER_DOM, RenderEvent.RENDER_OPENGL:
+			case RenderEvent.RENDER_CAIRO, RenderEvent.RENDER_CANVAS, RenderEvent.RENDER_OPENGL:
 				if (__customRenderEvent == null)
 				{
 					__customRenderEvent = new RenderEvent(null);
@@ -1307,11 +1304,9 @@ class DisplayObject extends EventDispatcher implements IBitmapDrawable
 					}
 				}
 
-			case RenderEvent.CLEAR_DOM, RenderEvent.RENDER_CAIRO, RenderEvent.RENDER_CANVAS, RenderEvent.RENDER_DOM, RenderEvent.RENDER_OPENGL:
-				if (!hasEventListener(RenderEvent.CLEAR_DOM)
-					&& !hasEventListener(RenderEvent.RENDER_CAIRO)
+			case RenderEvent.RENDER_CAIRO, RenderEvent.RENDER_CANVAS, RenderEvent.RENDER_OPENGL:
+				if (!hasEventListener(RenderEvent.RENDER_CAIRO)
 					&& !hasEventListener(RenderEvent.RENDER_CANVAS)
-					&& !hasEventListener(RenderEvent.RENDER_DOM)
 					&& !hasEventListener(RenderEvent.RENDER_OPENGL))
 				{
 					__customRenderEvent = null;
@@ -1720,28 +1715,8 @@ class DisplayObject extends EventDispatcher implements IBitmapDrawable
 
 		if (!transformOnly)
 		{
-			if (__supportDOM)
-			{
-				__renderTransformChanged = !__renderTransform.equals(__renderTransformCache);
-
-				if (__renderTransformCache == null)
-				{
-					__renderTransformCache = __renderTransform.clone();
-				}
-				else
-				{
-					__renderTransformCache.copyFrom(__renderTransform);
-				}
-			}
-
 			if (renderParent != null)
 			{
-				if (__supportDOM)
-				{
-					var worldVisible = (renderParent.__worldVisible && __visible);
-					__worldVisibleChanged = (__worldVisible != worldVisible);
-					__worldVisible = worldVisible;
-				}
 				var worldAlpha = alpha * renderParent.__worldAlpha;
 				__worldAlphaChanged = (__worldAlpha != worldAlpha);
 				__worldAlpha = worldAlpha;
@@ -1788,11 +1763,6 @@ class DisplayObject extends EventDispatcher implements IBitmapDrawable
 			{
 				__worldAlpha = alpha;
 
-				if (__supportDOM)
-				{
-					__worldVisibleChanged = (__worldVisible != __visible);
-					__worldVisible = __visible;
-				}
 				__worldAlphaChanged = (__worldAlpha != alpha);
 
 				if (__objectTransform != null)
@@ -2286,11 +2256,6 @@ class DisplayObject extends EventDispatcher implements IBitmapDrawable
 		}
 
 		__setTransformDirty();
-
-		if (__supportDOM)
-		{
-			__setRenderDirty();
-		}
 
 		return __scrollRect;
 	}

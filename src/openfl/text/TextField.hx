@@ -2186,12 +2186,7 @@ class TextField extends InteractiveObject
 			__selectionIndex = __caretIndex;
 		}
 
-		var enableInput = true;
-
-		if (enableInput)
-		{
-			__enableInput();
-		}
+		__enableInput();
 	}
 
 	@:noCompletion private function __stopCursorTimer():Void
@@ -2212,12 +2207,7 @@ class TextField extends InteractiveObject
 
 	@:noCompletion private function __stopTextInput():Void
 	{
-		var disableInput = true;
-
-		if (disableInput)
-		{
-			__disableInput();
-		}
+		__disableInput();
 	}
 
 	@:noCompletion private function __updateLayout():Void
@@ -2433,7 +2423,6 @@ class TextField extends InteractiveObject
 
 	@:noCompletion private function __updateText(value:String):Void
 	{
-
 		// applies maxChars and restrict on text
 
 		__textEngine.text = value;
@@ -2467,7 +2456,7 @@ class TextField extends InteractiveObject
 			}
 		}
 
-		if (!__displayAsPassword )
+		if (!__displayAsPassword)
 		{
 			__textEngine.text = __text;
 		}
@@ -3217,13 +3206,9 @@ class TextField extends InteractiveObject
 					__selectionIndex = __getOppositeIdentifierBound(__specialSelectionInitialIndex, __lineSelection);
 				}
 
-				var setDirty = true;
+				__dirty = true;
 
-				if (setDirty)
-				{
-					__dirty = true;
-					__setRenderDirty();
-				}
+				__setRenderDirty();
 			}
 		}
 	}
@@ -3270,7 +3255,6 @@ class TextField extends InteractiveObject
 
 				__stopCursorTimer();
 				__startCursorTimer();
-
 			}
 		}
 	}
@@ -3358,14 +3342,12 @@ class TextField extends InteractiveObject
 		}
 
 		__updateLayout();
+
 		// If we start word selection only when the mouse moves, we can't fully select the first word on a double click
 		// and there would be a delay before the first word is selected
 
-		if (!DisplayObject.__supportDOM)
-		{
-			__dirty = true;
-			__setRenderDirty();
-		}
+		__dirty = true;
+		__setRenderDirty();
 
 		// stage could be null if the TextField was removed from stage in an
 		// earlier listener

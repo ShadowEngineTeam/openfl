@@ -32,6 +32,7 @@ class TextEngine
 	private static inline var UTF8_SPACE:Int = 32;
 	private static inline var UTF8_HYPHEN:Int = 0x2D;
 	private static var __defaultFonts:Map<String, DefaultFontSet>;
+
 	public var antiAliasType:AntiAliasType;
 	public var autoSize:TextFieldAutoSize;
 	public var background:Bool;
@@ -133,7 +134,6 @@ class TextEngine
 		lineWidths = new Vector();
 		layoutGroups = new Vector();
 		textFormatRanges = new Vector();
-
 	}
 
 	private function createRestrictRegexp(restrict:String):EReg

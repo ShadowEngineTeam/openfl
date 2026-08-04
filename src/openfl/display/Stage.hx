@@ -1232,12 +1232,10 @@ class Stage extends DisplayObjectContainer #if lime implements IModule #end
 		if (__renderer != null)
 		{
 			__renderer.__clear();
-
 			__renderer.__allowSmoothing = (quality != LOW);
 			__renderer.__pixelRatio = #if openfl_disable_hdpi 1 #else window.scale #end;
 			__renderer.__worldTransform = __displayMatrix;
 			__renderer.__stage = this;
-
 			__renderer.__resize(windowWidth, windowHeight);
 		}
 		#end
@@ -3664,22 +3662,9 @@ class Stage extends DisplayObjectContainer #if lime implements IModule #end
 			if (__transformDirty || __renderDirty)
 			{
 				super.__update(false, updateChildren);
-
-				if (updateChildren)
-				{
-					if (DisplayObject.__supportDOM)
-					{
-						__wasDirty = true;
-					}
-
-					// __dirty = false;
-				}
 			}
 			else if (!__renderDirty && __wasDirty)
 			{
-				// If we were dirty last time, we need at least one more
-				// update in order to clear "changed" properties
-
 				super.__update(false, updateChildren);
 
 				if (updateChildren)
