@@ -1879,8 +1879,6 @@ import lime.graphics.cairo.Cairo;
 
 		#if (openfl_legacy_scale9grid && lime_cairo && !cairo && !openfl_force_hw_graphics && !force_hw_graphics)
 		var calculateScale = __owner.__worldScale9Grid == null;
-		#elseif (openfl_legacy_scale9grid && lime_canvas && !canvas && !openfl_force_hw_graphics && !force_hw_graphics)
-		var calculateScale = __owner.__worldScale9Grid == null;
 		#else
 		var calculateScale = true;
 		#end

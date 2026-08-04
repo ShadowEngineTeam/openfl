@@ -1063,7 +1063,7 @@ class DisplayObject extends EventDispatcher implements IBitmapDrawable
 					dispatchers.push(this);
 				}
 
-			case RenderEvent.RENDER_CAIRO, RenderEvent.RENDER_CANVAS, RenderEvent.RENDER_OPENGL:
+			case RenderEvent.RENDER_CAIRO, RenderEvent.RENDER_OPENGL:
 				if (__customRenderEvent == null)
 				{
 					__customRenderEvent = new RenderEvent(null);
@@ -1304,9 +1304,8 @@ class DisplayObject extends EventDispatcher implements IBitmapDrawable
 					}
 				}
 
-			case RenderEvent.RENDER_CAIRO, RenderEvent.RENDER_CANVAS, RenderEvent.RENDER_OPENGL:
+			case RenderEvent.RENDER_CAIRO, RenderEvent.RENDER_OPENGL:
 				if (!hasEventListener(RenderEvent.RENDER_CAIRO)
-					&& !hasEventListener(RenderEvent.RENDER_CANVAS)
 					&& !hasEventListener(RenderEvent.RENDER_OPENGL))
 				{
 					__customRenderEvent = null;

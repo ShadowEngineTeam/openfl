@@ -119,8 +119,6 @@ import openfl.utils.ByteArray;
 		var image = __getImage(source);
 		if (image == null) return;
 
-		// TODO: Improve handling of miplevels with canvas src
-
 		uploadFromTypedArray(image.data, side, miplevel);
 		#end
 	}
