@@ -84,9 +84,8 @@ class Lib
 	**/
 	public static function getDefinitionByName(name:String):Class<Dynamic>
 	{
-		if (name == null) return null;
-		name = StringTools.replace(name, "::", ".");
-		return Type.resolveClass(name);
+		notImplemented();
+		return null;
 	}
 
 	/**
@@ -100,18 +99,8 @@ class Lib
 	**/
 	public static function getQualifiedClassName(value:Dynamic):String
 	{
-		if (value == null) return null;
-		var ref = (value is Class) ? value : Type.getClass(value);
-		if (ref == null)
-		{
-			if ((value is Bool) || value == Bool) return "Bool";
-			else if ((value is Int) || value == Int) return "Int";
-			else if ((value is Float) || value == Float) return "Float";
-			// TODO: Array? Map?
-			else
-				return null;
-		}
-		return Type.getClassName(ref);
+		notImplemented();
+		return null;
 	}
 
 	/**
@@ -140,12 +129,8 @@ class Lib
 	**/
 	public static function getQualifiedSuperclassName(value:Dynamic):String
 	{
-		if (value == null) return null;
-		var ref = (value is Class) ? value : Type.getClass(value);
-		if (ref == null) return null;
-		var parentRef = Type.getSuperClass(ref);
-		if (parentRef == null) return null;
-		return Type.getClassName(parentRef);
+		notImplemented();
+		return null;
 	}
 
 	/**
