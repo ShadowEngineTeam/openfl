@@ -10,13 +10,14 @@ import openfl.net.URLRequest;
 import openfl.utils.ByteArray;
 import openfl.utils.Future;
 #if lime_openal
-import lime.media.AudioManager;
 import lime.media.OpenALAudioContext;
 #end
 #if lime
 import openfl.utils._internal.UInt8Array;
 import lime.media.AudioBuffer;
 import lime.media.AudioSource;
+import lime.media.AudioManager;
+import lime.media.AudioContextType;
 #end
 
 /**
@@ -238,6 +239,8 @@ class Sound extends EventDispatcher
 	#if lime
 	@:noCompletion private var __pendingSoundChannel:SoundChannel;
 	@:noCompletion private var __pendingAudioSource:AudioSource;
+	@:noCompletion private var __pendingStartTime:Float = 0;
+	@:noCompletion private var __pendingLoops:Int = 0;
 	@:noCompletion private var __buffer:AudioBuffer;
 	#end
 
@@ -761,22 +764,39 @@ class Sound extends EventDispatcher
 
 		var volume = SoundMixer.__soundTransform.volume * sndTransform.volume;
 
-		var audioSource = new AudioSource(__buffer);
-		audioSource.offset = Std.int(startTime);
-		if (loops > 1) audioSource.loops = loops - 1;
+		var audioSource:AudioSource = null;
 
-		audioSource.gain = volume;
+		if (AudioManager.context != null && AudioManager.context.type == AudioContextType.MINIAUDIO)
+		{
+			if (!__urlLoading)
+			{
+				audioSource = AudioSource.fromAudioBuffer(__buffer, Std.int(startTime), null, loops > 1 ? loops - 1 : 0);
+			}
+		}
+		else
+		{
+			audioSource = new AudioSource(__buffer);
+			audioSource.offset = Std.int(startTime);
+			if (loops > 1) audioSource.loops = loops - 1;
+		}
 
-		var position = audioSource.position;
-		position.x = pan;
-		position.z = -1 * Math.sqrt(1 - Math.pow(pan, 2));
-		audioSource.position = position;
+		if (audioSource != null)
+		{
+			audioSource.gain = volume;
+
+			var position = audioSource.position;
+			position.x = pan;
+			position.z = -1 * Math.sqrt(1 - Math.pow(pan, 2));
+			audioSource.position = position;
+		}
 
 		var soundChannel = new SoundChannel(this, __urlLoading ? null : audioSource, sndTransform);
 		if (__urlLoading)
 		{
 			__pendingAudioSource = audioSource;
 			__pendingSoundChannel = soundChannel;
+			__pendingStartTime = startTime;
+			__pendingLoops = loops;
 		}
 		else if (__buffer == null)
 		{
@@ -876,11 +896,19 @@ class Sound extends EventDispatcher
 
 			if (__pendingSoundChannel != null)
 			{
-				__pendingAudioSource.buffer = __buffer;
-				// ideally, Lime would call init() when setting buffer,
-				// similar to how it does in the AudioSource constructor
-				@:privateAccess __pendingAudioSource.init();
-				__pendingSoundChannel.__initAudioSource(__pendingAudioSource);
+				if (AudioManager.context != null && AudioManager.context.type == AudioContextType.MINIAUDIO)
+				{
+					__pendingSoundChannel.__initAudioSource(AudioSource.fromAudioBuffer(__buffer, Std.int(__pendingStartTime), null,
+						__pendingLoops > 1 ? __pendingLoops - 1 : 0));
+
+					__pendingSoundChannel.__updateTransform();
+				}
+				else
+				{
+					__pendingAudioSource.buffer = __buffer;
+					@:privateAccess __pendingAudioSource.init();
+					__pendingSoundChannel.__initAudioSource(__pendingAudioSource);
+				}
 			}
 		}
 		__pendingSoundChannel = null;
