@@ -1679,7 +1679,6 @@ class TextField extends InteractiveObject
 		{
 			stage.window.textInputEnabled = true;
 
-			#if (lime >= "8.0.0")
 			// ensure that the text field is not hidden by the soft keyboard
 			var bounds = getBounds(stage);
 			var limeRect = new lime.math.Rectangle(bounds.x, bounds.y, bounds.width, bounds.height);
@@ -1699,7 +1698,6 @@ class TextField extends InteractiveObject
 			// strangely, the SDL docs seem to say the opposite, "this function
 			// is intended to be called before SDL_StartTextInput"
 			stage.window.setTextInputRect(limeRect);
-			#end
 
 			if (!__inputEnabled)
 			{
