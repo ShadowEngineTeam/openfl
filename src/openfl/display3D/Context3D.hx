@@ -8,6 +8,7 @@ import openfl.display._internal.SamplerState;
 import openfl.display3D.textures.ASTCTexture;
 import openfl.display3D.textures.BCTexture;
 import openfl.display3D.textures.CubeTexture;
+import openfl.display3D.textures.MultiBufferTexture;
 import openfl.display3D.textures.RectangleTexture;
 import openfl.display3D.textures.TextureBase;
 import openfl.display3D.textures.Texture;
@@ -849,6 +850,24 @@ import lime.math.Vector2;
 	public function createRectangleTexture(width:Int, height:Int, format:Context3DTextureFormat, optimizeForRenderToTexture:Bool):RectangleTexture
 	{
 		return new RectangleTexture(this, width, height, format, optimizeForRenderToTexture);
+	}
+
+	/**
+		Creates a new MultiBufferTexture instance.
+
+		MultiBufferTexture allows you to submit your triangles into multiple textures "attachments"
+		during the RTT pass.
+		And you could change the fragment data of each attachment by targeting it's `gl_FragData[i]` in the shader.
+		Allowing you submit a triangle into different textures, and different results, yet keeping it all in the same submit batch.
+
+		@param width   The width of this texture.
+		@param height  The height of this texture.
+		@param formats The color format of each buffer in this texture.
+		@return A `MultiBufferTexture` instance.
+	**/
+	public function createMultiBufferTexture(width:Int, height:Int, formats:Array<Context3DTextureFormat>):MultiBufferTexture
+	{
+		return new MultiBufferTexture(this, width, height, formats);
 	}
 
 	/**
@@ -2509,6 +2528,12 @@ import lime.math.Vector2;
 				var cubeTexture:CubeTexture = cast __state.renderToTexture;
 				width = cubeTexture.__size;
 				height = cubeTexture.__size;
+			}
+			else if ((__state.renderToTexture is MultiBufferTexture))
+			{
+				var multiBufferTexture:MultiBufferTexture = cast __state.renderToTexture;
+				width = multiBufferTexture.__width;
+				height = multiBufferTexture.__height;
 			}
 
 			gl.viewport(0, 0, width, height);
