@@ -58,9 +58,11 @@ import lime.graphics.cairo.Cairo;
 	@:noCompletion private var __commands:DrawCommandBuffer;
 	@:noCompletion private var __bufferCache:Array<Array<BitmapData>>;
 	@:noCompletion private var __bufferFilters:Array<Array<BitmapFilter>>;
+	@:noCompletion private var __bufferNextUpdateTime:Array<Float>;
 	@:noCompletion private var __bufferResolutionScale:Array<Float>;
 	@:noCompletion private var __bufferResult:Array<BitmapData>;
 	@:noCompletion private var __bufferSourceView:BitmapData;
+	@:noCompletion private var __bufferUpdateDelay:Array<Float>;
 	@:noCompletion private var __dirty(default, set):Bool = true;
 	@:noCompletion private var __extraBufferFormats:Array<Context3DTextureFormat>;
 	@:noCompletion private var __hardwareDirty:Bool;
@@ -1557,13 +1559,15 @@ import lime.graphics.cairo.Cairo;
 		return __extraBufferFormats.length;
 	}
 
-	public function setBufferFilters(index:Int, filters:Array<BitmapFilter>, resolutionScale:Float = 1.0):Void
+	public function setBufferFilters(index:Int, filters:Array<BitmapFilter>, resolutionScale:Float = 1.0, updateInterval:Float = 0):Void
 	{
 		if (__bufferFilters == null) __bufferFilters = [];
 		if (__bufferResolutionScale == null) __bufferResolutionScale = [];
+		if (__bufferUpdateDelay == null) __bufferUpdateDelay = [];
 
 		__bufferFilters[index - 1] = filters;
 		__bufferResolutionScale[index - 1] = resolutionScale;
+		__bufferUpdateDelay[index - 1] = updateInterval;
 	}
 
 	public function getBuffer(index:Int):BitmapData

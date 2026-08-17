@@ -218,10 +218,23 @@ class DisplayObjectRenderer extends EventDispatcher
 		renderer.__worldTransform.identity();
 		renderer.__worldColorTransform.__identity();
 
+		var now = haxe.Timer.stamp();
+
 		for (i in 0...graphics.__extraBufferFormats.length)
 		{
 			var filters = graphics.__bufferFilters[i];
 			if (filters == null || filters.length == 0) continue;
+
+			var interval = graphics.__bufferUpdateDelay != null ? graphics.__bufferUpdateDelay[i] : 0;
+			if (interval > 0 && graphics.__bufferResult != null && graphics.__bufferResult[i] != null)
+			{
+				if (graphics.__bufferNextUpdateTime == null) graphics.__bufferNextUpdateTime = [];
+
+				var nextUpdateTime = graphics.__bufferNextUpdateTime[i];
+				if (now < nextUpdateTime) continue;
+
+				graphics.__bufferNextUpdateTime[i] = now + interval;
+			}
 
 			var scale = graphics.__bufferResolutionScale != null ? graphics.__bufferResolutionScale[i] : 1.0;
 			var scaledWidth = Math.round(sourceWidth * scale);

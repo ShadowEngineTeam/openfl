@@ -293,7 +293,12 @@ import lime.math.Vector2;
 		__stage3D = stage3D;
 
 		__context = stage.window.context;
+
+		#if mobile
+		gl = __context.gles3;
+		#else
 		gl = __context.gl;
+		#end
 
 		if (__contextState == null) __contextState = new Context3DState();
 		__state = new Context3DState();
