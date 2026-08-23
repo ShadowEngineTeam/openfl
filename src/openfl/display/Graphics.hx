@@ -4,6 +4,8 @@ import openfl.display._internal.CairoGraphics;
 import openfl.display._internal.Context3DBuffer;
 import openfl.display._internal.DrawCommandBuffer;
 import openfl.display._internal.DrawCommandReader;
+import openfl.display._internal.IBitmapDrawableType;
+import openfl.display._internal.GraphicsTessellator.GraphicsTessellatedFillPart;
 import openfl.display._internal.ShaderBuffer;
 import openfl.display3D.Context3DTextureFormat;
 import openfl.display3D.IndexBuffer3D;
@@ -53,6 +55,7 @@ import lime.graphics.cairo.Cairo;
 {
 	@:noCompletion private static var maxTextureHeight:Null<Int> = null;
 	@:noCompletion private static var maxTextureWidth:Null<Int> = null;
+	@:noCompletion private static inline var __renderSizePadding:Float = 1.25;
 
 	@:noCompletion private var __bounds:Rectangle;
 	@:noCompletion private var __commands:DrawCommandBuffer;
@@ -66,12 +69,16 @@ import lime.graphics.cairo.Cairo;
 	@:noCompletion private var __dirty(default, set):Bool = true;
 	@:noCompletion private var __extraBufferFormats:Array<Context3DTextureFormat>;
 	@:noCompletion private var __hardwareDirty:Bool;
+	@:noCompletion private var __hardwareCompatible:Bool = false;
+	@:noCompletion private var __hardwareCompatibilityKnown:Bool = false;
 	@:noCompletion private var __height:Int;
 	@:noCompletion private var __managed:Bool;
 	@:noCompletion private var __positionX:Float;
 	@:noCompletion private var __positionY:Float;
 	@:noCompletion private var __quadBuffer:Context3DBuffer;
+	@:noCompletion private var __renderHeight:Int;
 	@:noCompletion private var __renderTransform:Matrix;
+	@:noCompletion private var __renderWidth:Int;
 	@:noCompletion private var __shaderBufferPool:ObjectPool<ShaderBuffer>;
 	@:noCompletion private var __softwareDirty:Bool;
 	@:noCompletion private var __strokePadding:Float;
@@ -79,6 +86,7 @@ import lime.graphics.cairo.Cairo;
 	@:noCompletion private var __triangleIndexBuffer:IndexBuffer3D;
 	@:noCompletion private var __triangleIndexBufferCount:Int;
 	@:noCompletion private var __triangleIndexBufferData:UInt16Array;
+	@:noCompletion private var __tessellatedFillParts:Array<GraphicsTessellatedFillPart>;
 	@:noCompletion private var __usedShaderBuffers:List<ShaderBuffer>;
 	@:noCompletion private var __vertexBuffer:VertexBuffer3D;
 	@:noCompletion private var __vertexBufferCount:Int;
@@ -104,11 +112,10 @@ import lime.graphics.cairo.Cairo;
 		__strokePadding = 0;
 		__positionX = 0;
 		__positionY = 0;
-		__renderTransform = new Matrix();
-		__usedShaderBuffers = new List<ShaderBuffer>();
-		__worldTransform = new Matrix();
 		__width = 0;
 		__height = 0;
+		__renderWidth = 0;
+		__renderHeight = 0;
 
 		__bitmapScaleX = 1;
 		__bitmapScaleY = 1;
@@ -385,6 +392,12 @@ import lime.graphics.cairo.Cairo;
 		if (shader != null)
 		{
 			#if lime
+			if (__shaderBufferPool == null)
+			{
+				__shaderBufferPool = new ObjectPool<ShaderBuffer>(function() return new ShaderBuffer());
+				__usedShaderBuffers = new List<ShaderBuffer>();
+			}
+
 			var shaderBuffer = __shaderBufferPool.get();
 			__usedShaderBuffers.add(shaderBuffer);
 			shaderBuffer.update(cast shader);
@@ -402,13 +415,17 @@ import lime.graphics.cairo.Cairo;
 	public function clear():Void
 	{
 		#if lime
-		for (shaderBuffer in __usedShaderBuffers)
+		if (__usedShaderBuffers != null)
 		{
-			__shaderBufferPool.release(shaderBuffer);
+			for (shaderBuffer in __usedShaderBuffers)
+			{
+				__shaderBufferPool.release(shaderBuffer);
+			}
+
+			__usedShaderBuffers.clear();
 		}
 		#end
 
-		__usedShaderBuffers.clear();
 		__commands.clear();
 		__strokePadding = 0;
 
@@ -1284,25 +1301,6 @@ import lime.graphics.cairo.Cairo;
 		__commands.lineGradientStyle(type, colors, alphas, ratios, matrix, spreadMethod, interpolationMethod, focalPointRatio);
 	}
 
-	#if false
-	/**
-		Specifies a shader to use for the line stroke when drawing lines.
-
-		The shader line style is used for subsequent calls to Graphics methods such as the `lineTo()` method or the
-		`drawCircle()` method. The line style remains in effect until you call the `lineStyle()` or
-		`lineGradientStyle()` methods, or the `lineBitmapStyle()` method again with different parameters.
-
-		You can call the `lineShaderStyle()` method in the middle of drawing a path to specify different styles for
-		different line segments within a path.
-
-		Call the `lineStyle()` method before you call the `lineShaderStyle()` method to enable a stroke, or else the
-		value of the line style is undefined.
-
-		Calls to the `clear()` method set the line style back to undefined.
-	**/
-	// @:require(flash10) public function lineShaderStyle (shader:Shader, ?matrix:Matrix):Void;
-	#end
-
 	/**
 		Specifies a line style used for subsequent calls to Graphics methods such
 		as the `lineTo()` method or the `drawCircle()`
@@ -1896,13 +1894,15 @@ import lime.graphics.cairo.Cairo;
 		}
 	}
 
-	@:noCompletion private function __update(displayMatrix:Matrix, pixelRatio:Float):Void
+	@:noCompletion private function __update(displayMatrix:Matrix, pixelRatio:Float, allowRenderSizeReuse:Bool = false):Void
 	{
 		if (__bounds == null || __bounds.width <= 0 || __bounds.height <= 0)
 		{
 			if (__width >= 1 || __height >= 1) __dirty = true;
 			__width = 0;
 			__height = 0;
+			__renderWidth = 0;
+			__renderHeight = 0;
 			return;
 		}
 
@@ -1936,7 +1936,7 @@ import lime.graphics.cairo.Cairo;
 				scaleY = Math.sqrt(parentTransform.c * parentTransform.c + parentTransform.d * parentTransform.d);
 			}
 
-			if (displayMatrix != null)
+			if (displayMatrix != null && __owner.__worldScale9Grid == null)
 			{
 				if (displayMatrix.b == 0)
 				{
@@ -1958,6 +1958,12 @@ import lime.graphics.cairo.Cairo;
 			}
 		}
 
+		if (__owner.__worldScale9Grid != null)
+		{
+			scaleX = Math.abs(__owner.scaleX) * pixelRatio;
+			scaleY = Math.abs(__owner.scaleY) * pixelRatio;
+		}
+
 		#if openfl_disable_graphics_upscaling
 		if (__owner.__worldScale9Grid == null)
 		{
@@ -1974,6 +1980,8 @@ import lime.graphics.cairo.Cairo;
 			if (__width >= 1 || __height >= 1) __dirty = true;
 			__width = 0;
 			__height = 0;
+			__renderWidth = 0;
+			__renderHeight = 0;
 			return;
 		}
 
@@ -1989,8 +1997,61 @@ import lime.graphics.cairo.Cairo;
 			scaleY = maxTextureHeight / __bounds.height;
 		}
 
+		var newWidth = Math.ceil(width + 1.0);
+		var newHeight = Math.ceil(height + 1.0);
+
+		// Keep the display size exact, but allow software-backed graphics to
+		// reuse a larger raster allocation across nearby zoom levels.
+		var renderWidth = newWidth;
+		var renderHeight = newHeight;
+		var useExactRenderScale = (__owner.__drawableType == TEXT_FIELD);
+		allowRenderSizeReuse = allowRenderSizeReuse && !useExactRenderScale;
+
+		#if !openfl_disable_graphics_upscaling
+		if (allowRenderSizeReuse && __owner.__worldScale9Grid == null)
+		{
+			if (__renderWidth > 0 && renderWidth <= __renderWidth)
+			{
+				renderWidth = __renderWidth;
+			}
+			else if (__renderWidth > 0 && renderWidth > __renderWidth)
+			{
+				renderWidth = Math.ceil(Math.max(renderWidth, __renderWidth * __renderSizePadding));
+			}
+
+			if (__renderHeight > 0 && renderHeight <= __renderHeight)
+			{
+				renderHeight = __renderHeight;
+			}
+			else if (__renderHeight > 0 && renderHeight > __renderHeight)
+			{
+				renderHeight = Math.ceil(Math.max(renderHeight, __renderHeight * __renderSizePadding));
+			}
+
+			if (maxTextureWidth != null && renderWidth > maxTextureWidth)
+			{
+				renderWidth = maxTextureWidth;
+			}
+
+			if (maxTextureHeight != null && renderHeight > maxTextureHeight)
+			{
+				renderHeight = maxTextureHeight;
+			}
+		}
+		#end
+
 		var inverseA:Float;
 		var inverseD:Float;
+
+		if (__renderTransform == null)
+		{
+			__renderTransform = new Matrix();
+		}
+
+		if (__worldTransform == null)
+		{
+			__worldTransform = new Matrix();
+		}
 
 		if (__owner.__worldScale9Grid != null)
 		{
@@ -2001,8 +2062,8 @@ import lime.graphics.cairo.Cairo;
 		}
 		else
 		{
-			__renderTransform.a = width / __bounds.width;
-			__renderTransform.d = height / __bounds.height;
+			__renderTransform.a = (allowRenderSizeReuse ? renderWidth : width) / __bounds.width;
+			__renderTransform.d = (allowRenderSizeReuse ? renderHeight : height) / __bounds.height;
 			inverseA = (1 / __renderTransform.a);
 			inverseD = (1 / __renderTransform.d);
 		}
@@ -2044,15 +2105,7 @@ import lime.graphics.cairo.Cairo;
 		__renderTransform.ty = __worldTransform.__transformInverseY(tx, ty);
 		#end
 
-		// Calculate the size to contain the graphics and an extra subpixel
-		// We used to add tx and ty from __renderTransform instead of 1.0
-		// but it improves performance if we keep the size consistent when the
-		// extra pixel isn't needed
-		var newWidth = Math.ceil(width + 1.0);
-		var newHeight = Math.ceil(height + 1.0);
-
-		// Mark dirty if render size changed
-		if (newWidth != __width || newHeight != __height)
+		if (useExactRenderScale && (newWidth != __width || newHeight != __height))
 		{
 			#if !openfl_disable_graphics_upscaling
 			__dirty = true;
@@ -2061,6 +2114,8 @@ import lime.graphics.cairo.Cairo;
 
 		__width = newWidth;
 		__height = newHeight;
+		__renderWidth = renderWidth;
+		__renderHeight = renderHeight;
 	}
 
 	// Get & Set Methods
@@ -2075,6 +2130,9 @@ import lime.graphics.cairo.Cairo;
 		{
 			__softwareDirty = true;
 			__hardwareDirty = true;
+			__hardwareCompatible = false;
+			__hardwareCompatibilityKnown = false;
+			__tessellatedFillParts = null;
 		}
 
 		return __dirty = value;
