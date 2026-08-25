@@ -6,9 +6,6 @@ import openfl.display.DisplayObjectRenderer;
 import openfl.display.Shader;
 import openfl.geom.Point;
 import openfl.geom.Rectangle;
-#if lime
-import lime.math.RGBA;
-#end
 
 /**
 	The ColorMatrixFilter class lets you apply a 4 x 5 matrix transformation
