@@ -119,7 +119,7 @@ import openfl.utils.ObjectPool;
 		__bitmapScaleY = 1;
 
 		__shaderBufferPool = new ObjectPool<ShaderBuffer>(function() return new ShaderBuffer());
-
+		__usedShaderBuffers = new List<ShaderBuffer>();
 	}
 
 	/**
