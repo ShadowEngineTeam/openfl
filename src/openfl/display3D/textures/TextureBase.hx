@@ -337,8 +337,8 @@ class TextureBase extends EventDispatcher
 		}
 		else
 		{
-			internalFormat = TextureBase.__textureInternalFormat;
-			format = TextureBase.__textureFormat;
+			internalFormat = __limeBufferFormatToGLInternalFormat(image.buffer.format);
+			format = __limeBufferFormatToGLFormat(image.buffer.format);
 		}
 
 		__context.__bindGLTexture2D(__textureID);
@@ -388,5 +388,15 @@ class TextureBase extends EventDispatcher
 			__memoryFormat = format;
 			__memoryInternalFormat = internalFormat;
 		}
+	}
+
+	@:noCompletion private function __limeBufferFormatToGLFormat(pixelFormat:lime.graphics.PixelFormat):Int
+	{
+		return pixelFormat == RGBA32 ? __context.gl.RGBA : TextureBase.__textureFormat;
+	}
+
+	@:noCompletion private function __limeBufferFormatToGLInternalFormat(pixelFormat:lime.graphics.PixelFormat):Int
+	{
+		return pixelFormat == RGBA32 ? __context.gl.RGBA : TextureBase.__textureInternalFormat;
 	}
 }
