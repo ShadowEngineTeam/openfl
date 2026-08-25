@@ -1,8 +1,8 @@
 package openfl.display;
 
 #if sys
-import openfl.events.EventDispatcher;
 import lime.system.System;
+import openfl.events.EventDispatcher;
 import openfl.geom.Rectangle;
 
 /**
@@ -87,7 +87,7 @@ class Screen extends EventDispatcher
 
 	@:noCompletion private var __displayIndex:Int;
 
-	private function new(index:Int)
+	@:noCompletion private function new(index:Int)
 	{
 		super();
 		__displayIndex = index;

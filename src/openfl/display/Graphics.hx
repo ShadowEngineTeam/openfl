@@ -1,11 +1,15 @@
 package openfl.display;
 
+import lime.graphics.cairo.Cairo;
+import lime.utils.Float32Array;
+import lime.utils.UInt16Array;
+import openfl.Vector;
 import openfl.display._internal.CairoGraphics;
 import openfl.display._internal.Context3DBuffer;
 import openfl.display._internal.DrawCommandBuffer;
 import openfl.display._internal.DrawCommandReader;
-import openfl.display._internal.IBitmapDrawableType;
 import openfl.display._internal.GraphicsTessellator.GraphicsTessellatedFillPart;
+import openfl.display._internal.IBitmapDrawableType;
 import openfl.display._internal.ShaderBuffer;
 import openfl.display3D.Context3DTextureFormat;
 import openfl.display3D.IndexBuffer3D;
@@ -14,13 +18,7 @@ import openfl.errors.ArgumentError;
 import openfl.filters.BitmapFilter;
 import openfl.geom.Matrix;
 import openfl.geom.Rectangle;
-import openfl.utils._internal.Float32Array;
-import openfl.utils._internal.UInt16Array;
 import openfl.utils.ObjectPool;
-import openfl.Vector;
-#if lime
-import lime.graphics.cairo.Cairo;
-#end
 
 /**
 	The Graphics class contains a set of methods that you can use to create a
@@ -99,7 +97,7 @@ import lime.graphics.cairo.Cairo;
 	@:noCompletion private var __owner:DisplayObject;
 	@:noCompletion private var __width:Int;
 	@:noCompletion private var __worldTransform:Matrix;
-	@SuppressWarnings("checkstyle:Dynamic") @:noCompletion private var __cairo:#if lime Cairo #else Dynamic #end;
+	@:noCompletion private var __cairo:Cairo;
 	@:noCompletion private var __bitmap:BitmapData;
 	@:noCompletion private var __bitmapScaleX:Float;
 	@:noCompletion private var __bitmapScaleY:Float;
@@ -391,7 +389,6 @@ import lime.graphics.cairo.Cairo;
 	{
 		if (shader != null)
 		{
-			#if lime
 			if (__shaderBufferPool == null)
 			{
 				__shaderBufferPool = new ObjectPool<ShaderBuffer>(function() return new ShaderBuffer());
@@ -403,7 +400,6 @@ import lime.graphics.cairo.Cairo;
 			shaderBuffer.update(cast shader);
 
 			__commands.beginShaderFill(shaderBuffer);
-			#end
 		}
 	}
 
@@ -414,7 +410,6 @@ import lime.graphics.cairo.Cairo;
 	**/
 	public function clear():Void
 	{
-		#if lime
 		if (__usedShaderBuffers != null)
 		{
 			for (shaderBuffer in __usedShaderBuffers)
@@ -424,7 +419,6 @@ import lime.graphics.cairo.Cairo;
 
 			__usedShaderBuffers.clear();
 		}
-		#end
 
 		__commands.clear();
 		__strokePadding = 0;
@@ -1639,15 +1633,13 @@ import lime.graphics.cairo.Cairo;
 		return graphicsData;
 	}
 
-	@:noCompletion
-	private inline function __calculateBezierCubicPoint(t:Float, p1:Float, p2:Float, p3:Float, p4:Float):Float
+	@:noCompletion private #if !js inline #end function __calculateBezierCubicPoint(t:Float, p1:Float, p2:Float, p3:Float, p4:Float):Float
 	{
 		var iT = 1 - t;
 		return p1 * (iT * iT * iT) + 3 * p2 * t * (iT * iT) + 3 * p3 * iT * (t * t) + p4 * (t * t * t);
 	}
 
-	@:noCompletion
-	private inline function __calculateBezierQuadPoint(t:Float, p1:Float, p2:Float, p3:Float):Float
+	@:noCompletion private #if !js inline #end function __calculateBezierQuadPoint(t:Float, p1:Float, p2:Float, p3:Float):Float
 	{
 		var iT = 1 - t;
 		return iT * iT * p1 + 2 * iT * t * p2 + t * t * p3;

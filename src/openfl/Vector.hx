@@ -710,8 +710,7 @@ abstract Vector<T>(IVector<T>)
 		return new ObjectVector<T>(length, fixed, cast array, true);
 	}
 
-	@SuppressWarnings("checkstyle:Dynamic") @:to inline private static function toNullVector<T:Null<Dynamic>>(t:IVector<T>, length:Int,
-			fixed:Bool, array:Array<T>):ObjectVector<T>
+	@:to #if !js inline #end private static function toNullVector<T:Null<Dynamic>>(t:IVector<T>, length:Int, fixed:Bool, array:Array<T>):ObjectVector<T>
 	{
 		return new ObjectVector<T>(length, fixed, cast array, true);
 	}
@@ -952,7 +951,6 @@ abstract Vector<T>(IVector<T>)
 		return new BoolVector(0, false, __array.splice(pos, len));
 	}
 
-	@SuppressWarnings("checkstyle:Dynamic")
 	@:noCompletion @:keep private function toJSON():Dynamic
 	{
 		return __array;
@@ -1017,7 +1015,6 @@ abstract Vector<T>(IVector<T>)
 	@:noCompletion private var __array:Array<Float>;
 	@:noCompletion private var __tempIndex:Int;
 
-	@SuppressWarnings("checkstyle:Dynamic")
 	public function new(length:Int = 0, fixed:Bool = false, array:Array<Dynamic> = null, forceCopy:Bool = false):Void
 	{
 		if (forceCopy)
@@ -1200,7 +1197,6 @@ abstract Vector<T>(IVector<T>)
 		return new FloatVector(0, false, __array.splice(pos, len));
 	}
 
-	@SuppressWarnings("checkstyle:Dynamic")
 	@:noCompletion @:keep private function toJSON():Dynamic
 	{
 		return __array;
@@ -1452,7 +1448,6 @@ abstract Vector<T>(IVector<T>)
 		return new FunctionVector(0, false, __array.splice(pos, len));
 	}
 
-	@SuppressWarnings("checkstyle:Dynamic")
 	@:noCompletion @:keep private function toJSON():Dynamic
 	{
 		return __array;
@@ -1690,7 +1685,6 @@ abstract Vector<T>(IVector<T>)
 		return new IntVector(0, false, __array.splice(pos, len));
 	}
 
-	@SuppressWarnings("checkstyle:Dynamic")
 	@:noCompletion @:keep private function toJSON():Dynamic
 	{
 		return __array;
@@ -1755,7 +1749,6 @@ abstract Vector<T>(IVector<T>)
 	@:noCompletion private var __array:Array<T>;
 	@:noCompletion private var __tempIndex:Int;
 
-	@SuppressWarnings("checkstyle:Dynamic")
 	public function new(length:Int = 0, fixed:Bool = false, array:Array<Dynamic> = null, forceCopy:Bool = false):Void
 	{
 		if (forceCopy)
@@ -1778,7 +1771,6 @@ abstract Vector<T>(IVector<T>)
 		this.fixed = fixed;
 	}
 
-	@SuppressWarnings("checkstyle:Dynamic")
 	public function concat(a:IVector<T> = null):IVector<T>
 	{
 		if (a == null)
@@ -1939,7 +1931,6 @@ abstract Vector<T>(IVector<T>)
 		return new ObjectVector(0, false, __array.splice(pos, len));
 	}
 
-	@SuppressWarnings("checkstyle:Dynamic")
 	@:noCompletion @:keep private function toJSON():Dynamic
 	{
 		return __array;

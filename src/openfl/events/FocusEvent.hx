@@ -1,6 +1,5 @@
 package openfl.events;
 
-// import openfl.utils.ObjectPool;
 import openfl.display.InteractiveObject;
 
 /**
@@ -118,9 +117,6 @@ class FocusEvent extends Event
 		`keyFocusChange`.
 	**/
 	public var shiftKey:Bool;
-
-	// @:noCompletion private static var __pool:ObjectPool<FocusEvent> = new ObjectPool<FocusEvent>(function() return new FocusEvent(null),
-	// function(event) event.__init());
 
 	/**
 		Creates an Event object with specific information relevant to focus

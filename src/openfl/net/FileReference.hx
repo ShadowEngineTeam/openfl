@@ -1,7 +1,8 @@
 package openfl.net;
 
-import haxe.io.Path;
 import haxe.Timer;
+import haxe.io.Path;
+import lime.utils.Bytes;
 import openfl.events.DataEvent;
 import openfl.events.Event;
 import openfl.events.EventDispatcher;
@@ -10,10 +11,7 @@ import openfl.events.IOErrorEvent;
 import openfl.events.ProgressEvent;
 import openfl.filesystem.File;
 import openfl.utils.ByteArray;
-#if lime
-import lime.utils.Bytes;
-#end
-#if (lime && !macro)
+#if !macro
 import lime.ui.FileDialog;
 import lime.ui.FileDialogFilter;
 #end
@@ -784,7 +782,7 @@ class FileReference extends EventDispatcher
 		__urlLoader.addEventListener(ProgressEvent.PROGRESS, urlLoader_onProgress);
 		__urlLoader.load(request);
 
-		#if (lime && !macro)
+		#if !macro
 		var filters = null;
 		if (defaultFileName != null && Path.extension(defaultFileName).length > 0)
 		{
@@ -1021,7 +1019,7 @@ class FileReference extends EventDispatcher
 			__data.writeUTFBytes(Std.string(data));
 		}
 
-		#if (lime && !macro)
+		#if !macro
 		var filters = null;
 		if (defaultFileName != null && Path.extension(defaultFileName).length > 0)
 		{
@@ -1285,7 +1283,7 @@ class FileReference extends EventDispatcher
 		#end
 	}
 
-	private function __uploadFileBytes(request:URLRequest, uploadDataFieldName:String, fileBytes:ByteArray):Void
+	@:noCompletion private function __uploadFileBytes(request:URLRequest, uploadDataFieldName:String, fileBytes:ByteArray):Void
 	{
 		var hasUrlVars = Type.typeof(request.data) == Type.ValueType.TObject;
 		if (hasUrlVars && request.method == URLRequestMethod.GET)
@@ -1503,18 +1501,6 @@ class FileReference extends EventDispatcher
 			__data = null;
 		}
 		#end
-
-		// #if (lime && !macro)
-		// if (__pendingDownload)
-		// {
-		// 	// Maybe just use an achor element and save the data as a blob with js instead of invoking lime?
-		// 	var saveFileDialog = new FileDialog();
-		// 	saveFileDialog.save(__data, __pendingDefaultFileName != null ? Path.extension(__pendingDefaultFileName) : null, __pendingDefaultFileName);
-		// 	__pendingDownload = false;
-		// 	__pendingDefaultFileName = null;
-		// }
-		// #end
-		// #end
 
 		dispatchEvent(event);
 	}

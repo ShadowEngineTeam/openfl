@@ -12,10 +12,6 @@ using haxe.macro.TypeTools;
 @SuppressWarnings("checkstyle:FieldDocComment")
 class ShaderMacro
 {
-	#if 0
-	private static var __suppressWarning:Array<Class<Dynamic>> = [Expr];
-	#end
-
 	public static function build():Array<Field>
 	{
 		var fields = Context.getBuildFields();
@@ -453,7 +449,7 @@ class ShaderMacro
 		return fields;
 	}
 
-	private static inline function getDefaultGLVersion():String
+	@:noCompletion private static inline function getDefaultGLVersion():String
 	{
 		// Specify the default glVersion.
 		// We can use compile defines to guess the value that prevents crashes in the majority of cases.
@@ -467,7 +463,7 @@ class ShaderMacro
 	 * @param isFragment Whether the source is a fragment shader. False if it is a vertex shader.
 	 * @return The converted source.
 	 */
-	private static function processGLSLText(source:String, glVersion:String, isFragment:Bool)
+	@:noCompletion private static function processGLSLText(source:String, glVersion:String, isFragment:Bool)
 	{
 		if (glVersion == "" || glVersion == null) return processGLSLText(source, getDefaultGLVersion(), isFragment);
 
@@ -505,7 +501,7 @@ class ShaderMacro
 		}
 	}
 
-	private static function buildGLSLHeaders(glVersion:String):String
+	@:noCompletion private static function buildGLSLHeaders(glVersion:String):String
 	{
 		var glVersionCleaner:EReg = ~/\b(\d+)\s*(?:core|es|compatibility)\b/g;
 
@@ -518,13 +514,13 @@ class ShaderMacro
 		}
 	}
 
-	private static function buildGLSLExtensions(glExtensions:Array<{name:String, behavior:String}>, glVersion:String,
+	@:noCompletion private static function buildGLSLExtensions(glExtensions:Array<{name:String, behavior:String}>, glVersion:String,
 			isFragment:Bool):Array<{name:String, behavior:String}>
 	{
 		return glExtensions;
 	}
 
-	private static function processFields(source:String, storageType:String, fields:Array<Field>, pos:Position):Void
+	@:noCompletion private static function processFields(source:String, storageType:String, fields:Array<Field>, pos:Position):Void
 	{
 		if (source == null) return;
 

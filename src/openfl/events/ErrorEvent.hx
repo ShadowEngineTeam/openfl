@@ -1,6 +1,5 @@
 package openfl.events;
 
-// import openfl.utils.ObjectPool;
 import openfl.events.TextEvent;
 
 /**
@@ -43,9 +42,6 @@ class ErrorEvent extends TextEvent
 		`id` parameter supplied in the constructor.
 	**/
 	public var errorID(default, null):Int;
-
-	// @:noCompletion private static var __pool:ObjectPool<ErrorEvent> = new ObjectPool<ErrorEvent>(function() return new ErrorEvent(null),
-	// function(event) event.__init());
 
 	/**
 		Creates an Event object that contains information about error events.

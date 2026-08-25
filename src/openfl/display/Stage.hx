@@ -2,10 +2,23 @@ package openfl.display;
 
 import haxe.CallStack;
 import haxe.ds.ArraySort;
-import openfl.utils._internal.Log;
-import openfl.utils._internal.TouchData;
-import openfl.display3D.Context3D;
+import lime.app.Application;
+import lime.app.IModule;
+import lime.graphics.RenderContext;
+import lime.graphics.RenderContextType;
+import lime.system.Orientation;
+import lime.ui.Gamepad;
+import lime.ui.GamepadAxis;
+import lime.ui.GamepadButton;
+import lime.ui.KeyCode;
+import lime.ui.KeyModifier;
+import lime.ui.MouseCursor as LimeMouseCursor;
+import lime.ui.MouseWheelMode;
+import lime.ui.Touch;
+import lime.ui.Window;
+import lime.utils.Log;
 import openfl.display.Application as OpenFLApplication;
+import openfl.display3D.Context3D;
 import openfl.errors.IllegalOperationError;
 import openfl.events.Event;
 import openfl.events.EventDispatcher;
@@ -28,22 +41,7 @@ import openfl.ui.GameInput;
 import openfl.ui.Keyboard;
 import openfl.ui.Mouse;
 import openfl.ui.MouseCursor;
-#if lime
-import lime.app.Application;
-import lime.app.IModule;
-import lime.graphics.RenderContext;
-import lime.graphics.RenderContextType;
-import lime.ui.Touch;
-import lime.ui.Gamepad;
-import lime.ui.GamepadAxis;
-import lime.ui.GamepadButton;
-import lime.ui.KeyCode;
-import lime.ui.KeyModifier;
-import lime.ui.MouseCursor as LimeMouseCursor;
-import lime.ui.MouseWheelMode;
-import lime.ui.Window;
-import lime.system.Orientation;
-#end
+import openfl.utils._internal.TouchData;
 #if gl_stats
 import openfl.display._internal.stats.Context3DStats;
 #end
@@ -180,7 +178,7 @@ using StringTools;
 @:access(openfl.ui.Keyboard)
 @:access(openfl.ui.Mouse)
 @:access(lime.ui.Window)
-class Stage extends DisplayObjectContainer #if lime implements IModule #end
+class Stage extends DisplayObjectContainer implements IModule
 {
 	/**
 		Whether the application supports changes in the stage orientation (and
@@ -251,8 +249,6 @@ class Stage extends DisplayObjectContainer #if lime implements IModule #end
 	**/
 	public var application(default, null):Application;
 
-	// @:noCompletion @:dox(hide) @:require(flash15) public var browserZoomFactor (default, null):Float;
-
 	/**
 		The window background color.
 	**/
@@ -303,8 +299,6 @@ class Stage extends DisplayObjectContainer #if lime implements IModule #end
 		for more information regarding API support across multiple profiles.
 	**/
 	public var deviceOrientation(get, never):StageOrientation;
-
-	// @:noCompletion @:dox(hide) @:require(flash11) public var displayContextInfo (default, null):String;
 
 	/**
 		A value from the StageDisplayState class that specifies which display
@@ -502,8 +496,6 @@ class Stage extends DisplayObjectContainer #if lime implements IModule #end
 		`Stage.scaleMode` is set to `StageScaleMode.NO_SCALE`.
 	**/
 	public var fullScreenWidth(get, never):UInt;
-
-	// @:noCompletion @:dox(hide) @:require(flash11_2) public var mouseLock:Bool;
 
 	/**
 		The current orientation of the stage. This property is set to one of
@@ -807,60 +799,6 @@ class Stage extends DisplayObjectContainer #if lime implements IModule #end
 	public var nativeWindow(default, null):openfl.display.NativeWindow;
 	#end
 
-	/**
-		Indicates whether GPU compositing is available and in use. The
-		`wmodeGPU` value is `true` _only_ when all three of the following
-		conditions exist:
-		* GPU compositing has been requested.
-		* GPU compositing is available.
-		* GPU compositing is in use.
-
-		Specifically, the `wmodeGPU` property indicates one of the following:
-
-		1. GPU compositing has not been requested or is unavailable. In this
-		case, the `wmodeGPU` property value is `false`.
-		2. GPU compositing has been requested (if applicable and available),
-		but the environment is operating in "fallback mode" (not optimal
-		rendering) due to limitations of the content. In this case, the
-		`wmodeGPU` property value is `true`.
-		3. GPU compositing has been requested (if applicable and available),
-		and the environment is operating in the best mode. In this case, the
-		`wmodeGPU` property value is also `true`.
-
-		In other words, the `wmodeGPU` property identifies the capability and
-		state of the rendering environment. For runtimes that do not support
-		GPU compositing, such as AIR 1.5.2, the value is always `false`,
-		because (as stated above) the value is `true` only when GPU
-		compositing has been requested, is available, and is in use.
-
-		The `wmodeGPU` property is useful to determine, at runtime, whether or
-		not GPU compositing is in use. The value of `wmodeGPU` indicates if
-		your content is going to be scaled by hardware, or not, so you can
-		present graphics at the correct size. You can also determine if you're
-		rendering in a fast path or not, so that you can adjust your content
-		complexity accordingly.
-
-		For Flash Player in a browser, GPU compositing can be requested by the
-		value of `gpu` for the `wmode` HTML parameter in the page hosting the
-		SWF file. For other configurations, GPU compositing can be requested
-		in the header of a SWF file (set using SWF authoring tools).
-
-		However, the `wmodeGPU` property does not identify the current
-		rendering performance. Even if GPU compositing is "in use" the
-		rendering process might not be operating in the best mode. To adjust
-		your content for optimal rendering, use a Flash runtime debugger
-		version, and set the `DisplayGPUBlendsetting` in your mm.cfg file.
-
-		**Note:** This property is always `false` when referenced from
-		Haxe code that runs before the runtime performs its first rendering
-		pass. For example, if you examine `wmodeGPU` from a script in Frame 1
-		of Adobe Flash Professional, and your SWF file is the first SWF file
-		loaded in a new instance of the runtime, then the `wmodeGPU` value is
-		`false`. To get an accurate value, wait until at least one rendering
-		pass has occurred. If you write an event listener for the `exitFrame`
-		event of any `DisplayObject`, the `wmodeGPU` value at is the correct
-		value.
-	**/
 	@:noCompletion private var __cacheFocus:InteractiveObject;
 	@:noCompletion private var __clearBeforeRender:Bool;
 	@:noCompletion private var __color:Int;
@@ -910,10 +848,8 @@ class Stage extends DisplayObjectContainer #if lime implements IModule #end
 	@:noCompletion private var __uncaughtErrorEvents:UncaughtErrorEvents;
 	@:noCompletion private var __wasDirty:Bool;
 	@:noCompletion private var __wasFullscreen:Bool;
-	#if lime
 	@:noCompletion private var __primaryTouch:Touch;
-	#end
-	private var __oldStageOrientation:StageOrientation = UNKNOWN;
+	@:noCompletion private var __oldStageOrientation:StageOrientation = UNKNOWN;
 
 	public function new(window:Window, color:Null<Int> = null)
 	{
@@ -1023,7 +959,6 @@ class Stage extends DisplayObjectContainer #if lime implements IModule #end
 		__renderDirty = true;
 	}
 
-	// @:noCompletion @:dox(hide) public function isFocusInaccessible ():Bool;
 	public override function localToGlobal(pos:Point):Point
 	{
 		return pos.clone();
@@ -1074,7 +1009,6 @@ class Stage extends DisplayObjectContainer #if lime implements IModule #end
 	**/
 	public function setOrientation(newOrientation:StageOrientation):Void {}
 
-	@SuppressWarnings("checkstyle:Dynamic")
 	@:noCompletion private function __broadcastEvent(event:Event):Void
 	{
 		if (DisplayObject.__broadcastEvents.exists(event.type))
@@ -1109,7 +1043,6 @@ class Stage extends DisplayObjectContainer #if lime implements IModule #end
 
 	@:noCompletion private function __createRenderer():Void
 	{
-		#if lime
 		var windowWidth = Std.int(window.width * window.scale);
 		var windowHeight = Std.int(window.height * window.scale);
 
@@ -1144,10 +1077,9 @@ class Stage extends DisplayObjectContainer #if lime implements IModule #end
 			__renderer.__stage = this;
 			__renderer.__resize(windowWidth, windowHeight);
 		}
-		#end
 	}
 
-	@SuppressWarnings(["checkstyle:Dynamic", "checkstyle:LeftCurly"])
+	@SuppressWarnings("checkstyle:LeftCurly")
 	@:noCompletion private override function __dispatchEvent(event:Event):Bool
 	{
 		var result:Bool;
@@ -1206,7 +1138,7 @@ class Stage extends DisplayObjectContainer #if lime implements IModule #end
 		}
 	}
 
-	@SuppressWarnings(["checkstyle:Dynamic", "checkstyle:LeftCurly"])
+	@SuppressWarnings("checkstyle:LeftCurly")
 	@:noCompletion private function __dispatchStack(event:Event, stack:Array<DisplayObject>):Void
 	{
 		// TODO: Prevent repetition
@@ -1327,7 +1259,6 @@ class Stage extends DisplayObjectContainer #if lime implements IModule #end
 		}
 	}
 
-	@SuppressWarnings("checkstyle:Dynamic")
 	@:noCompletion private function __dispatchTarget(target:EventDispatcher, event:Event):Bool
 	{
 		if (__uncaughtErrorEvents.__enabled)
@@ -1404,7 +1335,6 @@ class Stage extends DisplayObjectContainer #if lime implements IModule #end
 		return local;
 	}
 
-	@SuppressWarnings("checkstyle:Dynamic")
 	@:noCompletion private function __handleError(e:Dynamic):Void
 	{
 		var event = new UncaughtErrorEvent(UncaughtErrorEvent.UNCAUGHT_ERROR, true, true, e);
@@ -1445,7 +1375,6 @@ class Stage extends DisplayObjectContainer #if lime implements IModule #end
 	}
 	#end
 
-	#if lime
 	@:noCompletion private function __onKey(type:String, keyCode:KeyCode, modifier:KeyModifier):Void
 	{
 		__dispatchPendingMouseEvent();
@@ -1763,9 +1692,7 @@ class Stage extends DisplayObjectContainer #if lime implements IModule #end
 			}
 		}
 	}
-	#end
 
-	#if lime
 	@:noCompletion private function __onLimeCreateWindow(window:Window):Void
 	{
 		if (this.window != window) return;
@@ -2077,7 +2004,6 @@ class Stage extends DisplayObjectContainer #if lime implements IModule #end
 		__update(false, true);
 		#end
 
-		#if lime
 		if (__renderer != null)
 		{
 			if (context3D != null)
@@ -2133,7 +2059,6 @@ class Stage extends DisplayObjectContainer #if lime implements IModule #end
 
 			__renderer.__cleared = false;
 		}
-		#end
 
 		return cancelled;
 	}
@@ -2525,7 +2450,6 @@ class Stage extends DisplayObjectContainer #if lime implements IModule #end
 			__dispatchEvent(new FullScreenEvent(FullScreenEvent.FULL_SCREEN, false, false, false, true));
 		}
 	}
-	#end
 
 	@:noCompletion private function __onMouse(type:String, x:Float, y:Float, button:Int):Void
 	{
@@ -3027,7 +2951,6 @@ class Stage extends DisplayObjectContainer #if lime implements IModule #end
 		Point.__pool.release(localPoint);
 	}
 
-	#if lime
 	@:noCompletion private function __onMouseWheel(deltaX:Float, deltaY:Float, deltaMode:MouseWheelMode):Void
 	{
 		var x = __mouseX;
@@ -3064,9 +2987,7 @@ class Stage extends DisplayObjectContainer #if lime implements IModule #end
 
 		Point.__pool.release(targetPoint);
 	}
-	#end
 
-	#if lime
 	@:noCompletion private function __onTouch(type:String, touch:Touch, isPrimaryTouchPoint:Bool):Void
 	{
 		var targetPoint = Point.__pool.get();
@@ -3261,9 +3182,7 @@ class Stage extends DisplayObjectContainer #if lime implements IModule #end
 			TouchData.__pool.release(touchData);
 		}
 	}
-	#end
 
-	#if lime
 	@:noCompletion private function __registerLimeModule(application:Application):Void
 	{
 		application.onCreateWindow.add(__onLimeCreateWindow);
@@ -3282,7 +3201,6 @@ class Stage extends DisplayObjectContainer #if lime implements IModule #end
 		Touch.onEnd.add(__onLimeTouchEnd);
 		Touch.onCancel.add(__onLimeTouchCancel);
 	}
-	#end
 
 	@:noCompletion private function __applyScaleAndAlign(windowWidth:Float, windowHeight:Float, scaleX:Float, scaleY:Float):Void
 	{
@@ -3500,7 +3418,6 @@ class Stage extends DisplayObjectContainer #if lime implements IModule #end
 
 	@:noCompletion private function __unregisterLimeModule(application:Application):Void
 	{
-		#if lime
 		application.onCreateWindow.remove(__onLimeCreateWindow);
 		application.onUpdate.remove(__onLimeUpdate);
 		application.onExit.remove(__onLimeModuleExit);
@@ -3511,7 +3428,6 @@ class Stage extends DisplayObjectContainer #if lime implements IModule #end
 		Touch.onMove.remove(__onLimeTouchMove);
 		Touch.onEnd.remove(__onLimeTouchEnd);
 		Touch.onCancel.remove(__onLimeTouchCancel);
-		#end
 	}
 
 	#if openfl_enable_experimental_update_queue

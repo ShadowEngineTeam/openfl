@@ -1,6 +1,5 @@
 package openfl.display._internal;
 
-import openfl.utils.Promise;
 import openfl.display.IDisplayObjectLoader;
 import openfl.display.LoaderInfo;
 import openfl.events.Event;
@@ -12,6 +11,7 @@ import openfl.net.URLRequest;
 import openfl.system.LoaderContext;
 import openfl.utils.ByteArray;
 import openfl.utils.Future;
+import openfl.utils.Promise;
 
 class BitmapDataLoader implements IDisplayObjectLoader
 {

@@ -12,7 +12,6 @@ import openfl.utils.ByteArray;
 @:fileXml(' tags="haxe,release" ')
 @:noDebug
 #end
-
 @:access(openfl.display.DisplayObject)
 @:access(openfl.display.DisplayObjectContainer)
 @:access(openfl.display.BitmapData)
@@ -24,7 +23,7 @@ import openfl.utils.ByteArray;
 @:access(openfl.filters.ColorMatrixFilter)
 class Context3DDisplayObjectContainer
 {
-	private static var __colorMatrixDisplayObjectShader:ColorMatrixDisplayObjectShader;
+	@:noCompletion private static var __colorMatrixDisplayObjectShader:ColorMatrixDisplayObjectShader;
 
 	public static function renderDrawable(displayObjectContainer:DisplayObjectContainer, renderer:OpenGLRenderer):Void
 	{
@@ -73,7 +72,7 @@ class Context3DDisplayObjectContainer
 		}
 	}
 
-	private static function __renderSingleBitmapColorMatrixFilter(displayObjectContainer:DisplayObjectContainer, renderer:OpenGLRenderer):Bool
+	@:noCompletion private static function __renderSingleBitmapColorMatrixFilter(displayObjectContainer:DisplayObjectContainer, renderer:OpenGLRenderer):Bool
 	{
 		#if openfl_disable_filters
 		return false;
@@ -122,7 +121,8 @@ class Context3DDisplayObjectContainer
 
 		var leaves = [];
 		var multiRejection = null;
-		if (__collectRenderableColorMatrixLeaves(displayObjectContainer, true, colorMatrixFilter, leaves, multiRejection) && leaves.length > 0)
+		if (__collectRenderableColorMatrixLeaves(displayObjectContainer, true, colorMatrixFilter, leaves, multiRejection)
+			&& leaves.length > 0)
 		{
 			Context3DDisplayObject.render(displayObjectContainer, renderer);
 
@@ -138,11 +138,12 @@ class Context3DDisplayObjectContainer
 		}
 
 		return __rejectColorMatrixFastPath(displayObjectContainer, multiRejection != null && multiRejection.length > 0 ? multiRejection[0] : (rejection != null
-			&& rejection.length > 0 ? rejection[0] : "not-single-leaf"), null);
+			&& rejection.length > 0 ? rejection[0] : "not-single-leaf"),
+			null);
 		#end
 	}
 
-	private static function __renderIdentityColorMatrixContainer(displayObjectContainer:DisplayObjectContainer, filter:ColorMatrixFilter,
+	@:noCompletion private static function __renderIdentityColorMatrixContainer(displayObjectContainer:DisplayObjectContainer, filter:ColorMatrixFilter,
 			renderer:OpenGLRenderer):Void
 	{
 		var filters = displayObjectContainer.__filters;
@@ -188,7 +189,7 @@ class Context3DDisplayObjectContainer
 		}
 	}
 
-	private static function __getSingleRenderableColorMatrixLeaf(displayObject:DisplayObject, isFilterRoot:Bool, rootFilter:ColorMatrixFilter,
+	@:noCompletion private static function __getSingleRenderableColorMatrixLeaf(displayObject:DisplayObject, isFilterRoot:Bool, rootFilter:ColorMatrixFilter,
 			rejection:Array<String>):DisplayObject
 	{
 		if (!displayObject.__renderable) return __setSingleLeafRejection(rejection, "not-renderable", displayObject);
@@ -241,18 +242,21 @@ class Context3DDisplayObjectContainer
 		return __getSingleRenderableColorMatrixLeaf(container.__children[0], false, rootFilter, rejection);
 	}
 
-	private static inline function __hasDrawableGraphics(displayObject:DisplayObject):Bool
+	@:noCompletion private static inline function __hasDrawableGraphics(displayObject:DisplayObject):Bool
 	{
 		return displayObject.__graphics != null && displayObject.__graphics.__commands.length > 0;
 	}
 
-	private static inline function __isEmptyColorMatrixLeaf(displayObject:DisplayObject):Bool
+	@:noCompletion private static inline function __isEmptyColorMatrixLeaf(displayObject:DisplayObject):Bool
 	{
 		var container:DisplayObjectContainer = __isDisplayObjectContainer(displayObject) ? cast displayObject : null;
-		return container != null && !__hasDrawableGraphics(displayObject) && container.__children != null && container.__children.length == 0;
+		return container != null
+			&& !__hasDrawableGraphics(displayObject)
+			&& container.__children != null
+			&& container.__children.length == 0;
 	}
 
-	private static function __collectRenderableColorMatrixLeaves(displayObject:DisplayObject, isFilterRoot:Bool, rootFilter:ColorMatrixFilter,
+	@:noCompletion private static function __collectRenderableColorMatrixLeaves(displayObject:DisplayObject, isFilterRoot:Bool, rootFilter:ColorMatrixFilter,
 			leaves:Array<DisplayObject>, rejection:Array<String>):Bool
 	{
 		if (!displayObject.__renderable) return __setMultiLeafRejection(rejection, "not-renderable", displayObject);
@@ -308,18 +312,19 @@ class Context3DDisplayObjectContainer
 		return true;
 	}
 
-	private static inline function __checkColorMatrixLeafLimit(leaves:Array<DisplayObject>, rejection:Array<String>, displayObject:DisplayObject):Bool
+	@:noCompletion private static inline function __checkColorMatrixLeafLimit(leaves:Array<DisplayObject>, rejection:Array<String>,
+			displayObject:DisplayObject):Bool
 	{
 		if (leaves.length > 4) return __setMultiLeafRejection(rejection, "too-many-leaves", displayObject);
 		return true;
 	}
 
-	private static function __setMultiLeafRejection(rejection:Array<String>, reason:String, displayObject:DisplayObject):Bool
+	@:noCompletion private static function __setMultiLeafRejection(rejection:Array<String>, reason:String, displayObject:DisplayObject):Bool
 	{
 		return false;
 	}
 
-	private static function __renderColorMatrixLeaf(displayObject:DisplayObject, filter:ColorMatrixFilter, renderer:OpenGLRenderer):Void
+	@:noCompletion private static function __renderColorMatrixLeaf(displayObject:DisplayObject, filter:ColorMatrixFilter, renderer:OpenGLRenderer):Void
 	{
 		if (__colorMatrixDisplayObjectShader == null) __colorMatrixDisplayObjectShader = new ColorMatrixDisplayObjectShader();
 		renderer.__initDisplayShader(__colorMatrixDisplayObjectShader);
@@ -346,22 +351,23 @@ class Context3DDisplayObjectContainer
 		}
 	}
 
-	private static function __setSingleLeafRejection(rejection:Array<String>, reason:String, displayObject:DisplayObject):DisplayObject
+	@:noCompletion private static function __setSingleLeafRejection(rejection:Array<String>, reason:String, displayObject:DisplayObject):DisplayObject
 	{
 		return null;
 	}
 
-	private static function __canIgnoreNestedColorMatrixFilters(rootFilter:ColorMatrixFilter, displayObject:DisplayObject):Bool
+	@:noCompletion private static function __canIgnoreNestedColorMatrixFilters(rootFilter:ColorMatrixFilter, displayObject:DisplayObject):Bool
 	{
 		return __hasOnlyIdentityColorMatrixFilters(displayObject);
 	}
 
-	private static function __setChildCountRejection(rejection:Array<String>, rootFilter:ColorMatrixFilter, container:DisplayObjectContainer):DisplayObject
+	@:noCompletion private static function __setChildCountRejection(rejection:Array<String>, rootFilter:ColorMatrixFilter,
+			container:DisplayObjectContainer):DisplayObject
 	{
 		return __setSingleLeafRejection(rejection, "child-count-" + container.__children.length, container);
 	}
 
-	private static function __hasOnlyIdentityColorMatrixFilters(displayObject:DisplayObject):Bool
+	@:noCompletion private static function __hasOnlyIdentityColorMatrixFilters(displayObject:DisplayObject):Bool
 	{
 		if (displayObject.__filters == null || displayObject.__filters.length == 0) return false;
 
@@ -375,7 +381,7 @@ class Context3DDisplayObjectContainer
 		return true;
 	}
 
-	private static function __isIdentityColorMatrix(matrix:Array<Float>):Bool
+	@:noCompletion private static function __isIdentityColorMatrix(matrix:Array<Float>):Bool
 	{
 		return __matrixClose(matrix[0], 1) && __matrixClose(matrix[1], 0) && __matrixClose(matrix[2], 0) && __matrixClose(matrix[3], 0)
 			&& __matrixClose(matrix[4], 0) && __matrixClose(matrix[5], 0) && __matrixClose(matrix[6], 1) && __matrixClose(matrix[7], 0)
@@ -384,32 +390,32 @@ class Context3DDisplayObjectContainer
 			&& __matrixClose(matrix[16], 0) && __matrixClose(matrix[17], 0) && __matrixClose(matrix[18], 1) && __matrixClose(matrix[19], 0);
 	}
 
-	private static inline function __matrixClose(value:Float, target:Float):Bool
+	@:noCompletion private static inline function __matrixClose(value:Float, target:Float):Bool
 	{
 		return Math.abs(value - target) < 0.0001;
 	}
 
 	#if (haxe_ver >= 4.2)
-	private static inline function __isBitmap(value:Dynamic):Bool
+	@:noCompletion private static inline function __isBitmap(value:Dynamic):Bool
 		return Std.isOfType(value, Bitmap);
 
-	private static inline function __isColorMatrixFilter(value:Dynamic):Bool
+	@:noCompletion private static inline function __isColorMatrixFilter(value:Dynamic):Bool
 		return Std.isOfType(value, ColorMatrixFilter);
 
-	private static inline function __isDisplayObjectContainer(value:Dynamic):Bool
+	@:noCompletion private static inline function __isDisplayObjectContainer(value:Dynamic):Bool
 		return Std.isOfType(value, DisplayObjectContainer);
 	#else
-	private static inline function __isBitmap(value:Dynamic):Bool
+	@:noCompletion private static inline function __isBitmap(value:Dynamic):Bool
 		return Std.is(value, Bitmap);
 
-	private static inline function __isColorMatrixFilter(value:Dynamic):Bool
+	@:noCompletion private static inline function __isColorMatrixFilter(value:Dynamic):Bool
 		return Std.is(value, ColorMatrixFilter);
 
-	private static inline function __isDisplayObjectContainer(value:Dynamic):Bool
+	@:noCompletion private static inline function __isDisplayObjectContainer(value:Dynamic):Bool
 		return Std.is(value, DisplayObjectContainer);
 	#end
 
-	private static function __rejectColorMatrixFastPath(displayObject:DisplayObject, reason:String, rejectionObject:DisplayObject):Bool
+	@:noCompletion private static function __rejectColorMatrixFastPath(displayObject:DisplayObject, reason:String, rejectionObject:DisplayObject):Bool
 	{
 		return false;
 	}

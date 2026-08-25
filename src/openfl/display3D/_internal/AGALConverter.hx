@@ -1,22 +1,20 @@
 package openfl.display3D._internal;
 
 import haxe.Int64;
+import lime.graphics.opengl.GL;
+import lime.utils.Log;
 import openfl.display._internal.SamplerState;
-import openfl.utils._internal.Log;
 import openfl.display3D.Context3DMipFilter;
 import openfl.display3D.Context3DTextureFilter;
 import openfl.display3D.Context3DWrapMode;
 import openfl.errors.IllegalOperationError;
 import openfl.utils.ByteArray;
 import openfl.utils.Endian;
-#if lime
-import lime.graphics.opengl.GL;
-#end
 
 @SuppressWarnings("checkstyle:FieldDocComment")
 class AGALConverter
 {
-	private static var limitedProfile:Null<Bool> #if !desktop = true #end;
+	@:noCompletion private static var limitedProfile:Null<Bool> #if !desktop = true #end;
 
 	public static function prefixFromType(regType:RegisterType, programType:ProgramType):String
 	{
@@ -39,7 +37,7 @@ class AGALConverter
 		}
 	}
 
-	private static function readUInt64(byteArray:ByteArray):Int64
+	@:noCompletion private static function readUInt64(byteArray:ByteArray):Int64
 	{
 		var low = byteArray.readInt();
 		var high = byteArray.readInt();
@@ -543,13 +541,11 @@ class AGALConverter
 			sb.add("\n");
 		}
 
-		#if lime
 		if (limitedProfile == null)
 		{
 			var version:String = GL.getParameter(GL.VERSION);
 			limitedProfile = (version.indexOf("OpenGL ES") > -1);
 		}
-		#end
 
 		// combine parts into final progam
 		var glsl = new StringBuf();
@@ -657,7 +653,7 @@ private enum ProgramType
 @SuppressWarnings("checkstyle:FieldDocComment")
 class RegisterMap
 {
-	private var mEntries:Array<RegisterMapEntry> = new Array();
+	@:noCompletion private var mEntries:Array<RegisterMapEntry> = new Array();
 
 	public function new()
 	{

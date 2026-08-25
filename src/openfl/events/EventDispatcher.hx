@@ -545,7 +545,7 @@ class EventDispatcher implements IEventDispatcher
 private class Listener
 {
 	public var callback:Dynamic->Void;
-public var priority:Int;
+	public var priority:Int;
 	public var useCapture:Bool;
 	public var useWeakReference:Bool;
 

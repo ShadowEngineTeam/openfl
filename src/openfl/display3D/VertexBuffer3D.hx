@@ -1,10 +1,10 @@
 package openfl.display3D;
 
-import openfl.display3D._internal.GLBuffer;
-import openfl.utils._internal.ArrayBufferView;
-import openfl.utils._internal.Float32Array;
-import openfl.utils.ByteArray;
+import lime.graphics.opengl.GLBuffer;
+import lime.utils.ArrayBufferView;
+import lime.utils.Float32Array;
 import openfl.Vector;
+import openfl.utils.ByteArray;
 
 /**
 	The VertexBuffer3D class represents a set of vertex data uploaded to a rendering context.
@@ -100,12 +100,10 @@ class VertexBuffer3D
 	**/
 	public function uploadFromByteArray(data:ByteArray, byteArrayOffset:Int, startVertex:Int, numVertices:Int):Void
 	{
-		#if lime
 		var offset = byteArrayOffset + startVertex * __stride;
 		var length = numVertices * __vertexSize;
 
 		uploadFromTypedArray(new Float32Array(data, offset, length));
-		#end
 	}
 
 	/**
@@ -148,7 +146,6 @@ class VertexBuffer3D
 	**/
 	public function uploadFromVector(data:Vector<Float>, startVertex:Int, numVertices:Int):Void
 	{
-		#if lime
 		if (data == null) return;
 		var gl = __context.gl;
 
@@ -176,7 +173,6 @@ class VertexBuffer3D
 		}
 
 		uploadFromTypedArray(__tempFloat32Array);
-		#end
 	}
 
 	/**
@@ -198,7 +194,6 @@ class VertexBuffer3D
 	**/
 	public function uploadFromArray(data:Array<Float>, startVertex:Int, numVertices:Int):Void
 	{
-		#if lime
 		if (data == null) return;
 		var gl = __context.gl;
 
@@ -226,6 +221,5 @@ class VertexBuffer3D
 		}
 
 		uploadFromTypedArray(__tempFloat32Array);
-		#end
 	}
 }

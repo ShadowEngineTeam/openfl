@@ -1,18 +1,16 @@
 package openfl.media;
 
+import lime.media.AudioSource;
 import openfl.events.Event;
 import openfl.events.EventDispatcher;
-#if lime
-import lime.media.AudioSource;
-#end
 #if lime_openal
-import openfl.events.SampleDataEvent;
-import openfl.utils.ByteArray;
 import lime.media.openal.AL;
 import lime.media.openal.ALBuffer;
 import lime.media.openal.ALSource;
 import lime.utils.ArrayBufferView;
 import lime.utils.Int16Array;
+import openfl.events.SampleDataEvent;
+import openfl.utils.ByteArray;
 #end
 
 /**
@@ -71,21 +69,19 @@ import lime.utils.Int16Array;
 	@:noCompletion private var __sound:Sound;
 	@:noCompletion private var __isValid:Bool;
 	@:noCompletion private var __soundTransform:SoundTransform;
-	#if lime
 	@:noCompletion private var __audioSource:AudioSource;
-	#end
 
 	#if lime_openal
-	private var __sampleDataEvent:SampleDataEvent;
-	private var __alSource:ALSource;
-	private var __outputBuffer:ByteArray;
-	private var __bufferView:ArrayBufferView;
-	private var __alBuffers:Array<ALBuffer>;
-	private var __numberOfBuffers:Int = 3;
-	private var __emptyBuffers:Array<ALBuffer>;
+	@:noCompletion private var __sampleDataEvent:SampleDataEvent;
+	@:noCompletion private var __alSource:ALSource;
+	@:noCompletion private var __outputBuffer:ByteArray;
+	@:noCompletion private var __bufferView:ArrayBufferView;
+	@:noCompletion private var __alBuffers:Array<ALBuffer>;
+	@:noCompletion private var __numberOfBuffers:Int = 3;
+	@:noCompletion private var __emptyBuffers:Array<ALBuffer>;
 	#end
 
-	@:noCompletion private function new(sound:Sound, audioSource:#if lime AudioSource #else Dynamic #end = null, soundTransform:SoundTransform = null):Void
+	@:noCompletion private function new(sound:Sound, audioSource:AudioSource = null, soundTransform:SoundTransform = null):Void
 	{
 		super(this);
 
@@ -132,9 +128,8 @@ import lime.utils.Int16Array;
 		}
 		#end
 
-		#if lime
 		__audioSource.stop();
-		#end
+
 		__dispose();
 	}
 
@@ -142,11 +137,10 @@ import lime.utils.Int16Array;
 	{
 		if (!__isValid) return;
 
-		#if lime
 		__audioSource.onComplete.remove(audioSource_onComplete);
 		__audioSource.dispose();
 		__audioSource = null;
-		#end
+
 		__isValid = false;
 	}
 
@@ -223,9 +217,8 @@ import lime.utils.Int16Array;
 		this.soundTransform = soundTransform;
 	}
 
-	@:noCompletion private function __initAudioSource(audioSource:#if lime AudioSource #else Dynamic #end):Void
+	@:noCompletion private function __initAudioSource(audioSource:AudioSource):Void
 	{
-		#if lime
 		__audioSource = audioSource;
 		if (__audioSource == null)
 		{
@@ -236,7 +229,6 @@ import lime.utils.Int16Array;
 		__isValid = true;
 
 		__audioSource.play();
-		#end
 	}
 
 	// Get & Set Methods
@@ -244,20 +236,15 @@ import lime.utils.Int16Array;
 	{
 		if (!__isValid) return 0;
 
-		#if lime
 		return __audioSource.currentTime + __audioSource.offset;
-		#else
-		return 0;
-		#end
 	}
 
 	@:noCompletion private function set_position(value:Float):Float
 	{
 		if (!__isValid) return 0;
 
-		#if lime
 		__audioSource.currentTime = Std.int(value) - __audioSource.offset;
-		#end
+
 		return value;
 	}
 
@@ -282,7 +269,6 @@ import lime.utils.Int16Array;
 
 			if (__isValid)
 			{
-				#if lime
 				__audioSource.gain = volume;
 
 				var position = __audioSource.position;
@@ -291,7 +277,6 @@ import lime.utils.Int16Array;
 				__audioSource.position = position;
 
 				return value;
-				#end
 			}
 		}
 
@@ -320,7 +305,7 @@ import lime.utils.Int16Array;
 	}
 
 	#if lime_openal
-	private function watchBuffers(_):Void
+	@:noCompletion private function watchBuffers(_):Void
 	{
 		var alAudioContext = __sound.__alAudioContext;
 		var hasSampleData = true;

@@ -1,20 +1,18 @@
 package openfl;
 
-import openfl.utils.Dictionary;
 import haxe.Constraints.Function;
 import haxe.PosInfos;
 import haxe.Timer;
-import openfl.errors.Error;
-import openfl.errors.TypeError;
-import openfl.utils._internal.Log;
-import openfl.utils._internal.Lib as InternalLib;
+import lime.system.System;
+import lime.utils.Log;
 import openfl.display.Application;
 import openfl.display.MovieClip;
+import openfl.errors.Error;
+import openfl.errors.TypeError;
 import openfl.net.URLLoader;
 import openfl.net.URLRequest;
-#if lime
-import lime.system.System;
-#end
+import openfl.utils.Dictionary;
+import openfl.utils._internal.Lib as InternalLib;
 
 @:access(openfl.display.Stage)
 @:access(openfl.events.UncaughtErrorEvents)
@@ -27,9 +25,6 @@ class Lib
 	@:noCompletion private static var __timers:Map<UInt, Timer> = new Map();
 	@:noCompletion private static var __registeredClassAliases:Map<String, Class<Dynamic>> = new Map();
 	@:noCompletion private static var __registeredClasses:Dictionary<Class<Dynamic>, String> = new Dictionary();
-	#if 0
-	private static var __unusedImports:Array<Class<Dynamic>> = [SWFLibrary, SWFLiteLibrary];
-	#end
 
 	public static function as<T>(v:Dynamic, c:Class<T>):Null<T>
 	{
@@ -169,11 +164,7 @@ class Lib
 	**/
 	public static function getTimer():Float
 	{
-		#if lime
 		return System.getTimer();
-		#else
-		return 0;
-		#end
 	}
 
 	/**
@@ -369,7 +360,6 @@ class Lib
 			window = "_blank";
 		}
 
-		#if lime
 		var uri = request.url;
 
 		if (Type.typeof(request.data) == Type.ValueType.TObject)
@@ -394,7 +384,6 @@ class Lib
 		}
 
 		System.openURL(uri, window);
-		#end
 	}
 
 	/**

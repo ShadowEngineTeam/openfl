@@ -1,9 +1,9 @@
 package openfl.display3D.textures;
 
-import openfl.display._internal.SamplerState;
+import lime.utils.ArrayBufferView;
+import lime.utils.UInt8Array;
 import openfl.display.BitmapData;
-import openfl.utils._internal.ArrayBufferView;
-import openfl.utils._internal.UInt8Array;
+import openfl.display._internal.SamplerState;
 import openfl.utils.ByteArray;
 
 /**
@@ -45,14 +45,13 @@ import openfl.utils.ByteArray;
 	**/
 	public function uploadFromBitmapData(source:BitmapData):Void
 	{
-		#if lime
 		if (source == null) return;
 
 		var image = __getImage(source);
+
 		if (image == null) return;
 
 		uploadFromTypedArray(image.data);
-		#end
 	}
 
 	/**
@@ -73,9 +72,7 @@ import openfl.utils.ByteArray;
 	**/
 	public function uploadFromByteArray(data:ByteArray, byteArrayOffset:UInt):Void
 	{
-		#if lime
 		uploadFromTypedArray(new UInt8Array(data.toArrayBuffer(), byteArrayOffset));
-		#end
 	}
 
 	/**

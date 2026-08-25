@@ -1,6 +1,5 @@
 package openfl.events;
 
-// import openfl.utils.ObjectPool;
 import openfl.ui.GameInputDevice;
 
 /**
@@ -27,9 +26,6 @@ import openfl.ui.GameInputDevice;
 		Returns a reference to the device that was added or removed. When a device is added, use this property to get a reference to the new device, instead of enumerating all of the devices to find the new one.
 	**/
 	public var device(default, null):GameInputDevice;
-
-	// @:noCompletion private static var __pool:ObjectPool<GameInputEvent> = new ObjectPool<GameInputEvent>(function() return new GameInputEvent(null),
-	// function(event) event.__init());
 
 	public function new(type:String, bubbles:Bool = true, cancelable:Bool = false, device:GameInputDevice = null)
 	{

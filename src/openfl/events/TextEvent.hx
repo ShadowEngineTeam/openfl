@@ -1,7 +1,5 @@
 package openfl.events;
 
-// import openfl.utils.ObjectPool;
-
 /**
 	An object dispatches a TextEvent object when a user enters text in a text
 	field or clicks a hyperlink in an HTML-enabled text field. There are two
@@ -49,9 +47,6 @@ class TextEvent extends Event
 		`<a>` tag.
 	**/
 	public var text:String;
-
-	// @:noCompletion private static var __pool:ObjectPool<TextEvent> = new ObjectPool<TextEvent>(function() return new TextEvent(null),
-	// function(event) event.__init());
 
 	/**
 		Creates an Event object that contains information about text events. Event

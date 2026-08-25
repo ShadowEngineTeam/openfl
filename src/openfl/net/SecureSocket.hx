@@ -1,8 +1,8 @@
 package openfl.net;
 
 import openfl.errors.ArgumentError;
-import openfl.errors.IllegalOperationError;
 import openfl.errors.IOError;
+import openfl.errors.IllegalOperationError;
 import openfl.errors.SecurityError;
 import openfl.events.Event;
 import openfl.events.IOErrorEvent;
@@ -106,7 +106,7 @@ class SecureSocket extends Socket
 	**/
 	public static var isSupported(get, never):Bool;
 
-	private static function get_isSupported():Bool
+	@:noCompletion private static function get_isSupported():Bool
 	{
 		#if sys
 		return true;

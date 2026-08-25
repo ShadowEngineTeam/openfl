@@ -1,13 +1,11 @@
 package openfl.sensors;
 
 import haxe.Timer;
+import lime.system.Sensor;
+import lime.system.SensorType;
 import openfl.errors.ArgumentError;
 import openfl.events.DeviceRotationEvent;
 import openfl.events.EventDispatcher;
-#if lime
-import lime.system.Sensor;
-import lime.system.SensorType;
-#end
 
 /**
 	The DeviceRotation class dispatches events based on activity detected by the
@@ -88,7 +86,6 @@ class DeviceRotation extends EventDispatcher
 	{
 		if (!initialized)
 		{
-			#if lime
 			var sensors = Sensor.getSensors(SensorType.GYROSCOPE);
 
 			if (sensors.length > 0)
@@ -96,7 +93,6 @@ class DeviceRotation extends EventDispatcher
 				sensors[0].onUpdate.add(gyroscope_onUpdate);
 				supported = true;
 			}
-			#end
 
 			initialized = true;
 		}
@@ -164,7 +160,7 @@ class DeviceRotation extends EventDispatcher
 	}
 
 	// Getters & Setters
-	private static function get_isSupported():Bool
+	@:noCompletion private static function get_isSupported():Bool
 	{
 		initialize();
 		return supported;

@@ -1,11 +1,10 @@
 package openfl.events;
 
-// import openfl.utils.ObjectPool;
 import openfl.utils.ByteArray;
 import openfl.utils.Endian;
 #if lime_openal
-import openfl.errors.Error;
 import haxe.io.Bytes;
+import openfl.errors.Error;
 #end
 
 /**
@@ -107,8 +106,6 @@ class SampleDataEvent extends Event
 	**/
 	@:keep public var position:Float;
 
-	// @:noCompletion private static var __pool:ObjectPool<SampleDataEvent> = new ObjectPool<SampleDataEvent>(function() return new SampleDataEvent(null),
-	// function(event) event.__init());
 	/**
 		Creates an event object that contains information about audio data
 		events. Event objects are passed as parameters to event listeners.
@@ -123,8 +120,8 @@ class SampleDataEvent extends Event
 		@param thedata     A byte array of data.
 	**/
 	#if lime_openal
-	private var leftChannel:Int;
-	private var rightChannel:Int;
+	@:noCompletion private var leftChannel:Int;
+	@:noCompletion private var rightChannel:Int;
 	#end
 
 	public function new(type:String, bubbles:Bool = false, cancelable:Bool = false)
@@ -161,7 +158,7 @@ class SampleDataEvent extends Event
 	}
 
 	#if lime_openal
-	private function getBufferSize():Int
+	@:noCompletion private function getBufferSize():Int
 	{
 		var bufferSize:Int = Std.int(data.length / 4 / 2);
 		if (bufferSize > 0)
@@ -178,7 +175,7 @@ class SampleDataEvent extends Event
 		return bufferSize;
 	}
 
-	private function getSamples(outputBuffer:ByteArray):Void
+	@:noCompletion private function getSamples(outputBuffer:ByteArray):Void
 	{
 		var bytesLength:Int = data.length;
 		var tempFloat:Float;

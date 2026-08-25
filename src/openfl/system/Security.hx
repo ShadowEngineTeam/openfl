@@ -465,9 +465,6 @@ class Security
 	**/
 	public static function allowInsecureDomain(p1:Dynamic = null, p2:Dynamic = null, p3:Dynamic = null, p4:Dynamic = null, p5:Dynamic = null):Void {}
 
-	// @:noCompletion @:dox(hide) @:require(flash10_1) public static function duplicateSandboxBridgeInputArguments (toplevel:Dynamic, args:Array<Dynamic>):Array<Dynamic>;
-	// @:noCompletion @:dox(hide) @:require(flash10_1) public static function duplicateSandboxBridgeOutputArgument (toplevel:Dynamic, arg:Dynamic):Dynamic;
-
 	/**
 		Looks for a policy file at the location specified by the `url`
 		parameter. Adobe AIR and Flash Player use policy files to determine
@@ -581,12 +578,12 @@ class Security
 		// similar to AIR, does nothing
 	}
 
-	private static function get_pageDomain():String
+	@:noCompletion private static function get_pageDomain():String
 	{
 		return "undefined";
 	}
 
-	private static function get_sandboxType():String
+	@:noCompletion private static function get_sandboxType():String
 	{
 		return Security.APPLICATION;
 	}

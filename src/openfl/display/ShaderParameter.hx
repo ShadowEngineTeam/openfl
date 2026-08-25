@@ -1,6 +1,6 @@
 package openfl.display;
 
-import openfl.utils._internal.Float32Array;
+import lime.utils.Float32Array;
 import openfl.display3D.Context3D;
 
 /**
@@ -93,9 +93,9 @@ import openfl.display3D.Context3D;
 	/**
 		The zero-based index of the parameter.
 	**/
-	@SuppressWarnings("checkstyle:Dynamic") public var index(default, null):Dynamic;
+	public var index(default, null):Dynamic;
 
-	@:noCompletion @:dox(hide) @SuppressWarnings("checkstyle:FieldDocComment") public var name(default, set):String;
+	@SuppressWarnings("checkstyle:FieldDocComment") public var name(default, set):String;
 
 	/**
 		The data type of the parameter as defined in the shader. The set of
@@ -182,7 +182,6 @@ import openfl.display3D.Context3D;
 	{
 		if (index < 0) return;
 
-		#if lime
 		var gl = context.gl;
 
 		var value = overrideValue != null ? overrideValue : this.value;
@@ -411,14 +410,12 @@ import openfl.display3D.Context3D;
 				}
 			}
 		}
-		#end
 	}
 
 	@:noCompletion private function __updateGLFromBuffer(context:Context3D, buffer:Float32Array, position:Int, length:Int, bufferOffset:Int):Void
 	{
 		if (index < 0) return;
 
-		#if lime
 		var gl = context.gl;
 
 		if (__isUniform)
@@ -578,7 +575,6 @@ import openfl.display3D.Context3D;
 				}
 			}
 		}
-		#end
 	}
 
 	// Get & Set Methods

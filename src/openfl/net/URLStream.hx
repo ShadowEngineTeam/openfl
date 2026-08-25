@@ -1,13 +1,13 @@
 package openfl.net;
 
-import openfl.events.EventDispatcher;
 import openfl.events.Event;
+import openfl.events.EventDispatcher;
 import openfl.events.IOErrorEvent;
-import openfl.events.SecurityErrorEvent;
 import openfl.events.ProgressEvent;
-import openfl.utils.IDataInput;
+import openfl.events.SecurityErrorEvent;
 import openfl.utils.ByteArray;
 import openfl.utils.Endian;
+import openfl.utils.IDataInput;
 
 /**
 	The URLStream class provides low-level access to downloading URLs. Data is
@@ -637,7 +637,7 @@ class URLStream extends EventDispatcher implements IDataInput
 	}
 
 	// Get & Set Methods
-	private function get_bytesAvailable():UInt
+	@:noCompletion private function get_bytesAvailable():UInt
 	{
 		if (__data != null)
 		{
@@ -647,17 +647,17 @@ class URLStream extends EventDispatcher implements IDataInput
 		return 0;
 	}
 
-	private function get_connected():Bool
+	@:noCompletion private function get_connected():Bool
 	{
 		return false;
 	}
 
-	private function get_endian():Endian
+	@:noCompletion private function get_endian():Endian
 	{
 		return __data.endian;
 	}
 
-	private function set_endian(value:Endian):Endian
+	@:noCompletion private function set_endian(value:Endian):Endian
 	{
 		return __data.endian = value;
 	}

@@ -1,7 +1,5 @@
 package openfl.events;
 
-// import openfl.utils.ObjectPool;
-
 /**
 	The Accelerometer class dispatches AccelerometerEvent objects when
 	acceleration updates are obtained from the Accelerometer sensor installed
@@ -57,9 +55,6 @@ class AccelerometerEvent extends Event
 		property of the event is set to 4000.
 	**/
 	public var timestamp:Float;
-
-	// @:noCompletion private static var __pool:ObjectPool<AccelerometerEvent> = new ObjectPool<AccelerometerEvent>(function() return
-	// 	new AccelerometerEvent(null), function(event) event.__init());
 
 	/**
 		Creates an AccelerometerEvent object that contains information about

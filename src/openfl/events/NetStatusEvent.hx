@@ -1,7 +1,5 @@
 package openfl.events;
 
-// import openfl.utils.ObjectPool;
-
 /**
 	A NetConnection, NetStream, or SharedObject object dispatches
 	NetStatusEvent objects when a it reports its status. There is only one
@@ -118,9 +116,6 @@ class NetStatusEvent extends Event
 		buffer using the `NetStream.bufferTime` property.
 	**/
 	public var info:Dynamic;
-
-	// @:noCompletion private static var __pool:ObjectPool<NetStatusEvent> = new ObjectPool<NetStatusEvent>(function() return new NetStatusEvent(null),
-	// function(event) event.__init());
 
 	/**
 		Creates an Event object that contains information about `netStatus`

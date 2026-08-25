@@ -1,9 +1,9 @@
 package openfl.display;
 
+import openfl.display3D.Context3D;
 import openfl.display3D.Context3DMipFilter;
 import openfl.display3D.Context3DTextureFilter;
 import openfl.display3D.Context3DWrapMode;
-import openfl.display3D.Context3D;
 
 /**
 	// TODO: Document GLSL Shaders
@@ -79,7 +79,7 @@ import openfl.display3D.Context3D;
 		The zero-based index of the input in the shader, indicating the order
 		of the input definitions in the shader.
 	**/
-	@SuppressWarnings("checkstyle:Dynamic") public var index(default, null):Dynamic;
+	public var index(default, null):Dynamic;
 
 	/**
 		The input data that is used when the shader executes. This property

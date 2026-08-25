@@ -1,9 +1,7 @@
 package openfl.system;
 
-#if lime
 import lime.system.Clipboard;
 import lime.system.System as LimeSystem;
-#end
 #if cpp
 import cpp.vm.Gc;
 #end
@@ -22,8 +20,6 @@ import cpp.vm.Gc;
 **/
 @:final class System
 {
-	// @:noCompletion @:dox(hide) @:require(flash11) public static var processCPUUsage (default, null):Float;
-
 	/**
 		The amount of memory (in bytes) currently in use that has been directly
 		allocated by Flash Player or AIR.
@@ -132,9 +128,7 @@ import cpp.vm.Gc;
 	**/
 	public static function exit(code:Int):Void
 	{
-		#if lime
 		LimeSystem.exit(code);
-		#end
 	}
 
 	/**
@@ -174,8 +168,6 @@ import cpp.vm.Gc;
 	}
 	#end
 
-	// @:noCompletion @:dox(hide) @:require(flash11) public static function pauseForGCIfCollectionImminent (imminence:Float = 0.75):Void;
-
 	#if !openfl_strict
 	/**
 		Resumes the application after calling `System.pause()`.
@@ -207,9 +199,7 @@ import cpp.vm.Gc;
 	**/
 	public static function setClipboard(string:String):Void
 	{
-		#if lime
 		Clipboard.text = string;
-		#end
 	}
 
 	// Getters & Setters

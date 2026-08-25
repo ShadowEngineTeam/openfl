@@ -1,20 +1,18 @@
 package openfl.display3D;
 
-import openfl.display3D._internal.GLProgram;
-import openfl.display3D._internal.GLShader;
-import openfl.display3D._internal.GLUniformLocation;
-import openfl.display3D._internal.AGALConverter;
-import openfl.display._internal.SamplerState;
-import openfl.utils._internal.Float32Array;
-import openfl.utils._internal.Log;
+import lime.graphics.opengl.GL;
+import lime.graphics.opengl.GLProgram;
+import lime.graphics.opengl.GLShader;
+import lime.graphics.opengl.GLUniformLocation;
+import lime.utils.BytePointer;
+import lime.utils.Float32Array;
+import lime.utils.Log;
+import openfl.Vector;
 import openfl.display.ShaderParameterType;
+import openfl.display._internal.SamplerState;
+import openfl.display3D._internal.AGALConverter;
 import openfl.errors.IllegalOperationError;
 import openfl.utils.ByteArray;
-import openfl.Vector;
-#if lime
-import lime.graphics.opengl.GL;
-import lime.utils.BytePointer;
-#end
 
 /**
 	The Program3D class represents a pair of rendering programs (also called "shaders")
@@ -69,7 +67,6 @@ import lime.utils.BytePointer;
 	@:noCompletion private var __glslUniformTypes:Array<ShaderParameterType>;
 	@:noCompletion private var __glVertexShader:GLShader;
 	@:noCompletion private var __glVertexSource:String;
-	// @:noCompletion private var __memUsage:Int;
 	@:noCompletion private var __samplerStates:Array<SamplerState>;
 
 	@:noCompletion private function new(context3D:Context3D, format:Context3DProgramFormat)
@@ -389,7 +386,7 @@ import lime.utils.BytePointer;
 		var glslVertex = AGALConverter.convertToGLSL(vertexProgram, null);
 		var glslFragment = AGALConverter.convertToGLSL(fragmentProgram, samplerStates);
 
-		if (Log.level == LogLevel.VERBOSE)
+		if (Log.level == VERBOSE)
 		{
 			Log.info(glslVertex);
 			Log.info(glslFragment);
@@ -476,7 +473,6 @@ import lime.utils.BytePointer;
 	{
 		if (__format == GLSL) return;
 
-		#if lime
 		var gl = __context.gl;
 
 		__agalUniforms.clear();
@@ -567,7 +563,7 @@ import lime.utils.BytePointer;
 				__agalAlphaSamplerEnabled[uniform.regIndex] = uniform;
 			}
 
-			if (Log.level == LogLevel.VERBOSE)
+			if (Log.level == VERBOSE)
 			{
 				Log.verbose('${i} name:${uniform.name} type:${uniform.type} size:${uniform.size} location:${uniform.location}');
 			}
@@ -575,7 +571,6 @@ import lime.utils.BytePointer;
 
 		__agalVertexUniformMap = new UniformMap(Lambda.array(vertexUniforms));
 		__agalFragmentUniformMap = new UniformMap(Lambda.array(fragmentUniforms));
-		#end
 	}
 
 	@:noCompletion private function __deleteShaders():Void
@@ -932,9 +927,7 @@ import lime.utils.BytePointer;
 	public var regCount:Int;
 	public var isDirty:Bool;
 	public var context:Context3D;
-	#if lime
 	public var regDataPointer:BytePointer;
-	#end
 
 	public function new(context:Context3D)
 	{
@@ -942,14 +935,11 @@ import lime.utils.BytePointer;
 
 		isDirty = true;
 
-		#if lime
 		regDataPointer = new BytePointer();
-		#end
 	}
 
 	public function flush():Void
 	{
-		#if lime
 		var gl = context.__context.gles2;
 
 		var index:Int = regIndex * 4;
@@ -970,7 +960,6 @@ import lime.utils.BytePointer;
 			default:
 				gl.uniform4fv(location, regCount, __getUniformRegisters(index, regCount * 4));
 		}
-		#end
 	}
 
 	#if lime

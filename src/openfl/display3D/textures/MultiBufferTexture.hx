@@ -1,8 +1,8 @@
 package openfl.display3D.textures;
 
-import openfl.display3D._internal.GLFramebuffer;
-import openfl.display3D._internal.GLTexture;
-import openfl.utils._internal.Log;
+import lime.graphics.opengl.GLFramebuffer;
+import lime.graphics.opengl.GLTexture;
+import lime.utils.Log;
 
 @:access(openfl.display3D.Context3D)
 @:access(openfl.display.Stage)
@@ -47,7 +47,7 @@ class MultiBufferTexture extends TextureBase
 		}
 	}
 
-	private override function __getGLFramebuffer(enableDepthAndStencil:Bool, antiAlias:Int, surfaceSelector:Int):GLFramebuffer
+	@:noCompletion private override function __getGLFramebuffer(enableDepthAndStencil:Bool, antiAlias:Int, surfaceSelector:Int):GLFramebuffer
 	{
 		var gl = __context.gl;
 		var addedBuffers = __glFramebuffer == null;
@@ -107,7 +107,7 @@ class MultiBufferTexture extends TextureBase
 		__textureID = previousTexture;
 	}
 
-	private function context3DFormatToGLFormat(f:Context3DTextureFormat):Int
+	@:noCompletion private function context3DFormatToGLFormat(f:Context3DTextureFormat):Int
 	{
 		var gl = __context.gl;
 
@@ -136,14 +136,14 @@ class MultiBufferTexture extends TextureBase
 		}
 	}
 
-	private function context3DFormatToInternalGLFormat(f:Context3DTextureFormat, baseGLFormat:Int):Int
+	@:noCompletion private function context3DFormatToInternalGLFormat(f:Context3DTextureFormat, baseGLFormat:Int):Int
 	{
 		var gl = __context.gl;
 
 		switch (f)
 		{
 			case BGRA:
-				#if (lime && !ios)
+				#if !ios
 				return (__context.__context.type == OPENGLES) ? baseGLFormat : gl.RGBA;
 				#else
 				return gl.RGBA;

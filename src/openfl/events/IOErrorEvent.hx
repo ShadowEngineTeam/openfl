@@ -1,7 +1,5 @@
 package openfl.events;
 
-// import openfl.utils.ObjectPool;
-
 /**
 	An IOErrorEvent object is dispatched when an error causes input or output
 	operations to fail.
@@ -13,8 +11,6 @@ package openfl.events;
 **/
 class IOErrorEvent extends ErrorEvent
 {
-	// @:noCompletion @:dox(hide) public static var DISK_ERROR:String;
-
 	/**
 		Defines the value of the `type` property of an `ioError` event object.
 
@@ -68,11 +64,6 @@ class IOErrorEvent extends ErrorEvent
 	**/
 	public static inline var STANDARD_ERROR_IO_ERROR:EventType<IOErrorEvent> = "standardErrorIoError";
 	#end
-
-	// @:noCompletion @:dox(hide) public static var NETWORK_ERROR:String;
-	// @:noCompletion @:dox(hide) public static var VERIFY_ERROR:String;
-	// @:noCompletion private static var __pool:ObjectPool<IOErrorEvent> = new ObjectPool<IOErrorEvent>(function() return new IOErrorEvent(null),
-	// function(event) event.__init());
 
 	/**
 		Creates an Event object that contains specific information about

@@ -7,8 +7,13 @@ import haxe.ds.StringMap;
 @SuppressWarnings("checkstyle:FieldDocComment")
 class ShapeCache
 {
-	private var __shortWordMap:StringMap<StringMap<Array<GlyphPosition>>>;
-	private var __longWordMap:StringMap<IntMap<CacheMeasurement>>;
+	#if (html5 && js)
+	@:noCompletion private var __shortWordMap:StringMap<StringMap<Array<Float>>>;
+	#else
+	@:noCompletion private var __shortWordMap:StringMap<StringMap<Array<GlyphPosition>>>;
+	#end
+
+	@:noCompletion private var __longWordMap:StringMap<IntMap<CacheMeasurement>>;
 
 	public function new()
 	{
@@ -16,7 +21,7 @@ class ShapeCache
 		__longWordMap = new StringMap();
 	}
 
-	private static function hashFunction(key:String):Int
+	@:noCompletion private static function hashFunction(key:String):Int
 	{
 		var hash = 0, i, chr;
 		for (i in 0...key.length)
@@ -28,15 +33,22 @@ class ShapeCache
 		return hash;
 	}
 
-	public function cache(formatRange:TextFormatRange,
-			getPositions:TextLayout):Array<GlyphPosition>
+	#if (js && html5)
+	public function cache(formatRange:TextFormatRange, getPositions:Void->Array<Float>, wordKey:String = null):Array<Float>
+	#else
+	public function cache(formatRange:TextFormatRange, getPositions:TextLayout):Array<GlyphPosition>
+	#end
 	{
 		var formatKey:String = formatRange.format.__cacheKey;
+
 		if (formatKey == null)
 		{
 			formatKey = formatRange.format.__toCacheKey();
 		}
+		#if (!(js && html5))
 		var wordKey:String = getPositions.text;
+		#end
+
 		if (wordKey.length > 15)
 		{
 			return __cacheLongWord(wordKey, formatKey, getPositions);
@@ -47,69 +59,70 @@ class ShapeCache
 		}
 	}
 
-	private function __cacheShortWord(wordKey:String, formatKey:String, getPositions:TextLayout):Array<GlyphPosition>
+	#if (js && html5)
+	@:noCompletion private function __cacheShortWord(wordKey:String, formatKey:String, getPositions:Void->Array<Float>):Array<Float>
+	#else
+	@:noCompletion private function __cacheShortWord(wordKey:String, formatKey:String, getPositions:TextLayout):Array<GlyphPosition>
+	#end
+	{
+		if (__shortWordMap.exists(formatKey))
 		{
-			if
-			(__shortWordMap.exists(formatKey))
+			var formatMap = __shortWordMap.get(formatKey);
+			if (formatMap.exists(wordKey))
 			{
-				var formatMap = __shortWordMap.get(formatKey);
-				if
-				(formatMap.exists(wordKey))
-				{
-					return
-					formatMap.get
-					(wordKey);
-				}
+				return formatMap.get(wordKey);
+			}
 			else
-				{
-					formatMap.set
-					(wordKey, getPositions.positions);
-				}
-			}
-		else
 			{
-				var formatMap = new StringMap();
-				formatMap.set
-				(wordKey, getPositions.positions);
-				__shortWordMap.set
-				(formatKey, formatMap);
+				formatMap.set(wordKey, #if (js && html5) getPositions() #else getPositions.positions #end);
 			}
-			return
-			cast getPositions.positions
-			;
 		}
-		private function __cacheLongWord(wordKey : String, formatKey : String, getPositions : TextLayout):Array<GlyphPosition>
+		else
+		{
+			var formatMap = new StringMap();
+
+			formatMap.set(wordKey, #if (js && html5) getPositions() #else getPositions.positions #end);
+			__shortWordMap.set(formatKey, formatMap);
+		}
+		return #if (js && html5) getPositions() #else cast getPositions.positions #end;
+	}
+
+	#if (js && html5)
+	@:noCompletion private function __cacheLongWord(wordKey:String, formatKey:String, getPositions:Void->Array<Float>):Array<Float>
+	#else
+	@:noCompletion private function __cacheLongWord(wordKey:String, formatKey:String, getPositions:TextLayout):Array<GlyphPosition>
+	#end
+	{
+		var hash = hashFunction(wordKey);
+		if (__longWordMap.exists(formatKey))
+		{
+			var formatMap = __longWordMap.get(formatKey);
+			if (formatMap.exists(hash))
 			{
-				var hash = hashFunction(wordKey);
-				if (__longWordMap.exists(formatKey))
+				var measurement = formatMap.get(hash);
+				if (measurement.exists(wordKey))
 				{
-					var formatMap = __longWordMap.get(formatKey);
-					if (formatMap.exists(hash))
-					{
-						var measurement = formatMap.get(hash);
-						if (measurement.exists(wordKey))
-						{
-							return measurement.get(wordKey);
-						}
-						else
-						{
-							measurement.set(wordKey, getPositions.positions);
-						}
-					}
-					else
-					{
-						var measurement = new CacheMeasurement(wordKey, getPositions.positions);
-						formatMap.set(hash, measurement);
-					}
+					return measurement.get(wordKey);
 				}
 				else
 				{
-					var formatMap = new IntMap();
-					var measurement = new CacheMeasurement(wordKey, getPositions.positions);
-					measurement.hash = hash;
-					formatMap.set(hash, measurement);
-					__longWordMap.set(formatKey, formatMap);
+					measurement.set(wordKey, #if (js && html5) getPositions() #else getPositions.positions #end);
 				}
-				return getPositions.positions;
 			}
+			else
+			{
+				var measurement = new CacheMeasurement(wordKey, #if (js && html5) getPositions() #else getPositions.positions #end);
+				formatMap.set(hash, measurement);
+			}
+		}
+		else
+		{
+			var formatMap = new IntMap();
+			var measurement = new CacheMeasurement(wordKey, #if (js && html5) getPositions() #else getPositions.positions #end);
+			measurement.hash = hash;
+			formatMap.set(hash, measurement);
+			__longWordMap.set(formatKey, formatMap);
+		}
+		return #if (js && html5) getPositions() #else getPositions.positions #end;
 	}
+}

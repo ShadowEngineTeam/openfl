@@ -1,19 +1,17 @@
 package openfl.display._internal;
 
-import openfl.display._internal.CairoGraphics;
-import openfl.display._internal.DrawCommandReader;
-import openfl.utils._internal.Float32Array;
-import openfl.utils._internal.UInt16Array;
+import lime.math.ARGB;
+import lime.utils.Float32Array;
+import lime.utils.UInt16Array;
 import openfl.display.BitmapData;
 import openfl.display.Graphics;
 import openfl.display.MovieClip;
 import openfl.display.OpenGLRenderer;
+import openfl.display._internal.CairoGraphics;
+import openfl.display._internal.DrawCommandReader;
 import openfl.geom.ColorTransform;
 import openfl.geom.Matrix;
 import openfl.geom.Rectangle;
-#if lime
-import lime.math.ARGB;
-#end
 #if gl_stats
 import openfl.display._internal.stats.Context3DStats;
 import openfl.display._internal.stats.DrawCallContext;
@@ -30,26 +28,26 @@ import openfl.display._internal.stats.DrawCallContext;
 @SuppressWarnings("checkstyle:FieldDocComment")
 class Context3DGraphics
 {
-	private static var blankBitmapData = new BitmapData(1, 1, false, 0);
+	@:noCompletion private static var blankBitmapData = new BitmapData(1, 1, false, 0);
 
 	public static inline function getBlankBitmapData():BitmapData
 	{
 		return blankBitmapData;
 	}
-	private static var maskRender:Bool;
-	private static var tempColorTransform = new ColorTransform(1, 1, 1, 1, 0, 0, 0, 0);
-	private static var tempVerticesVector:Vector<Float> = new Vector<Float>();
-	private static var tempIndicesVector:Vector<Int> = new Vector<Int>();
-	private static var tempUvtVector:Vector<Float> = new Vector<Float>();
-	private static var tempScale9VerticesVector:Vector<Float>;
-	private static var renderOrHitTestReader:DrawCommandReader = new DrawCommandReader(null);
-	private static var buildBufferReader:DrawCommandReader = new DrawCommandReader(null);
-	private static var tempLinePathVertices:Vector<Float> = new Vector<Float>();
-	private static var tempLinePathReducedVertices:Vector<Float> = new Vector<Float>();
 
-	private static function buildBuffer(graphics:Graphics, renderer:OpenGLRenderer):Void
+	@:noCompletion private static var maskRender:Bool;
+	@:noCompletion private static var tempColorTransform = new ColorTransform(1, 1, 1, 1, 0, 0, 0, 0);
+	@:noCompletion private static var tempVerticesVector:Vector<Float> = new Vector<Float>();
+	@:noCompletion private static var tempIndicesVector:Vector<Int> = new Vector<Int>();
+	@:noCompletion private static var tempUvtVector:Vector<Float> = new Vector<Float>();
+	@:noCompletion private static var tempScale9VerticesVector:Vector<Float>;
+	@:noCompletion private static var renderOrHitTestReader:DrawCommandReader = new DrawCommandReader(null);
+	@:noCompletion private static var buildBufferReader:DrawCommandReader = new DrawCommandReader(null);
+	@:noCompletion private static var tempLinePathVertices:Vector<Float> = new Vector<Float>();
+	@:noCompletion private static var tempLinePathReducedVertices:Vector<Float> = new Vector<Float>();
+
+	@:noCompletion private static function buildBuffer(graphics:Graphics, renderer:OpenGLRenderer):Void
 	{
-
 		var quadBufferPosition = 0;
 		var triangleIndexBufferPosition = 0;
 		var vertexBufferPosition = 0;
@@ -223,7 +221,6 @@ class Context3DGraphics
 		else
 		#end
 		{
-
 			for (type in graphics.__commands.types)
 			{
 				switch (type)
@@ -590,10 +587,9 @@ class Context3DGraphics
 
 		Rectangle.__pool.release(tileRect);
 		Matrix.__pool.release(tileTransform);
-
 	}
 
-	private static function isCompatible(graphics:Graphics):Bool
+	@:noCompletion private static function isCompatible(graphics:Graphics):Bool
 	{
 		#if (openfl_force_sw_graphics || force_sw_graphics)
 		return false;
@@ -713,9 +709,7 @@ class Context3DGraphics
 
 				case LINE_STYLE:
 					var c = data.readLineStyle();
-					if (c.thickness == null)
-					{
-					}
+					if (c.thickness == null) {}
 					else
 					{
 						data.destroy();
@@ -868,7 +862,6 @@ class Context3DGraphics
 		data.destroy();
 		return cacheCompatibility(true);
 	}
-
 
 	public static function render(graphics:Graphics, renderer:OpenGLRenderer):Void
 	{
@@ -1025,7 +1018,6 @@ class Context3DGraphics
 							renderer.setShader(shader);
 							renderer.applyMatrix(uMatrix);
 							renderer.applyBitmapData(blankBitmapData, true, repeat);
-							#if lime
 							var color:ARGB = (fill : ARGB);
 							tempColorTransform.__identity();
 							var worldColorTransform = graphics.__owner.__worldColorTransform;
@@ -1039,10 +1031,6 @@ class Context3DGraphics
 							tempColorTransform.alphaOffset = color.a * worldColorTransform.alphaMultiplier + worldColorTransform.alphaOffset;
 							renderer.applyAlpha((color.a / 0xFF) * graphics.__owner.__worldAlpha);
 							renderer.applyColorTransform(tempColorTransform);
-							#else
-							renderer.applyAlpha(graphics.__owner.__worldAlpha);
-							renderer.applyColorTransform(graphics.__owner.__worldColorTransform);
-							#end
 							renderer.updateShader();
 						}
 
@@ -1249,7 +1237,6 @@ class Context3DGraphics
 									renderer.setShader(shader);
 									renderer.applyMatrix(uMatrix);
 									renderer.applyBitmapData(blankBitmapData, true, repeat);
-									#if lime
 									var color:ARGB = (fill : ARGB);
 									tempColorTransform.__identity();
 									var worldColorTransform = graphics.__owner.__worldColorTransform;
@@ -1263,10 +1250,6 @@ class Context3DGraphics
 									tempColorTransform.alphaOffset = color.a * worldColorTransform.alphaMultiplier + worldColorTransform.alphaOffset;
 									renderer.applyAlpha((color.a / 0xFF) * graphics.__owner.__worldAlpha);
 									renderer.applyColorTransform(tempColorTransform);
-									#else
-									renderer.applyAlpha(graphics.__owner.__worldAlpha);
-									renderer.applyColorTransform(graphics.__owner.__worldColorTransform);
-									#end
 									renderer.updateShader();
 								}
 
@@ -1374,7 +1357,6 @@ class Context3DGraphics
 								renderer.setShader(shader);
 								renderer.applyMatrix(renderer.__getMatrix(matrix, AUTO));
 								renderer.applyBitmapData(blankBitmapData, true, repeat);
-								#if lime
 								var color:ARGB = (fill : ARGB);
 								tempColorTransform.__identity();
 								var worldColorTransform = graphics.__owner.__worldColorTransform;
@@ -1388,10 +1370,6 @@ class Context3DGraphics
 								tempColorTransform.alphaOffset = color.a * worldColorTransform.alphaMultiplier + worldColorTransform.alphaOffset;
 								renderer.applyAlpha((color.a / 0xFF) * graphics.__owner.__worldAlpha);
 								renderer.applyColorTransform(tempColorTransform);
-								#else
-								renderer.applyAlpha(graphics.__owner.__worldAlpha);
-								renderer.applyColorTransform(graphics.__owner.__worldColorTransform);
-								#end
 								renderer.updateShader();
 
 								var vertexBuffer = blankBitmapData.getVertexBuffer(context);
@@ -1462,7 +1440,6 @@ class Context3DGraphics
 			graphics.__dirty = false;
 		}
 		graphics.__hardwareDirty = false;
-
 	}
 
 	public static function renderMask(graphics:Graphics, renderer:OpenGLRenderer):Void
@@ -1474,14 +1451,13 @@ class Context3DGraphics
 		maskRender = false;
 	}
 
-	private static function resizeIndexBuffer(graphics:Graphics, isQuad:Bool, length:Int):Void
+	@:noCompletion private static function resizeIndexBuffer(graphics:Graphics, isQuad:Bool, length:Int):Void
 	{
 		if (isQuad) return;
 
 		var buffer = (isQuad ? null /*graphics.__quadIndexBufferData*/ : graphics.__triangleIndexBufferData);
 		var position = 0, newBuffer = null;
 
-		#if lime
 		if (buffer == null)
 		{
 			newBuffer = new UInt16Array(length);
@@ -1492,7 +1468,6 @@ class Context3DGraphics
 			newBuffer.set(buffer);
 			position = buffer.length;
 		}
-		#end
 
 		if (newBuffer != null)
 		{
@@ -1522,12 +1497,11 @@ class Context3DGraphics
 		}
 	}
 
-	private static function resizeVertexBuffer(graphics:Graphics, hasUVTData:Bool, length:Int):Void
+	@:noCompletion private static function resizeVertexBuffer(graphics:Graphics, hasUVTData:Bool, length:Int):Void
 	{
 		var buffer = (hasUVTData ? graphics.__vertexBufferDataUVT : graphics.__vertexBufferData);
 		var newBuffer:Float32Array = null;
 
-		#if lime
 		if (buffer == null)
 		{
 			newBuffer = new Float32Array(length);
@@ -1537,7 +1511,6 @@ class Context3DGraphics
 			newBuffer = new Float32Array(length);
 			newBuffer.set(buffer);
 		}
-		#end
 
 		if (newBuffer != null)
 		{
@@ -1545,7 +1518,7 @@ class Context3DGraphics
 		}
 	}
 
-	private static function populateUvtVector(vertices:Vector<Float>, bitmap:BitmapData, result:Vector<Float>):Void
+	@:noCompletion private static function populateUvtVector(vertices:Vector<Float>, bitmap:BitmapData, result:Vector<Float>):Void
 	{
 		var minX = vertices[0];
 		var maxX = minX;
@@ -1587,7 +1560,7 @@ class Context3DGraphics
 		}
 	}
 
-	private static function populateBitmapUvtVector(vertices:Vector<Float>, bitmap:BitmapData, bitmapMatrix:Matrix, result:Vector<Float>):Void
+	@:noCompletion private static function populateBitmapUvtVector(vertices:Vector<Float>, bitmap:BitmapData, bitmapMatrix:Matrix, result:Vector<Float>):Void
 	{
 		if (bitmapMatrix == null)
 		{
@@ -1613,7 +1586,7 @@ class Context3DGraphics
 		}
 	}
 
-	private static function reduceBitmapLinePath(vertices:Vector<Float>, result:Vector<Float>):Int
+	@:noCompletion private static function reduceBitmapLinePath(vertices:Vector<Float>, result:Vector<Float>):Int
 	{
 		result.length = 0;
 
@@ -1623,9 +1596,7 @@ class Context3DGraphics
 			return 0;
 		}
 
-		if (numVertices >= 2
-			&& vertices[0] == vertices[vertices.length - 2]
-			&& vertices[1] == vertices[vertices.length - 1])
+		if (numVertices >= 2 && vertices[0] == vertices[vertices.length - 2] && vertices[1] == vertices[vertices.length - 1])
 		{
 			numVertices--;
 		}
@@ -1665,7 +1636,7 @@ class Context3DGraphics
 		return Std.int(result.length / 2);
 	}
 
-	private static function toScale9Position(pos:Float, scale9Start:Float, scale9Center:Float, unscaledSize:Float, scale:Float):Float
+	@:noCompletion private static function toScale9Position(pos:Float, scale9Start:Float, scale9Center:Float, unscaledSize:Float, scale:Float):Float
 	{
 		if (scale <= 0.0)
 		{

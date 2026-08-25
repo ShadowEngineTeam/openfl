@@ -1,11 +1,11 @@
 package openfl.display3D.textures;
 
-import haxe.io.Bytes;
 import haxe.Timer;
-import openfl.utils._internal.ArrayBufferView;
-import openfl.utils._internal.UInt8Array;
-import openfl.display._internal.SamplerState;
+import haxe.io.Bytes;
+import lime.utils.ArrayBufferView;
+import lime.utils.UInt8Array;
 import openfl.display.BitmapData;
+import openfl.display._internal.SamplerState;
 import openfl.events.Event;
 import openfl.utils.ByteArray;
 
@@ -99,17 +99,6 @@ import openfl.utils.ByteArray;
 	**/
 	public function uploadFromBitmapData(source:BitmapData, miplevel:UInt = 0, generateMipmap:Bool = false):Void
 	{
-		#if lime
-		/* TODO
-			if (LowMemoryMode) {
-				// shrink bitmap data
-				source = source.shrinkToHalfResolution();
-				// shrink our dimensions for upload
-				width = source.width;
-				height = source.height;
-			}
-		**/
-
 		if (source == null) return;
 
 		var width = __width >> miplevel;
@@ -131,7 +120,6 @@ import openfl.utils.ByteArray;
 		if (image == null) return;
 
 		uploadFromTypedArray(image.data, miplevel);
-		#end
 	}
 
 	/**
@@ -160,9 +148,7 @@ import openfl.utils.ByteArray;
 	**/
 	public function uploadFromByteArray(data:ByteArray, byteArrayOffset:UInt, miplevel:UInt = 0):Void
 	{
-		#if lime
 		uploadFromTypedArray(new UInt8Array(data.toArrayBuffer(), byteArrayOffset), miplevel);
-		#end
 	}
 
 	/**

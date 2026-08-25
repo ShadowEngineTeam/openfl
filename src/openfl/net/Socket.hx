@@ -1,13 +1,12 @@
 package openfl.net;
 
+import haxe.Serializer;
+import haxe.Timer;
+import haxe.Unserializer;
 import haxe.io.Bytes;
 import haxe.io.BytesBuffer;
 import haxe.io.Eof;
 import haxe.io.Error;
-import haxe.Serializer;
-import haxe.Timer;
-import haxe.Unserializer;
-import openfl.utils._internal.Lib;
 import openfl.errors.IOError;
 import openfl.errors.SecurityError;
 import openfl.events.Event;
@@ -18,6 +17,7 @@ import openfl.utils.ByteArray;
 import openfl.utils.Endian;
 import openfl.utils.IDataInput;
 import openfl.utils.IDataOutput;
+import openfl.utils._internal.Lib;
 #if sys
 import sys.net.Host;
 import sys.net.Socket as SysSocket;

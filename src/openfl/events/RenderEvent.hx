@@ -1,6 +1,5 @@
 package openfl.events;
 
-// import openfl.utils.ObjectPool;
 import openfl.display.DisplayObjectRenderer;
 import openfl.geom.ColorTransform;
 import openfl.geom.Matrix;
@@ -75,9 +74,6 @@ import openfl.geom.Matrix;
 		The display object renderer being used for this render.
 	**/
 	public var renderer(default, null):DisplayObjectRenderer;
-
-	// @:noCompletion private static var __pool:ObjectPool<RenderEvent> = new ObjectPool<RenderEvent>(function() return new RenderEvent(null),
-	// function(event) event.__init());
 
 	/**
 		Creates an Event object that contains information about render events.

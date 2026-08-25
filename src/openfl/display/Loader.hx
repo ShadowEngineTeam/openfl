@@ -10,8 +10,8 @@ import openfl.events.ProgressEvent;
 import openfl.events.UncaughtErrorEvents;
 import openfl.net.URLRequest;
 import openfl.system.LoaderContext;
-import openfl.utils.Assets;
 import openfl.utils.AssetLibrary;
+import openfl.utils.Assets;
 import openfl.utils.ByteArray;
 import openfl.utils.Future;
 
@@ -752,7 +752,6 @@ class Loader extends DisplayObjectContainer
 		}
 	}
 
-	@SuppressWarnings("checkstyle:Dynamic")
 	@:noCompletion private function __dispatchError(error:Dynamic):Void
 	{
 		if (Std.isOfType(error, Event))
@@ -804,7 +803,6 @@ class Loader extends DisplayObjectContainer
 		#end
 	}
 
-	@SuppressWarnings("checkstyle:Dynamic")
 	@:noCompletion private function Loader_onError(error:Dynamic):Void
 	{
 		// TODO: Dispatch HTTPStatusEvent

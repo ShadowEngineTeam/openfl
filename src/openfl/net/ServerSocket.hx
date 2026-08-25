@@ -3,12 +3,12 @@ package openfl.net;
 import haxe.io.Error;
 import openfl.Lib;
 import openfl.errors.ArgumentError;
+import openfl.errors.Error as OFLError;
 import openfl.errors.IOError;
 import openfl.errors.RangeError;
-import openfl.errors.Error as OFLError;
 import openfl.events.Event;
-import openfl.events.EventType;
 import openfl.events.EventDispatcher;
+import openfl.events.EventType;
 import openfl.events.ServerSocketConnectEvent;
 import openfl.net.Socket as OFLSocket;
 import openfl.utils.ByteArray;
@@ -313,7 +313,7 @@ class ServerSocket extends EventDispatcher
 		}
 	}
 
-	private function get_isSupported():Bool
+	@:noCompletion private function get_isSupported():Bool
 	{
 		return true;
 	}

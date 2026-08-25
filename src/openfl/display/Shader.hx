@@ -1,17 +1,17 @@
 package openfl.display;
 
-import openfl.display3D.Context3DWrapMode;
-import openfl.display3D.Context3DMipFilter;
-import openfl.display3D.Context3DTextureFilter;
+import lime.graphics.opengl.GLProgram;
+import lime.graphics.opengl.GLShader;
+import lime.utils.Float32Array;
+import lime.utils.Log;
+import openfl.Lib;
 import openfl.display._internal.ShaderBuffer;
 import openfl.display3D.Context3D;
+import openfl.display3D.Context3DMipFilter;
+import openfl.display3D.Context3DTextureFilter;
+import openfl.display3D.Context3DWrapMode;
 import openfl.display3D.Program3D;
-import openfl.display3D._internal.GLProgram;
-import openfl.display3D._internal.GLShader;
 import openfl.utils.ByteArray;
-import openfl.utils._internal.Float32Array;
-import openfl.utils._internal.Log;
-import openfl.Lib;
 
 /**
 	// TODO: Document GLSL Shaders
@@ -189,7 +189,7 @@ class Shader
 
 		This property is not available on the Flash target.
 	**/
-	@SuppressWarnings("checkstyle:Dynamic") public var glProgram(default, null):GLProgram;
+	public var glProgram(default, null):GLProgram;
 
 	/**
 		The default GLSL vertex header, before being applied to the vertex source.
@@ -296,6 +296,7 @@ class Shader
 	@:noCompletion private var __textureCoord:ShaderParameter<Float>;
 	@:noCompletion private var __texture:ShaderInput<BitmapData>;
 	@:noCompletion private var __textureSize:ShaderParameter<Float>;
+	@:noCompletion private var __fieldList:Array<String> = null;
 
 	/**
 		Creates a new Shader instance.
@@ -527,12 +528,10 @@ class Shader
 
 		__context.__bindGLArrayBuffer(null);
 
-		#if lime
 		if (__context.__context.type == OPENGL)
 		{
 			gl.disable(gl.TEXTURE_2D);
 		}
-		#end
 	}
 
 	@:noCompletion private function __enable():Void
@@ -557,12 +556,10 @@ class Shader
 			textureCount++;
 		}
 
-		#if lime
 		if (__context.__context.type == OPENGL && textureCount > 0)
 		{
 			gl.enable(gl.TEXTURE_2D);
 		}
-		#end
 	}
 
 	@:noCompletion private function __init():Void
@@ -592,7 +589,6 @@ class Shader
 		var complexBlendsSupported = OpenGLRenderer.__complexBlendsSupported && isFragment;
 		var standardDerivativesSupported = OpenGLRenderer.__standardDerivativesSupported && isFragment;
 
-		#if lime
 		if (__context.__context.type == OPENGL)
 		{
 			complexBlendsSupported = complexBlendsSupported && (glVersion == "150" || !StringTools.startsWith(glVersion, "1"));
@@ -601,20 +597,17 @@ class Shader
 		{
 			complexBlendsSupported = complexBlendsSupported && !StringTools.startsWith(glVersion, "1");
 		}
-		#end
 
 		if (complexBlendsSupported)
 		{
 			extensions += "#extension GL_KHR_blend_equation_advanced : enable\n";
 
-			#if lime
 			if (__context.__context.type == OPENGL)
 			{
 				// compiling without this gives the error
 				// 'gl_SampleID' : required extension not requested: GL_ARB_sample_shading
 				extensions += "#extension GL_ARB_sample_shading : enable\n";
 			}
-			#end
 		}
 
 		if (standardDerivativesSupported)
@@ -927,9 +920,9 @@ class Shader
 						parameter.name = name;
 						parameter.type = parameterType;
 						parameter.__arrayLength = arrayLength;
-						#if lime
+
 						if (arrayLength > 0) parameter.__uniformMatrix = new Float32Array(arrayLength * arrayLength);
-						#end
+
 						parameter.__isFloat = true;
 						parameter.__isUniform = isUniform;
 						parameter.__length = length;
@@ -1297,6 +1290,16 @@ class Shader
 		}
 	}
 
+	@:noCompletion private function thisHasField(name:String)
+	{
+		// Reflect.hasField(this, name) is REALLY expensive so we cache the result.
+		if (__fieldList == null)
+		{
+			__fieldList = Reflect.fields(this).concat(Type.getInstanceFields(Type.getClass(this)));
+		}
+		return __fieldList.indexOf(name) != -1;
+	}
+
 	// Get & Set Methods
 	@:noCompletion private function get_data():ShaderData
 	{
@@ -1445,18 +1448,6 @@ class Shader
 		}
 
 		return __glVertexSource = value;
-	}
-
-	private var __fieldList:Array<String> = null;
-
-	private function thisHasField(name:String)
-	{
-		// Reflect.hasField(this, name) is REALLY expensive so we cache the result.
-		if (__fieldList == null)
-		{
-			__fieldList = Reflect.fields(this).concat(Type.getInstanceFields(Type.getClass(this)));
-		}
-		return __fieldList.indexOf(name) != -1;
 	}
 }
 

@@ -1,6 +1,9 @@
 package openfl.display;
 
 import haxe.Timer;
+import lime.graphics.RenderContext;
+import lime.graphics.opengl.GL;
+import openfl.Vector;
 import openfl.display3D.Context3D;
 import openfl.display3D.Context3DProfile;
 import openfl.display3D.Context3DRenderMode;
@@ -10,11 +13,6 @@ import openfl.events.ErrorEvent;
 import openfl.events.Event;
 import openfl.events.EventDispatcher;
 import openfl.geom.Matrix3D;
-import openfl.Vector;
-#if lime
-import lime.graphics.opengl.GL;
-import lime.graphics.RenderContext;
-#end
 
 /**
 	The Stage3D class provides a display area and a programmable rendering
@@ -270,7 +268,6 @@ class Stage3D extends EventDispatcher
 
 	@:noCompletion private function __createContext():Void
 	{
-		#if lime
 		var stage = __stage;
 		var renderer = stage.__renderer;
 
@@ -289,7 +286,6 @@ class Stage3D extends EventDispatcher
 			#end
 			__dispatchCreate();
 		}
-		#end
 	}
 
 	@:noCompletion private function __dispatchError():Void

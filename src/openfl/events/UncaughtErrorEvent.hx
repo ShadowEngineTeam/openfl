@@ -1,7 +1,5 @@
 package openfl.events;
 
-// import openfl.utils.ObjectPool;
-
 /**
 	An UncaughtErrorEvent object is dispatched by an instance of the
 	UncaughtErrorEvents class when an uncaught error occurs. An uncaught error
@@ -150,9 +148,6 @@ class UncaughtErrorEvent extends ErrorEvent
 		all runtime versions.
 	**/
 	public var error(default, null):Dynamic;
-
-	// @:noCompletion private static var __pool:ObjectPool<UncaughtErrorEvent> = new ObjectPool<UncaughtErrorEvent>(function() return
-	// 	new UncaughtErrorEvent(null), function(event) event.__init());
 
 	/**
 		Creates an UncaughtErrorEvent object that contains information about

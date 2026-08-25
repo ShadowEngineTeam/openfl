@@ -1,7 +1,5 @@
 package openfl.events;
 
-// import openfl.utils.ObjectPool;
-
 /**
 	The Stage object dispatches a FullScreenEvent object whenever the Stage
 	enters or leaves full-screen display mode. There is only one type of
@@ -52,9 +50,6 @@ class FullScreenEvent extends ActivityEvent
 		not (`false`).
 	**/
 	public var interactive:Bool;
-
-	// @:noCompletion private static var __pool:ObjectPool<FullScreenEvent> = new ObjectPool<FullScreenEvent>(function() return new FullScreenEvent(null),
-	// function(event) event.__init());
 
 	/**
 		Creates an event object that contains information about `fullScreen`

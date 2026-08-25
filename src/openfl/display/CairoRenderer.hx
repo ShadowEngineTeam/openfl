@@ -1,5 +1,9 @@
 package openfl.display;
 
+import lime.graphics.CairoRenderContext;
+import lime.graphics.cairo.Cairo;
+import lime.graphics.cairo.CairoOperator;
+import lime.math.Matrix3;
 import openfl.display._internal.CairoBitmap;
 import openfl.display._internal.CairoBitmapData;
 import openfl.display._internal.CairoDisplayObject;
@@ -11,12 +15,6 @@ import openfl.display._internal.CairoTextField;
 import openfl.display._internal.CairoTilemap;
 import openfl.geom.Matrix;
 import openfl.geom.Rectangle;
-#if lime
-import lime.graphics.cairo.Cairo;
-import lime.graphics.cairo.CairoOperator;
-import lime.graphics.CairoRenderContext;
-import lime.math.Matrix3;
-#end
 
 /**
 	**BETA**
@@ -36,14 +34,12 @@ class CairoRenderer extends DisplayObjectRenderer
 	/**
 		The current Cairo render context
 	**/
-	@SuppressWarnings("checkstyle:Dynamic")
-	public var cairo:#if lime CairoRenderContext #else Dynamic #end;
+	public var cairo:CairoRenderContext;
 
 	@:noCompletion private var __matrix:Matrix;
-	@SuppressWarnings("checkstyle:Dynamic") @:noCompletion private var __matrix3:#if lime Matrix3 #else Dynamic #end;
+	@:noCompletion private var __matrix3:Matrix3;
 
-	@SuppressWarnings("checkstyle:Dynamic")
-	@:noCompletion private function new(cairo:#if lime Cairo #else Dynamic #end)
+	@:noCompletion private function new(cairo:Cairo)
 	{
 		super();
 
@@ -61,8 +57,7 @@ class CairoRenderer extends DisplayObjectRenderer
 		Set the matrix value for the current render context, or (optionally) another Cairo
 		object
 	**/
-	@SuppressWarnings("checkstyle:Dynamic")
-	public function applyMatrix(transform:Matrix, cairo:#if lime Cairo #else Dynamic #end = null):Void
+	public function applyMatrix(transform:Matrix, cairo:Cairo = null):Void
 	{
 		if (cairo == null) cairo = this.cairo;
 
@@ -236,10 +231,8 @@ class CairoRenderer extends DisplayObjectRenderer
 		__setBlendModeCairo(cairo, value);
 	}
 
-	@SuppressWarnings("checkstyle:Dynamic")
-	@:noCompletion private function __setBlendModeCairo(cairo:#if lime Cairo #else Dynamic #end, value:BlendMode):Void
+	@:noCompletion private function __setBlendModeCairo(cairo:Cairo, value:BlendMode):Void
 	{
-		#if lime
 		switch (value)
 		{
 			case ADD:
@@ -287,6 +280,5 @@ class CairoRenderer extends DisplayObjectRenderer
 			default:
 				cairo.setOperator(CairoOperator.OVER);
 		}
-		#end
 	}
 }

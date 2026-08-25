@@ -1,9 +1,12 @@
 package openfl.display;
 
-import openfl.display._internal.Context3DGraphics;
+import lime.graphics.RenderContext;
+import lime.graphics.RenderContextType;
+import lime.graphics.cairo.Cairo;
 import openfl.display.Bitmap;
 import openfl.display.DisplayObject;
 import openfl.display.Tilemap;
+import openfl.display._internal.Context3DGraphics;
 import openfl.display3D.Context3D;
 import openfl.display3D.textures.MultiBufferTexture;
 import openfl.events.EventDispatcher;
@@ -14,11 +17,6 @@ import openfl.geom.Matrix;
 import openfl.geom.Point;
 import openfl.geom.Rectangle;
 import openfl.text.TextField;
-#if lime
-import lime.graphics.cairo.Cairo;
-import lime.graphics.RenderContext;
-import lime.graphics.RenderContextType;
-#end
 
 @:access(openfl.display._internal.Context3DGraphics)
 @:access(lime.graphics.ImageBuffer)
@@ -42,14 +40,14 @@ class DisplayObjectRenderer extends EventDispatcher
 	@:noCompletion private var __allowSmoothing:Bool;
 	@:noCompletion private var __blendMode:BlendMode;
 	@:noCompletion private var __cleared:Bool;
-	@SuppressWarnings("checkstyle:Dynamic") @:noCompletion private var __context:#if lime RenderContext #else Dynamic #end;
+	@:noCompletion private var __context:RenderContext;
 	@:noCompletion private var __overrideBlendMode:BlendMode;
 	@:noCompletion private var __pixelRatio:Float;
 	@:noCompletion private var __roundPixels:Bool;
 	@:noCompletion private var __stage:Stage;
 	@:noCompletion private var __tempColorTransform:ColorTransform;
 	@:noCompletion private var __transparent:Bool;
-	@SuppressWarnings("checkstyle:Dynamic") @:noCompletion private var __type:#if lime RenderContextType #else Dynamic #end;
+	@:noCompletion private var __type:RenderContextType;
 	@:noCompletion private var __worldAlpha:Float;
 	@:noCompletion private var __worldColorTransform:ColorTransform;
 	@:noCompletion private var __worldTransform:Matrix;
@@ -103,7 +101,7 @@ class DisplayObjectRenderer extends EventDispatcher
 	@:noCompletion private function __renderEvent(displayObject:DisplayObject):Void
 	{
 		var renderer = this;
-		#if lime
+
 		if (displayObject.__customRenderEvent != null && displayObject.__renderable)
 		{
 			displayObject.__customRenderEvent.allowSmoothing = renderer.__allowSmoothing;
@@ -142,7 +140,6 @@ class DisplayObjectRenderer extends EventDispatcher
 				renderer.setViewport();
 			}
 		}
-		#end
 	}
 
 	@:noCompletion private function __resize(width:Int, height:Int):Void {}
@@ -340,10 +337,8 @@ class DisplayObjectRenderer extends EventDispatcher
 		return buffer;
 	}
 
-	@:noCompletion private function __clipCacheBounds(displayObject:DisplayObject, renderer:DisplayObjectRenderer, bitmapMatrix:Matrix,
-		rect:Rectangle):Bool
+	@:noCompletion private function __clipCacheBounds(displayObject:DisplayObject, renderer:DisplayObjectRenderer, bitmapMatrix:Matrix, rect:Rectangle):Bool
 	{
-		#if lime
 		if (renderer.__type != OPENGL) return false;
 		if (rect.width <= 0 || rect.height <= 0) return false;
 
@@ -399,7 +394,6 @@ class DisplayObjectRenderer extends EventDispatcher
 
 		Rectangle.__pool.release(clipRect);
 		return true;
-		#end
 
 		return false;
 	}
@@ -411,6 +405,7 @@ class DisplayObjectRenderer extends EventDispatcher
 		cacheBounds.width = rect.width > 0 ? Math.ceil((rect.width + 1) * pixelRatio) : 0;
 		cacheBounds.height = rect.height > 0 ? Math.ceil((rect.height + 1) * pixelRatio) : 0;
 	}
+
 	@:noCompletion private function __updateCacheBitmap(displayObject:DisplayObject, force:Bool):Bool
 	{
 		if (displayObject == null) return false;
@@ -422,7 +417,7 @@ class DisplayObjectRenderer extends EventDispatcher
 				var bitmap:Bitmap = cast displayObject;
 				// TODO: Handle filters without an intermediate draw
 				if (bitmap.__bitmapData == null
-					|| (bitmap.__filters == null #if lime && renderer.__type == OPENGL #end && bitmap.__cacheBitmap == null)) return false;
+					|| (bitmap.__filters == null && renderer.__type == OPENGL && bitmap.__cacheBitmap == null)) return false;
 				force = (bitmap.__bitmapData.image != null && bitmap.__bitmapData.image.version != bitmap.__imageVersion)
 					|| (bitmap.__bitmapData.__texture != null
 						&& !bitmap.__bitmapData.readable
@@ -430,19 +425,17 @@ class DisplayObjectRenderer extends EventDispatcher
 
 			case TEXT_FIELD:
 				var textField:TextField = cast displayObject;
-				if (textField.__filters == null #if lime && renderer.__type == OPENGL #end && textField.__cacheBitmap == null
-					&& !textField.__domRender) return false;
+				if (textField.__filters == null && renderer.__type == OPENGL && textField.__cacheBitmap == null && !textField.__domRender) return false;
 				if (force) textField.__renderDirty = true;
 				force = force || textField.__dirty;
 
 			case TILEMAP:
 				var tilemap:Tilemap = cast displayObject;
-				if (tilemap.__filters == null #if lime && renderer.__type == OPENGL #end && tilemap.__cacheBitmap == null) return false;
+				if (tilemap.__filters == null && renderer.__type == OPENGL && tilemap.__cacheBitmap == null) return false;
 
 			default:
 		}
 
-		#if lime
 		if (displayObject.__isCacheBitmapRender) return false;
 		#if openfl_disable_cacheasbitmap
 		return false;
@@ -583,7 +576,9 @@ class DisplayObjectRenderer extends EventDispatcher
 						desiredCacheBounds = Rectangle.__pool.get();
 						__getFilterCacheBounds(clippedRect, pixelRatio, desiredCacheBounds);
 
-						if (!needRender && displayObject.__cacheBitmapBounds != null && !displayObject.__cacheBitmapBounds.equals(desiredCacheBounds))
+						if (!needRender
+							&& displayObject.__cacheBitmapBounds != null
+							&& !displayObject.__cacheBitmapBounds.equals(desiredCacheBounds))
 						{
 							needRender = true;
 						}
@@ -779,7 +774,6 @@ class DisplayObjectRenderer extends EventDispatcher
 
 			if (needRender)
 			{
-				#if lime
 				if (displayObject.__cacheBitmapRenderer == null || renderType != displayObject.__cacheBitmapRenderer.__type)
 				{
 					if (renderType == OPENGL)
@@ -801,9 +795,6 @@ class DisplayObjectRenderer extends EventDispatcher
 					displayObject.__cacheBitmapRenderer.__worldTransform = new Matrix();
 					displayObject.__cacheBitmapRenderer.__worldColorTransform = new ColorTransform();
 				}
-				#else
-				return false;
-				#end
 
 				if (displayObject.__cacheBitmapColorTransform == null) displayObject.__cacheBitmapColorTransform = new ColorTransform();
 
@@ -1118,7 +1109,6 @@ class DisplayObjectRenderer extends EventDispatcher
 					// object/transform invalidation flow.
 					displayObject.__graphics.__softwareDirty = false;
 				}
-
 			}
 
 			if (updateTransform || needRender)
@@ -1155,9 +1145,6 @@ class DisplayObjectRenderer extends EventDispatcher
 		}
 
 		return updated;
-		#else
-		return false;
-		#end
 	}
 
 	@:noCompletion private inline function __affineChanged(a:Matrix, b:Matrix, eps = 1e-4):Bool

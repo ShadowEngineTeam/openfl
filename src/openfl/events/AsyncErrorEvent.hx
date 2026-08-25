@@ -1,7 +1,5 @@
 package openfl.events;
 
-// import openfl.utils.ObjectPool;
-
 /**
 	An object dispatches an AsyncErrorEvent when an exception is thrown from
 	native asynchronous code, which could be from, for example,
@@ -30,9 +28,6 @@ class AsyncErrorEvent extends ErrorEvent
 		The exception that was thrown.
 	**/
 	public var error:Dynamic;
-
-	// @:noCompletion private static var __pool:ObjectPool<AsyncErrorEvent> = new ObjectPool<AsyncErrorEvent>(function() return new AsyncErrorEvent(null),
-	// function(event) event.__init());
 
 	/**
 		Creates an AsyncErrorEvent object that contains information about

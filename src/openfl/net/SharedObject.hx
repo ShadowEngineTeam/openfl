@@ -1,19 +1,17 @@
 package openfl.net;
 
-import haxe.io.Bytes;
-import haxe.io.Path;
 import haxe.Serializer;
 import haxe.Unserializer;
+import haxe.io.Bytes;
+import haxe.io.Path;
+import lime.app.Application;
+import lime.system.System;
 import openfl.errors.Error;
 import openfl.events.EventDispatcher;
 import openfl.utils.Object;
-#if lime
-import lime.app.Application;
-import lime.system.System;
-#end
 #if sys
-import sys.io.File;
 import sys.FileSystem;
+import sys.io.File;
 #end
 
 /**
@@ -178,8 +176,6 @@ class SharedObject extends EventDispatcher
 		shared object instead.
 	**/
 	public static var defaultObjectEncoding:ObjectEncoding = ObjectEncoding.DEFAULT;
-
-	// @:noCompletion @:dox(hide) @:require(flash11_7) public static var preventBackup:Bool;
 
 	/**
 		Indicates the object on which callback methods are invoked. The
@@ -363,8 +359,6 @@ class SharedObject extends EventDispatcher
 	}
 	#end
 
-	// @:noCompletion @:dox(hide) public static function deleteAll (url:String):Int;
-
 	/**
 		Immediately writes a locally persistent shared object to a local file. If
 		you don't use this method, Flash Player writes the shared object to a file
@@ -450,8 +444,6 @@ class SharedObject extends EventDispatcher
 
 		return SharedObjectFlushStatus.FLUSHED;
 	}
-
-	// @:noCompletion @:dox(hide) public static function getDiskUsage (url:String):Int;
 
 	/**
 		Returns a reference to a locally persistent shared object that is only
@@ -625,13 +617,11 @@ class SharedObject extends EventDispatcher
 		if (__sharedObjects == null)
 		{
 			__sharedObjects = new Map();
-			// Lib.application.onExit.add (application_onExit);
-			#if lime
+
 			if (Application.current != null)
 			{
 				Application.current.onExit.add(application_onExit);
 			}
-			#end
 		}
 
 		var id = localPath + "/" + name;
@@ -813,7 +803,6 @@ class SharedObject extends EventDispatcher
 
 	@:noCompletion private static function __getPath(localPath:String, name:String):String
 	{
-		#if lime
 		var path = System.applicationStorageDirectory + "/" + localPath + "/";
 
 		name = StringTools.replace(name, "//", "/");
@@ -843,9 +832,6 @@ class SharedObject extends EventDispatcher
 		}
 
 		return path + name + ".sol";
-		#else
-		return name + ".sol";
-		#end
 	}
 
 	@:noCompletion private static function __mkdir(directory:String):Void

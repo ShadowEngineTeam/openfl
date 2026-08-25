@@ -1,12 +1,11 @@
 package openfl.text;
 
 import haxe.Timer;
-import openfl.text._internal.HTMLParser;
-import openfl.text._internal.TextEngine;
-import openfl.text._internal.TextFormatRange;
-import openfl.text._internal.TextLayoutGroup;
-import openfl.text._internal.UTF8String;
-import openfl.utils._internal.Log;
+import lime.system.Clipboard;
+import lime.ui.KeyCode;
+import lime.ui.KeyModifier;
+import lime.utils.Log;
+import openfl.Lib;
 import openfl.display.DisplayObject;
 import openfl.display.Graphics;
 import openfl.display.InteractiveObject;
@@ -21,14 +20,13 @@ import openfl.events.TextEvent;
 import openfl.geom.Matrix;
 import openfl.geom.Rectangle;
 import openfl.net.URLRequest;
+import openfl.text._internal.HTMLParser;
+import openfl.text._internal.TextEngine;
+import openfl.text._internal.TextFormatRange;
+import openfl.text._internal.TextLayoutGroup;
+import openfl.text._internal.UTF8String;
 import openfl.ui.Keyboard;
 import openfl.ui.MouseCursor;
-import openfl.Lib;
-#if lime
-import lime.system.Clipboard;
-import lime.ui.KeyCode;
-import lime.ui.KeyModifier;
-#end
 /**
 	The TextField class is used to create display objects for text display and
 	input.
@@ -1543,11 +1541,9 @@ class TextField extends InteractiveObject
 	{
 		if (__inputEnabled && stage != null)
 		{
-			#if lime
 			stage.window.textInputEnabled = false;
 			stage.window.onTextInput.remove(window_onTextInput);
 			stage.window.onKeyDown.remove(window_onKeyDown);
-			#end
 
 			__inputEnabled = false;
 			__stopCursorTimer();
@@ -1584,7 +1580,6 @@ class TextField extends InteractiveObject
 
 	@:noCompletion private function __enableInput():Void
 	{
-		#if lime
 		if (stage != null)
 		{
 			stage.window.textInputEnabled = true;
@@ -1627,7 +1622,6 @@ class TextField extends InteractiveObject
 				__startCursorTimer();
 			}
 		}
-		#end
 	}
 
 	@:noCompletion private inline function __getAdvance(position):Float
@@ -3208,7 +3202,7 @@ class TextField extends InteractiveObject
 
 	@:noCompletion private function this_onKeyDown(event:KeyboardEvent):Void
 	{
-		#if (lime && !openfl_doc_gen)
+		#if !openfl_doc_gen
 		if (selectable && type != INPUT && event.keyCode == Keyboard.C && (event.commandKey || event.ctrlKey))
 		{
 			if (__caretIndex != __selectionIndex && !displayAsPassword)
@@ -3276,7 +3270,6 @@ class TextField extends InteractiveObject
 		}
 	}
 
-	#if lime
 	@:noCompletion private function window_onKeyDown(key:KeyCode, modifier:KeyModifier):Void
 	{
 		inline function isModifierPressed()
@@ -3481,7 +3474,6 @@ class TextField extends InteractiveObject
 				setSelection(__selectionIndex, __caretIndex);
 
 			case C:
-				#if lime
 				if (isModifierPressed())
 				{
 					if (__caretIndex != __selectionIndex && !displayAsPassword)
@@ -3489,10 +3481,8 @@ class TextField extends InteractiveObject
 						Clipboard.text = __text.substring(__caretIndex, __selectionIndex);
 					}
 				}
-				#end
 
 			case X:
-				#if lime
 				if (isModifierPressed())
 				{
 					if (__caretIndex != __selectionIndex && !displayAsPassword)
@@ -3516,10 +3506,9 @@ class TextField extends InteractiveObject
 						#end
 					}
 				}
-				#end
 
+			#if !js
 			case V:
-				#if lime
 				if (#if mac modifier.metaKey #else modifier.ctrlKey && !modifier.altKey #end)
 				{
 					if (Clipboard.text != null)
@@ -3553,7 +3542,7 @@ class TextField extends InteractiveObject
 					// TODO: does this need to occur?
 					__textEngine.textFormatRanges[__textEngine.textFormatRanges.length - 1].end = __text.length;
 				}
-				#end
+			#end
 
 			case A if (selectable):
 				if (isModifierPressed())
@@ -3564,7 +3553,6 @@ class TextField extends InteractiveObject
 			default:
 		}
 	}
-	#end
 
 	@:noCompletion private function window_onTextInput(value:String):Void
 	{

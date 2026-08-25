@@ -1,5 +1,7 @@
 package openfl.display;
 
+import lime.graphics.opengl.ext.KHR_debug;
+import lime.math.Matrix4;
 import openfl.display._internal.Context3DBitmap;
 import openfl.display._internal.Context3DBitmapData;
 import openfl.display._internal.Context3DDisplayObject;
@@ -11,17 +13,13 @@ import openfl.display._internal.Context3DTextField;
 import openfl.display._internal.Context3DTilemap;
 import openfl.display._internal.Context3DVideo;
 import openfl.display._internal.ShaderBuffer;
-import openfl.utils.ObjectPool;
-import openfl.display3D.Context3DClearMask;
 import openfl.display3D.Context3D;
+import openfl.display3D.Context3DClearMask;
+import openfl.display3D.OpenFLRenderContext;
 import openfl.geom.ColorTransform;
 import openfl.geom.Matrix;
 import openfl.geom.Rectangle;
-#if lime
-import lime.graphics.opengl.ext.KHR_debug;
-import openfl.display3D.OpenFLRenderContext;
-import lime.math.Matrix4;
-#end
+import openfl.utils.ObjectPool;
 
 /**
 	**BETA**
@@ -93,13 +91,13 @@ class OpenGLRenderer extends DisplayObjectRenderer
 	@SuppressWarnings("checkstyle:Dynamic") @:noCompletion private var __gl:#if lime openfl.display3D.OpenFLRenderContext #else Dynamic #end;
 	@:noCompletion private var __height:Int;
 	@:noCompletion private var __maskShader:Context3DMaskShader;
-	@SuppressWarnings("checkstyle:Dynamic") @:noCompletion private var __matrix:#if lime Matrix4 #else Dynamic #end;
+	@:noCompletion private var __matrix:Matrix4;
 	@:noCompletion private var __maskObjects:Array<DisplayObject>;
 	@:noCompletion private var __numClipRects:Int;
 	@:noCompletion private var __offsetX:Int;
 	@:noCompletion private var __offsetY:Int;
-	@SuppressWarnings("checkstyle:Dynamic") @:noCompletion private var __projection:#if lime Matrix4 #else Dynamic #end;
-	@SuppressWarnings("checkstyle:Dynamic") @:noCompletion private var __projectionFlipped:#if lime Matrix4 #else Dynamic #end;
+	@:noCompletion private var __projection:Matrix4;
+	@:noCompletion private var __projectionFlipped:Matrix4;
 	@:noCompletion private var __scrollRectMasks:ObjectPool<Shape>;
 	@:noCompletion private var __softwareRenderer:DisplayObjectRenderer;
 	@:noCompletion private var __stencilReference:Int;
@@ -127,10 +125,7 @@ class OpenGLRenderer extends DisplayObjectRenderer
 			Graphics.maxTextureWidth = Graphics.maxTextureHeight = __gl.getParameter(__gl.MAX_TEXTURE_SIZE);
 		}
 
-		#if lime
 		__matrix = new Matrix4();
-		#end
-
 		__values = new Array();
 
 		#if gl_debug
@@ -176,20 +171,15 @@ class OpenGLRenderer extends DisplayObjectRenderer
 
 		__softwareRenderer = new CairoRenderer(null);
 
-		#if lime
 		__type = OPENGL;
-		#end
-
 		__setBlendMode(NORMAL);
 		__context3D.__setGLBlend(true);
 
 		__clipRects = new Array();
 		__maskObjects = new Array();
 		__numClipRects = 0;
-		#if lime
 		__projection = new Matrix4();
 		__projectionFlipped = new Matrix4();
-		#end
 		__stencilReference = 0;
 		__tempRect = new Rectangle();
 
@@ -350,8 +340,7 @@ class OpenGLRenderer extends DisplayObjectRenderer
 		OpenGL rendering. Repeated calls to this method will return the same object with
 		new values, so it will need to be cloned if the result must be cached
 	**/
-	@SuppressWarnings("checkstyle:Dynamic")
-	public function getMatrix(transform:Matrix):#if lime Matrix4 #else Dynamic #end
+	public function getMatrix(transform:Matrix):Matrix4
 	{
 		if (gl != null)
 		{

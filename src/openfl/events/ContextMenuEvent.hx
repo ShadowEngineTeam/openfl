@@ -1,6 +1,5 @@
 package openfl.events;
 
-// import openfl.utils.ObjectPool;
 import openfl.display.InteractiveObject;
 
 /**
@@ -69,9 +68,6 @@ class ContextMenuEvent extends Event
 		reasons applies.
 	**/
 	public var mouseTarget:InteractiveObject;
-
-	// @:noCompletion private static var __pool:ObjectPool<ContextMenuEvent> = new ObjectPool<ContextMenuEvent>(function() return new ContextMenuEvent(null),
-	// function(event) event.__init());
 
 	/**
 		Creates an Event object that contains specific information about menu

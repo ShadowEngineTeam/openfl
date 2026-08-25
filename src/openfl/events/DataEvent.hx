@@ -1,7 +1,5 @@
 package openfl.events;
 
-// import openfl.utils.ObjectPool;
-
 /**
 	An object dispatches a DataEvent object when raw data has completed
 	loading. There are two types of data event:
@@ -45,9 +43,6 @@ class DataEvent extends TextEvent
 		The raw data loaded into Flash Player or Adobe AIR.
 	**/
 	public var data:String;
-
-	// @:noCompletion private static var __pool:ObjectPool<DataEvent> = new ObjectPool<DataEvent>(function() return new DataEvent(null),
-	// function(event) event.__init());
 
 	/**
 		Creates an event object that contains information about data events.

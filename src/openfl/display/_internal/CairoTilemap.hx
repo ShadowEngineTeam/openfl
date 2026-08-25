@@ -1,20 +1,18 @@
 package openfl.display._internal;
 
+import lime.graphics.cairo.CairoFilter;
+import lime.graphics.cairo.CairoPattern;
+import lime.graphics.cairo.CairoSurface;
+import lime.math.Matrix3;
 import openfl.display.BitmapData;
 import openfl.display.BlendMode;
 import openfl.display.CairoRenderer;
 import openfl.display.TileContainer;
 import openfl.display.Tilemap;
-import openfl.display.Tileset;
 import openfl.display.Tileset.TileData;
+import openfl.display.Tileset;
 import openfl.geom.Matrix;
 import openfl.geom.Rectangle;
-#if lime
-import lime.graphics.cairo.CairoFilter;
-import lime.graphics.cairo.CairoPattern;
-import lime.graphics.cairo.CairoSurface;
-import lime.math.Matrix3;
-#end
 
 @:access(lime.graphics.ImageBuffer)
 @:access(openfl.display.BitmapData)
@@ -42,8 +40,7 @@ class CairoTilemap
 		renderer.__pushMaskRect(rect, tilemap.__renderTransform);
 
 		renderTileContainer(tilemap.__group, renderer, tilemap.__renderTransform, tilemap.__tileset, (renderer.__allowSmoothing && tilemap.smoothing),
-			tilemap.tileAlphaEnabled, alpha, tilemap.tileBlendModeEnabled, tilemap.__worldBlendMode, null, null, null, rect,
-			#if lime new Matrix3() #else null #end);
+			tilemap.tileAlphaEnabled, alpha, tilemap.tileBlendModeEnabled, tilemap.__worldBlendMode, null, null, null, rect, new Matrix3());
 
 		renderer.__popMaskRect();
 		renderer.__popMaskObject(tilemap);
@@ -51,13 +48,10 @@ class CairoTilemap
 		Rectangle.__pool.release(rect);
 	}
 
-	@SuppressWarnings("checkstyle:Dynamic")
-	private static function renderTileContainer(group:TileContainer, renderer:CairoRenderer, parentTransform:Matrix, defaultTileset:Tileset, smooth:Bool,
-			alphaEnabled:Bool, worldAlpha:Float, blendModeEnabled:Bool, defaultBlendMode:BlendMode, cacheBitmapData:BitmapData,
-			surface:#if lime CairoSurface #else Dynamic #end, pattern:#if lime CairoPattern #else Dynamic #end, rect:Rectangle,
-			matrix:#if lime Matrix3 #else Dynamic #end):Void
+	@:noCompletion private static function renderTileContainer(group:TileContainer, renderer:CairoRenderer, parentTransform:Matrix, defaultTileset:Tileset,
+			smooth:Bool, alphaEnabled:Bool, worldAlpha:Float, blendModeEnabled:Bool, defaultBlendMode:BlendMode, cacheBitmapData:BitmapData,
+			surface:CairoSurface, pattern:CairoPattern, rect:Rectangle, matrix:Matrix3):Void
 	{
-		#if lime
 		var cairo = renderer.cairo;
 
 		var tileTransform = Matrix.__pool.get();
@@ -162,7 +156,6 @@ class CairoTilemap
 		}
 
 		Matrix.__pool.release(tileTransform);
-		#end
 	}
 
 	public static inline function renderDrawable(tilemap:Tilemap, renderer:CairoRenderer):Void

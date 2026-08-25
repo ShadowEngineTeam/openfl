@@ -5,8 +5,8 @@ import openfl.Vector;
 
 @:final class DateTimeFormatter
 {
-	private static var WEEKDAY_NAMES_EN = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-	private static var MONTH_NAMES_EN = [
+	@:noCompletion private static var WEEKDAY_NAMES_EN = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+	@:noCompletion private static var MONTH_NAMES_EN = [
 		"January",
 		"February",
 		"March",
@@ -20,11 +20,11 @@ import openfl.Vector;
 		"November",
 		"December"
 	];
-	private static inline var MERIDIEM_AM = "AM";
-	private static inline var MERIDIEM_PM = "PM";
-	private static inline var ERA_AD_LONG = "Anno Domini";
-	private static inline var ERA_AD_SHORT = "AD";
-	private static inline var ERA_AD_NARROW = "A";
+	@:noCompletion private static inline var MERIDIEM_AM = "AM";
+	@:noCompletion private static inline var MERIDIEM_PM = "PM";
+	@:noCompletion private static inline var ERA_AD_LONG = "Anno Domini";
+	@:noCompletion private static inline var ERA_AD_SHORT = "AD";
+	@:noCompletion private static inline var ERA_AD_NARROW = "A";
 
 	public static function getAvailableLocaleIDNames():Vector<String>
 	{
@@ -40,9 +40,9 @@ import openfl.Vector;
 		this.lastOperationStatus = NO_ERROR;
 	}
 
-	private var dateStyle:DateTimeStyle;
-	private var timeStyle:DateTimeStyle;
-	private var dateTimePattern:String;
+	@:noCompletion private var dateStyle:DateTimeStyle;
+	@:noCompletion private var timeStyle:DateTimeStyle;
+	@:noCompletion private var dateTimePattern:String;
 
 	public function getDateStyle():DateTimeStyle
 	{
@@ -98,7 +98,7 @@ import openfl.Vector;
 		return result;
 	}
 
-	private function formatStyles(date:Date, utc:Bool):String
+	@:noCompletion private function formatStyles(date:Date, utc:Bool):String
 	{
 		var result = "";
 		if (this.dateStyle != NONE)
@@ -138,7 +138,7 @@ import openfl.Vector;
 		return result;
 	}
 
-	private function formatPattern(date:Date, utc:Bool):String
+	@:noCompletion private function formatPattern(date:Date, utc:Bool):String
 	{
 		var result = "";
 		var tokens = DateTimeFormatTokenizer.tokenize(this.dateTimePattern);

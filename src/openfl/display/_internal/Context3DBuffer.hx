@@ -1,7 +1,7 @@
 package openfl.display._internal;
 
-import openfl.utils._internal.Float32Array;
-import openfl.utils._internal.UInt16Array;
+import lime.utils.Float32Array;
+import lime.utils.UInt16Array;
 import openfl.display3D.Context3D;
 import openfl.display3D.IndexBuffer3D;
 import openfl.display3D.VertexBuffer3D;
@@ -9,9 +9,9 @@ import openfl.display3D.VertexBuffer3D;
 @SuppressWarnings("checkstyle:FieldDocComment")
 class Context3DBuffer
 {
-	private static inline var MAX_INDEX_BUFFER_LENGTH:Int = 0xFFFF;
-	private static inline var MAX_QUADS_PER_INDEX_BUFFER:Int = 0x2AAA;
-	private static inline var MAX_QUAD_INDEX_BUFFER_LENGTH:Int = 0xFFFC;
+	@:noCompletion static inline var MAX_INDEX_BUFFER_LENGTH:Int = 0xFFFF;
+	@:noCompletion private static inline var MAX_QUADS_PER_INDEX_BUFFER:Int = 0x2AAA;
+	@:noCompletion private static inline var MAX_QUAD_INDEX_BUFFER_LENGTH:Int = 0xFFFC;
 
 	public var dataPerVertex:Int;
 	public var elementCount:Int;
@@ -23,7 +23,7 @@ class Context3DBuffer
 	public var vertexBufferData:Float32Array;
 	public var vertexCount:Int;
 
-	private var context3D:Context3D;
+	@:noCompletion private var context3D:Context3D;
 
 	public function new(context3D:Context3D, elementType:Context3DElementType, elementCount:Int, dataPerVertex:Int)
 	{
@@ -116,7 +116,6 @@ class Context3DBuffer
 
 		var vertexLength = numVertices * dataPerVertex;
 
-		#if lime
 		if (vertexBufferData == null)
 		{
 			vertexBufferData = new Float32Array(vertexLength);
@@ -127,7 +126,6 @@ class Context3DBuffer
 			vertexBufferData = new Float32Array(vertexLength);
 			vertexBufferData.set(cacheBufferData);
 		}
-		#end
 	}
 }
 

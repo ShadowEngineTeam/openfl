@@ -1,25 +1,23 @@
 package openfl.utils;
 
 import haxe.Int64;
+import haxe.Json;
+import haxe.Serializer;
+import haxe.Unserializer;
 import haxe.io.Bytes;
 import haxe.io.BytesData;
 import haxe.io.BytesInput;
 import haxe.io.BytesOutput;
 import haxe.io.FPHelper;
-import haxe.Json;
-import haxe.Serializer;
-import haxe.Unserializer;
-import openfl.errors.EOFError;
-import openfl.errors.RangeError;
-import openfl.net.ObjectEncoding;
-#if lime
 import lime.system.System;
 import lime.utils.ArrayBuffer;
 import lime.utils.BytePointer;
 import lime.utils.Bytes as LimeBytes;
 import lime.utils.DataPointer;
 import lime.utils.Int8Array;
-#end
+import openfl.errors.EOFError;
+import openfl.errors.RangeError;
+import openfl.net.ObjectEncoding;
 
 /**
 	The ByteArray class provides methods and properties to optimize reading,
@@ -93,9 +91,7 @@ abstract ByteArray(ByteArrayData) from ByteArrayData to ByteArrayData
 	**/
 	public static var defaultObjectEncoding(get, set):ObjectEncoding;
 
-	#if lime
 	@:noCompletion private static var __bytePointer = new BytePointer();
-	#end
 
 	/**
 		The number of bytes of data available for reading from the current
@@ -266,7 +262,6 @@ abstract ByteArray(ByteArrayData) from ByteArrayData to ByteArrayData
 		this.deflate();
 	}
 
-	#if lime
 	/**
 		Converts an ArrayBuffer into a ByteArray.
 
@@ -283,7 +278,6 @@ abstract ByteArray(ByteArrayData) from ByteArrayData to ByteArrayData
 		return ByteArrayData.fromBytes((buffer : Bytes));
 		#end
 	}
-	#end
 
 	/**
 		Converts a Bytes object into a ByteArray.
@@ -341,14 +335,9 @@ abstract ByteArray(ByteArrayData) from ByteArrayData to ByteArrayData
 	**/
 	public static function fromFile(path:String):ByteArray
 	{
-		#if lime
 		return LimeBytes.fromFile(path);
-		#else
-		return null;
-		#end
 	}
 
-	#if lime
 	/**
 		Converts a Lime Bytes object into a ByteArray.
 
@@ -359,7 +348,6 @@ abstract ByteArray(ByteArrayData) from ByteArrayData to ByteArrayData
 	{
 		return fromBytes(bytes);
 	}
-	#end
 
 	@:arrayAccess @:noCompletion private inline function get(index:Int):Int
 	{
@@ -407,15 +395,11 @@ abstract ByteArray(ByteArrayData) from ByteArrayData to ByteArrayData
 	**/
 	public static function loadFromBytes(bytes:Bytes):Future<ByteArray>
 	{
-		#if lime
 		return LimeBytes.loadFromBytes(bytes).then(function(limeBytes:LimeBytes)
 		{
 			var byteArray:ByteArray = limeBytes;
 			return Future.withValue(byteArray);
 		});
-		#else
-		return cast Future.withError("Cannot load ByteArray from bytes");
-		#end
 	}
 
 	/**
@@ -429,15 +413,11 @@ abstract ByteArray(ByteArrayData) from ByteArrayData to ByteArrayData
 	**/
 	public static function loadFromFile(path:String):Future<ByteArray>
 	{
-		#if lime
 		return LimeBytes.loadFromFile(path).then(function(limeBytes:LimeBytes)
 		{
 			var byteArray:ByteArray = limeBytes;
 			return Future.withValue(byteArray);
 		});
-		#else
-		return cast Future.withError("Cannot load ByteArray from file");
-		#end
 	}
 
 	/**
@@ -695,7 +675,6 @@ abstract ByteArray(ByteArrayData) from ByteArrayData to ByteArrayData
 		return value;
 	}
 
-	#if lime
 	/**
 		Converts a ByteArray into an ArrayBuffer.
 
@@ -710,9 +689,7 @@ abstract ByteArray(ByteArrayData) from ByteArrayData to ByteArrayData
 		return (byteArray : ByteArrayData);
 		#end
 	}
-	#end
 
-	#if lime
 	@:to @:noCompletion private static function toBytePointer(byteArray:ByteArray):BytePointer
 	{
 		#if !display
@@ -720,9 +697,7 @@ abstract ByteArray(ByteArrayData) from ByteArrayData to ByteArrayData
 		#end
 		return __bytePointer;
 	}
-	#end
 
-	#if lime
 	#if (sys || display)
 	@:to @:noCompletion private static function toDataPointer(byteArray:ByteArray):DataPointer
 	{
@@ -732,7 +707,7 @@ abstract ByteArray(ByteArrayData) from ByteArrayData to ByteArrayData
 		return __bytePointer;
 	}
 	#end
-	#end
+
 	@:to @:noCompletion private static function toBytes(byteArray:ByteArray):Bytes
 	{
 		#if display
@@ -753,7 +728,6 @@ abstract ByteArray(ByteArrayData) from ByteArrayData to ByteArrayData
 	}
 	#end
 
-	#if lime
 	@:to @:noCompletion private static function toLimeBytes(byteArray:ByteArray):LimeBytes
 	{
 		#if display
@@ -762,7 +736,6 @@ abstract ByteArray(ByteArrayData) from ByteArrayData to ByteArrayData
 		return (byteArray : ByteArrayData);
 		#end
 	}
-	#end
 
 	/**
 		Converts the byte array to a string. If the data in the array begins with
@@ -1138,8 +1111,6 @@ abstract ByteArray(ByteArrayData) from ByteArrayData to ByteArrayData
 
 	public function compress(algorithm:CompressionAlgorithm = ZLIB):Void
 	{
-		#if lime
-
 		var limeBytes:LimeBytes = this;
 
 		var bytes = switch (algorithm)
@@ -1156,7 +1127,6 @@ abstract ByteArray(ByteArrayData) from ByteArrayData to ByteArrayData
 			__length = __allocated;
 			position = __length;
 		}
-		#end
 	}
 
 	public function deflate():Void
@@ -1430,8 +1400,6 @@ abstract ByteArray(ByteArrayData) from ByteArrayData to ByteArrayData
 
 	public function uncompress(algorithm:CompressionAlgorithm = ZLIB):Void
 	{
-		#if lime
-
 		var limeBytes:LimeBytes = this;
 
 		var bytes = switch (algorithm)
@@ -1447,7 +1415,6 @@ abstract ByteArray(ByteArrayData) from ByteArrayData to ByteArrayData
 
 			__length = __allocated;
 		}
-		#end
 
 		position = 0;
 	}

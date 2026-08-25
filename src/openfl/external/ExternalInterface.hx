@@ -224,7 +224,7 @@ import openfl.utils._internal.Lib;
 		return null;
 	}
 
-	private static function get_objectID():String
+	@:noCompletion private static function get_objectID():String
 	{
 		return null;
 	}

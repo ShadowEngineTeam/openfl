@@ -1,8 +1,8 @@
 package openfl.display;
 
+import lime.graphics.cairo.Cairo;
+import openfl.Vector;
 import openfl.display._internal.IBitmapDrawableType;
-import openfl.utils.ObjectPool;
-import openfl.utils._internal.Lib;
 import openfl.errors.TypeError;
 import openfl.events.Event;
 import openfl.events.EventDispatcher;
@@ -18,10 +18,8 @@ import openfl.geom.Point;
 import openfl.geom.Rectangle;
 import openfl.geom.Transform;
 import openfl.ui.MouseCursor;
-import openfl.Vector;
-#if lime
-import lime.graphics.cairo.Cairo;
-#end
+import openfl.utils.ObjectPool;
+import openfl.utils._internal.Lib;
 
 /**
 	The DisplayObject class is the base class for all objects that can be
@@ -904,7 +902,6 @@ class DisplayObject extends EventDispatcher implements IBitmapDrawable
 	**/
 	@:keep public var y(get, set):Float;
 
-	// @:noCompletion @:dox(hide) @:require(flash10) var z:Float;
 	@:noCompletion private var __alpha:Float;
 	@:noCompletion private var __blendMode:BlendMode;
 	@:noCompletion private var __cacheAsBitmap:Bool;
@@ -918,7 +915,7 @@ class DisplayObject extends EventDispatcher implements IBitmapDrawable
 	@:noCompletion private var __cacheBitmapData3:BitmapData;
 	@:noCompletion private var __cacheBitmapMatrix:Matrix;
 	@:noCompletion private var __cacheBitmapRenderer:DisplayObjectRenderer;
-	@SuppressWarnings("checkstyle:Dynamic") @:noCompletion private var __cairo:#if lime Cairo #else Dynamic #end;
+	@:noCompletion private var __cairo:Cairo;
 	@:noCompletion private var __children:Array<DisplayObject>;
 	@:noCompletion private var __customRenderClear:Bool;
 	@:noCompletion private var __customRenderEvent:RenderEvent;
@@ -1007,7 +1004,6 @@ class DisplayObject extends EventDispatcher implements IBitmapDrawable
 		}
 	}
 
-	@SuppressWarnings("checkstyle:Dynamic")
 	public override function addEventListener<T>(type:EventType<T>, listener:T->Void, useCapture:Bool = false, priority:Int = 0,
 			useWeakReference:Bool = false):Void
 	{
@@ -1161,8 +1157,6 @@ class DisplayObject extends EventDispatcher implements IBitmapDrawable
 		return __globalToLocal(pos, new Point());
 	}
 
-	// @:noCompletion @:dox(hide) @:require(flash10) public function globalToLocal3D (point:Point):Vector3D;
-
 	/**
 		Evaluates the bounding box of the display object to see if it overlaps or
 		intersects with the bounding box of the `obj` display object.
@@ -1249,9 +1243,6 @@ class DisplayObject extends EventDispatcher implements IBitmapDrawable
 		return __getRenderTransform().transformPoint(point);
 	}
 
-	// @:noCompletion @:dox(hide) @:require(flash10) public function local3DToGlobal (point3d:Vector3D):Point;
-
-	@SuppressWarnings("checkstyle:Dynamic")
 	public override function removeEventListener<T>(type:EventType<T>, listener:T->Void, useCapture:Bool = false):Void
 	{
 		super.removeEventListener(type, listener, useCapture);

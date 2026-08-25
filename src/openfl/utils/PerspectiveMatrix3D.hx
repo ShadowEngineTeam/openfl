@@ -27,17 +27,17 @@
 
 package openfl.utils;
 
+import openfl.Vector;
 import openfl.geom.Matrix3D;
 import openfl.geom.Vector3D;
-import openfl.Vector;
 
 @SuppressWarnings("checkstyle:FieldDocComment")
 class PerspectiveMatrix3D extends Matrix3D
 {
-	private var _x:Vector3D = new Vector3D();
-	private var _y:Vector3D = new Vector3D();
-	private var _z:Vector3D = new Vector3D();
-	private var _w:Vector3D = new Vector3D();
+	@:noCompletion private var _x:Vector3D = new Vector3D();
+	@:noCompletion private var _y:Vector3D = new Vector3D();
+	@:noCompletion private var _z:Vector3D = new Vector3D();
+	@:noCompletion private var _w:Vector3D = new Vector3D();
 
 	public function new(v:Vector<Float> = null)
 	{
@@ -324,7 +324,7 @@ class PerspectiveMatrix3D extends Matrix3D
 		]));
 	}
 
-	private function _crossProductTo(a:Vector3D, b:Vector3D):Void
+	@:noCompletion private function _crossProductTo(a:Vector3D, b:Vector3D):Void
 	{
 		_w.x = a.y * b.z - a.z * b.y;
 		_w.y = a.z * b.x - a.x * b.z;

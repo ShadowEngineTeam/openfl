@@ -1,9 +1,7 @@
 package openfl.desktop;
 
 #if sys
-#if lime
 import lime.system.System;
-#end
 import openfl.display.NativeWindow;
 import openfl.events.EventDispatcher;
 import openfl.utils._internal.Lib;
@@ -274,7 +272,7 @@ class NativeApplication extends EventDispatcher
 	**/
 	public var startAtLogin(default, default):Bool;
 
-	private function new()
+	@:noCompletion private function new()
 	{
 		super();
 	}
@@ -299,9 +297,7 @@ class NativeApplication extends EventDispatcher
 	**/
 	public function exit(code:Int = 0):Void
 	{
-		#if lime
 		System.exit(code);
-		#end
 	}
 
 	/**
