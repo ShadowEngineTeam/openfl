@@ -7,6 +7,7 @@ import lime.graphics.opengl.GLRenderbuffer;
 import lime.graphics.opengl.GLTexture;
 import lime.utils.ArrayBufferView;
 import lime.utils.Log;
+import openfl.display.OpenGLRenderer;
 import openfl.display.BitmapData;
 import openfl.display._internal.SamplerState;
 import openfl.errors.Error;
@@ -24,10 +25,6 @@ import openfl.events.EventDispatcher;
 @:access(openfl.display.Stage)
 class TextureBase extends EventDispatcher
 {
-	@:noCompletion private static var __supportsBGRA:Null<Bool> = null;
-	@:noCompletion private static var __textureFormat:Int;
-	@:noCompletion private static var __textureInternalFormat:Int;
-
 	@:noCompletion private var __context:Context3D;
 	@:noCompletion private var __glDepthRenderbuffer:GLRenderbuffer;
 	@:noCompletion private var __glFramebuffer:GLFramebuffer;
@@ -49,7 +46,7 @@ class TextureBase extends EventDispatcher
 	@:noCompletion private var __textureID:GLTexture;
 	@:noCompletion private var __textureTarget:Int;
 
-	@:noCompletion private function new(context:Context3D)
+	@:noCompletion private function new(context:Context3D, ?format:Context3DTextureFormat)
 	{
 		super();
 
@@ -59,37 +56,46 @@ class TextureBase extends EventDispatcher
 		__textureID = gl.createTexture();
 		__textureContext = __context.__context;
 
-		if (__supportsBGRA == null)
+		// Since `format` has never been taken into account when creating the `TextureBase`, if `format` is null, keep the old behaviour.
+		if (format == null)
 		{
-			__textureInternalFormat = gl.RGBA;
-
-			var bgraExtension:Dynamic = null;
-			bgraExtension = gl.getExtension("EXT_bgra");
-			if (bgraExtension == null) bgraExtension = gl.getExtension("EXT_texture_format_BGRA8888");
-			if (bgraExtension == null) bgraExtension = gl.getExtension("APPLE_texture_format_BGRA8888");
-
-			if (bgraExtension != null)
+			if (OpenGLRenderer.__bgraExtension != null)
 			{
-				__supportsBGRA = true;
-				__textureFormat = bgraExtension.BGRA_EXT;
-
-				// Note: Get rid of this when `ANGLE` is added.
-				#if !ios
-				if (context.__context.type == OPENGLES)
-				{
-					__textureInternalFormat = bgraExtension.BGRA_EXT;
-				}
-				#end
+				__internalFormat = OpenGLRenderer.__bgraAsInternalFormat ? OpenGLRenderer.__bgraExtension.BGRA_EXT : gl.RGBA;
+				__format = OpenGLRenderer.__bgraExtension.BGRA_EXT;
 			}
 			else
 			{
-				__supportsBGRA = false;
-				__textureFormat = gl.RGBA;
+				__internalFormat = gl.RGBA;
+				__format = gl.RGBA;
 			}
 		}
-
-		__internalFormat = __textureInternalFormat;
-		__format = __textureFormat;
+		else
+		{
+			switch (format)
+			{
+				case RGB:
+					__internalFormat = gl.RGB;
+					__internalFormat = gl.RGB;
+				case BGRA:
+					if (OpenGLRenderer.__bgraExtension != null)
+					{
+						__internalFormat = OpenGLRenderer.__bgraAsInternalFormat ? OpenGLRenderer.__bgraExtension.BGRA_EXT : gl.RGBA;
+						__format = OpenGLRenderer.__bgraExtension.BGRA_EXT;
+					}
+					else
+					{
+						__internalFormat = gl.RGBA;
+						__format = gl.RGBA;
+					}
+				case RGBA:
+					__internalFormat = gl.RGBA;
+					__format = gl.RGBA;
+				case R:
+					__internalFormat = gl.R8;
+					__internalFormat = gl.RED;
+			}
+		}
 	}
 
 	/**
@@ -355,11 +361,11 @@ class TextureBase extends EventDispatcher
 
 	@:noCompletion private function __limeBufferFormatToGLFormat(pixelFormat:lime.graphics.PixelFormat):Int
 	{
-		return pixelFormat == RGBA32 ? __context.gl.RGBA : TextureBase.__textureFormat;
+		return pixelFormat == RGBA32 ? __context.gl.RGBA : __format;
 	}
 
 	@:noCompletion private function __limeBufferFormatToGLInternalFormat(pixelFormat:lime.graphics.PixelFormat):Int
 	{
-		return pixelFormat == RGBA32 ? __context.gl.RGBA : TextureBase.__textureInternalFormat;
+		return pixelFormat == RGBA32 ? __context.gl.RGBA : __internalFormat;
 	}
 }

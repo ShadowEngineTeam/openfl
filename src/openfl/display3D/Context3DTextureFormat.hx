@@ -6,37 +6,22 @@ package openfl.display3D;
 enum abstract Context3DTextureFormat(Null<Int>)
 {
 	/**
-		16 bit, bgr packed as 5:6:5
+		32-bit RGB format.
 	**/
-	public var BGR_PACKED = 0;
+	public var RGB = 0;
 
 	/**
-		32 bit
+		32-bit BGRA format.
 	**/
 	public var BGRA = 1;
 
 	/**
-		16 bit, bgra packed as 4:4:4:4
+		32-bit RGBA format.
 	**/
-	public var BGRA_PACKED = 2;
+	public var RGBA = 2;
 
 	/**
-		ATF (Adobe Texture Format)
-	**/
-	public var COMPRESSED = 3;
-
-	/**
-		ATF (Adobe Texture Format), with alpha
-	**/
-	public var COMPRESSED_ALPHA = 4;
-
-	/**
-		64 bit, rgba as 16:16:16:16
-	**/
-	public var RGBA_HALF_FLOAT = 5;
-
-	/**
-		8 bit, single color (RED) channel format.
+		8-bit single-channel red format.
 	**/
 	public var R = 6;
 
@@ -44,12 +29,10 @@ enum abstract Context3DTextureFormat(Null<Int>)
 	{
 		return switch (value)
 		{
-			case "bgrPacked565": BGR_PACKED;
+			case "rgb": RGB;
 			case "bgra": BGRA;
-			case "bgraPacked4444": BGRA_PACKED;
-			case "compressed": COMPRESSED;
-			case "compressedAlpha": COMPRESSED_ALPHA;
-			case "rgbaHalfFloat": RGBA_HALF_FLOAT;
+			case "rgba": RGBA;
+			case "r": R;
 			default: null;
 		}
 	}
@@ -58,12 +41,10 @@ enum abstract Context3DTextureFormat(Null<Int>)
 	{
 		return switch (cast this : Context3DTextureFormat)
 		{
-			case Context3DTextureFormat.BGR_PACKED: "bgrPacked565";
+			case Context3DTextureFormat.RGB: "rgb";
 			case Context3DTextureFormat.BGRA: "bgra";
-			case Context3DTextureFormat.BGRA_PACKED: "bgraPacked4444";
-			case Context3DTextureFormat.COMPRESSED: "compressed";
-			case Context3DTextureFormat.COMPRESSED_ALPHA: "compressedAlpha";
-			case Context3DTextureFormat.RGBA_HALF_FLOAT: "rgbaHalfFloat";
+			case Context3DTextureFormat.RGBA: "rgba";
+			case Context3DTextureFormat.R: "r";
 			default: null;
 		}
 	}
