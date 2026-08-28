@@ -76,7 +76,7 @@ class TextureBase extends EventDispatcher
 			{
 				case RGB:
 					__internalFormat = gl.RGB;
-					__internalFormat = gl.RGB;
+					__format = gl.RGB;
 				case BGRA:
 					if (OpenGLRenderer.__bgraExtension != null)
 					{
@@ -93,7 +93,7 @@ class TextureBase extends EventDispatcher
 					__format = gl.RGBA;
 				case R:
 					__internalFormat = gl.R8;
-					__internalFormat = gl.RED;
+					__format = gl.RED;
 			}
 		}
 	}
