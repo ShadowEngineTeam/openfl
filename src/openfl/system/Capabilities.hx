@@ -564,16 +564,8 @@ import sys.io.Process;
 
 	@:noCompletion private static inline function get_manufacturer():String
 	{
-		#if mac
-		return "OpenFL Macintosh";
-		#elseif linux
-		return "OpenFL Linux";
-		#elseif lime
 		var name = System.platformName;
 		return "OpenFL" + (name != null ? " " + name : "");
-		#else
-		return null;
-		#end
 	}
 
 	@:noCompletion private static inline function get_os():String

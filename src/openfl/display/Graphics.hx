@@ -53,7 +53,6 @@ import openfl.utils.ObjectPool;
 {
 	@:noCompletion private static var maxTextureHeight:Null<Int> = null;
 	@:noCompletion private static var maxTextureWidth:Null<Int> = null;
-	@:noCompletion private static inline var __renderSizePadding:Float = 1.25;
 
 	@:noCompletion private var __bounds:Rectangle;
 	@:noCompletion private var __commands:DrawCommandBuffer;
@@ -1903,50 +1902,42 @@ import openfl.utils.ObjectPool;
 
 		var scaleX = pixelRatio, scaleY = pixelRatio;
 
-		#if (openfl_legacy_scale9grid && lime_cairo && !cairo && !openfl_force_hw_graphics && !force_hw_graphics)
-		var calculateScale = __owner.__worldScale9Grid == null;
-		#else
-		var calculateScale = true;
-		#end
-		if (calculateScale)
+		if (parentTransform.b == 0)
 		{
-			if (parentTransform.b == 0)
+			scaleX = Math.abs(parentTransform.a);
+		}
+		else
+		{
+			scaleX = Math.sqrt(parentTransform.a * parentTransform.a + parentTransform.b * parentTransform.b);
+		}
+
+		if (parentTransform.c == 0)
+		{
+			scaleY = Math.abs(parentTransform.d);
+		}
+		else
+		{
+			scaleY = Math.sqrt(parentTransform.c * parentTransform.c + parentTransform.d * parentTransform.d);
+		}
+
+		if (displayMatrix != null && __owner.__worldScale9Grid == null)
+		{
+			if (displayMatrix.b == 0)
 			{
-				scaleX = Math.abs(parentTransform.a);
+				scaleX *= displayMatrix.a;
 			}
 			else
 			{
-				scaleX = Math.sqrt(parentTransform.a * parentTransform.a + parentTransform.b * parentTransform.b);
+				scaleX *= Math.sqrt(displayMatrix.a * displayMatrix.a + displayMatrix.b * displayMatrix.b);
 			}
 
-			if (parentTransform.c == 0)
+			if (displayMatrix.c == 0)
 			{
-				scaleY = Math.abs(parentTransform.d);
+				scaleY *= displayMatrix.d;
 			}
 			else
 			{
-				scaleY = Math.sqrt(parentTransform.c * parentTransform.c + parentTransform.d * parentTransform.d);
-			}
-
-			if (displayMatrix != null && __owner.__worldScale9Grid == null)
-			{
-				if (displayMatrix.b == 0)
-				{
-					scaleX *= displayMatrix.a;
-				}
-				else
-				{
-					scaleX *= Math.sqrt(displayMatrix.a * displayMatrix.a + displayMatrix.b * displayMatrix.b);
-				}
-
-				if (displayMatrix.c == 0)
-				{
-					scaleY *= displayMatrix.d;
-				}
-				else
-				{
-					scaleY *= Math.sqrt(displayMatrix.c * displayMatrix.c + displayMatrix.d * displayMatrix.d);
-				}
+				scaleY *= Math.sqrt(displayMatrix.c * displayMatrix.c + displayMatrix.d * displayMatrix.d);
 			}
 		}
 
@@ -2008,7 +1999,7 @@ import openfl.utils.ObjectPool;
 			}
 			else if (__renderWidth > 0 && renderWidth > __renderWidth)
 			{
-				renderWidth = Math.ceil(Math.max(renderWidth, __renderWidth * __renderSizePadding));
+				renderWidth = Math.ceil(Math.max(renderWidth, __renderWidth * 1.25));
 			}
 
 			if (__renderHeight > 0 && renderHeight <= __renderHeight)
@@ -2017,7 +2008,7 @@ import openfl.utils.ObjectPool;
 			}
 			else if (__renderHeight > 0 && renderHeight > __renderHeight)
 			{
-				renderHeight = Math.ceil(Math.max(renderHeight, __renderHeight * __renderSizePadding));
+				renderHeight = Math.ceil(Math.max(renderHeight, __renderHeight * 1.25));
 			}
 
 			if (maxTextureWidth != null && renderWidth > maxTextureWidth)

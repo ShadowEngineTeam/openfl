@@ -1173,7 +1173,6 @@ class BitmapData implements IBitmapDrawable
 		image.floodFill(x, y, color, ARGB32);
 	}
 
-	#if (!openfl_doc_gen || !flash_doc_gen)
 	/**
 		Creates a new BitmapData instance from Base64-encoded data
 		synchronously. The bytes must be of a supported bitmap file
@@ -1192,10 +1191,8 @@ class BitmapData implements IBitmapDrawable
 		var bitmapData = new BitmapData(0, 0, true, 0);
 		bitmapData.__fromBase64(base64, type);
 		return bitmapData;
-}
-	#end
+	}
 
-	#if (!openfl_doc_gen || !flash_doc_gen)
 	/**
 		Creates a new BitmapData from bytes (a `haxe.io.Bytes` or
 		`openfl.utils.ByteArray`) synchronously. The bytes must be of a
@@ -1226,9 +1223,7 @@ class BitmapData implements IBitmapDrawable
 			return bitmapData;
 		}
 	}
-	#end
 
-	#if (!openfl_doc_gen || !flash_doc_gen)
 	/**
 		Creates a new BitmapData from a file path synchronously.
 
@@ -1247,7 +1242,6 @@ class BitmapData implements IBitmapDrawable
 		bitmapData.__fromFile(path);
 		return bitmapData.image != null ? bitmapData : null;
 	}
-	#end
 
 	/**
 		Creates a new BitmapData using an existing Lime Image instance.
@@ -1269,8 +1263,6 @@ class BitmapData implements IBitmapDrawable
 	}
 
 	/**
-		**BETA**
-
 		Creates a new BitmapData instance from a Stage3D rectangle texture. The
 		BitmapData instance will hardware-only, and the `readable` property will
 		be false, meaning that some operations will not be permitted.
@@ -1287,13 +1279,13 @@ class BitmapData implements IBitmapDrawable
 	{
 		if (texture == null) return null;
 
-		var bitmapData = new BitmapData(texture.__width, texture.__height, true, 0);
-		bitmapData.readable = false;
+		var bitmapData = new BitmapData(0, 0, true, 0);
+		bitmapData.rect.setTo(0, 0, texture.__width, texture.__height);
 		bitmapData.__texture = texture;
 		bitmapData.__textureContext = texture.__textureContext;
 		bitmapData.__textureShared = shared;
-		bitmapData.__surface = null;
-		bitmapData.image = null;
+		bitmapData.__resize(texture.__width, texture.__height);
+		bitmapData.__isValid = true;
 		return bitmapData;
 	}
 
@@ -1330,8 +1322,6 @@ class BitmapData implements IBitmapDrawable
 	}
 
 	/**
-		**BETA**
-
 		Get the IndexBuffer3D object associated with this BitmapData object
 
 		@param	context	A Stage3D context
@@ -1542,8 +1532,6 @@ class BitmapData implements IBitmapDrawable
 	}
 
 	/**
-		**BETA**
-
 		Get the VertexBuffer3D object associated with this BitmapData object
 
 		@param	context	A Stage3D context
@@ -1566,46 +1554,10 @@ class BitmapData implements IBitmapDrawable
 					|| __vertexBufferScaleX != targetObject.scaleX
 					|| __vertexBufferScaleY != targetObject.scaleY)))
 		{
-			#if openfl_power_of_two
-			var newWidth = 1;
-			var newHeight = 1;
-
-			while (newWidth < width)
-			{
-				newWidth <<= 1;
-			}
-
-			while (newHeight < height)
-			{
-				newHeight <<= 1;
-			}
-
-			__uvRect = new Rectangle(0, 0, newWidth, newHeight);
-
-			var uvWidth = width / newWidth;
-			var uvHeight = height / newHeight;
-
-			__textureWidth = newWidth;
-			__textureHeight = newHeight;
-			#else
 			__uvRect = new Rectangle(0, 0, width, height);
 
 			var uvWidth = 1;
 			var uvHeight = 1;
-			#end
-
-			// __vertexBufferData = new Float32Array ([
-			//
-			// width, height, 0, uvWidth, uvHeight, alpha, (color transform, color offset...)
-			// 0, height, 0, 0, uvHeight, alpha, (color transform, color offset...)
-			// width, 0, 0, uvWidth, 0, alpha, (color transform, color offset...)
-			// 0, 0, 0, 0, 0, alpha, (color transform, color offset...)
-			//
-			//
-			// ]);
-
-			// [ colorTransform.redMultiplier, 0, 0, 0, 0, colorTransform.greenMultiplier, 0, 0, 0, 0, colorTransform.blueMultiplier, 0, 0, 0, 0, colorTransform.alphaMultiplier ];
-			// [ colorTransform.redOffset / 255, colorTransform.greenOffset / 255, colorTransform.blueOffset / 255, colorTransform.alphaOffset / 255 ]
 
 			__vertexBufferContext = context.__context;
 			__vertexBuffer = null;
@@ -2097,8 +2049,6 @@ class BitmapData implements IBitmapDrawable
 	}
 
 	/**
-		**BETA**
-
 		Get the CairoImageSurface associated with this BitmapData object for use with
 		Cairo software rendering
 
@@ -2117,8 +2067,6 @@ class BitmapData implements IBitmapDrawable
 	}
 
 	/**
-		**BETA**
-
 		Get a hardware texture representing this BitmapData instance
 
 		@param	context	A Context3D instance
@@ -2158,13 +2106,10 @@ class BitmapData implements IBitmapDrawable
 
 			var textureImage = image;
 
-			if (#if openfl_power_of_two !textureImage.powerOfTwo || #end (!textureImage.premultiplied && textureImage.transparent))
+			if (!textureImage.premultiplied && textureImage.transparent)
 			{
 				textureImage = textureImage.clone();
 				textureImage.premultiplied = true;
-				#if openfl_power_of_two
-				textureImage.powerOfTwo = true;
-				#end
 			}
 
 			__texture.__uploadFromImage(textureImage);

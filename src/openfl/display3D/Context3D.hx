@@ -942,6 +942,23 @@ import openfl.utils.ByteArray;
 		return new Texture(this, width, height, format, optimizeForRenderToTexture, streamingLevels);
 	}
 
+	/**
+		Checks whether ASTC (Adaptive Scalable Texture Compression) is supported on this Context3D instance.
+
+		@return `true` if ASTC textures can be used on this device, `false` otherwise.
+	**/
+	public function isASTCSupported():Bool
+	{
+		if (ASTCTexture.__astcCompressedTexturesSupported == null)
+		{
+			var extensions = gl.getSupportedExtensions();
+			ASTCTexture.__astcCompressedTexturesSupported = extensions.contains("KHR_texture_compression_astc_ldr")
+				|| extensions.contains("KHR_texture_compression_astc_hdr");
+		}
+
+		return ASTCTexture.__astcCompressedTexturesSupported == true;
+	}
+
 	public function createASTCTexture(data:ByteArray, isSRGB:Bool = false, isHDR:Bool = false):ASTCTexture
 	{
 		return new ASTCTexture(this, data, isSRGB, isHDR);
