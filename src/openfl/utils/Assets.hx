@@ -548,7 +548,7 @@ class Assets
 					{
 						if (bytes != null)
 						{
-							var bitmapData = BitmapData.fromTexture(openfl.Lib.current.stage.context3D.createASTCTexture(bytes), false);
+							var bitmapData = BitmapData.fromTexture(Lib.current.stage.context3D.createASTCTexture(bytes), false);
 
 							if (useCache && cache.enabled)
 							{
