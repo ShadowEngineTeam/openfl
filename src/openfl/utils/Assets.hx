@@ -1,9 +1,11 @@
 package openfl.utils;
 
+import haxe.io.Path;
 import lime.app.Promise;
 import lime.utils.AssetLibrary as LimeAssetLibrary;
 import lime.utils.Assets as LimeAssets;
 import lime.utils.Log;
+import openfl.Lib;
 import openfl.display.BitmapData;
 import openfl.display.MovieClip;
 import openfl.display.Sprite;
@@ -40,6 +42,10 @@ import openfl.text.Font;
 @:access(openfl.utils.AssetLibrary)
 class Assets
 {
+	public static var allowCompressedTextures:Bool = true;
+
+	public static var allowHardwareTextures:Bool = true;
+
 	public static var cache:IAssetCache = new AssetCache();
 
 	@:noCompletion private static var dispatcher:EventDispatcher #if !macro = new EventDispatcher() #end;
@@ -147,7 +153,7 @@ class Assets
 
 		if (image != null)
 		{
-			var bitmapData = BitmapData.fromImage(image);
+			var bitmapData = BitmapData.fromImage(image, true, (allowHardwareTextures && Assets.allowHardwareTextures));
 
 			bitmapData.__asset = true;
 
@@ -479,11 +485,13 @@ class Assets
 		@param	id 		The ID or asset path for the asset
 		@param	useCache		(Optional) Whether to allow use of the asset cache (Default: true)
 		@param  allowCompressedTextures		(Optional) Wether to allow compressed textures to be used to get this bitmap (Default: true)
+		@param	allowHardwareTextures		(Optional) Wether to allow hardware textures to be used (Default: true)
 		@return		Returns a Future<BitmapData>
 
 		@see [Working with bitmap assets](https://books.openfl.org/openfl-developers-guide/working-with-bitmaps/working-with-bitmap-assets.html)
 	**/
-	public static function loadBitmapData(id:String, useCache:Null<Bool> = true, allowCompressedTextures:Bool = true):Future<BitmapData>
+	public static function loadBitmapData(id:String, useCache:Null<Bool> = true, allowCompressedTextures:Bool = true,
+			allowHardwareTextures:Bool = true):Future<BitmapData>
 	{
 		if (useCache == null) useCache = true;
 
@@ -501,37 +509,43 @@ class Assets
 			}
 		}
 
-		if ((allowCompressedTextures || haxe.io.Path.extension(id) == "astc") && openfl.Lib.current.stage.context3D.isASTCSupported())
+		if (allowCompressedTextures && Assets.allowCompressedTextures)
 		{
-			final astcTexture:String = haxe.io.Path.withExtension(id, "astc");
+			final textureID:String = Path.withExtension(id, "astc");
 
-			if (LimeAssets.exists(astcTexture, BINARY))
+			if (LimeAssets.exists(textureID, BINARY))
 			{
-				LimeAssets.loadBytes(astcTexture).onComplete(function(bytes)
+				if (Lib.current.stage.context3D.isASTCSupported())
 				{
-					if (bytes != null)
+					LimeAssets.loadBytes(textureID).onComplete(function(bytes)
 					{
-						var bitmapData = BitmapData.fromTexture(openfl.Lib.current.stage.context3D.createASTCTexture(bytes), false);
-
-						if (useCache && cache.enabled)
+						if (bytes != null)
 						{
-							cache.setBitmapData(id, bitmapData);
+							var bitmapData = BitmapData.fromTexture(Lib.current.stage.context3D.createASTCTexture(bytes), false);
+
+							if (useCache && cache.enabled)
+							{
+								cache.setBitmapData(id, bitmapData);
+							}
+
+							promise.complete(bitmapData);
 						}
+						else
+						{
+							promise.error("[Assets] Could not load Image \"" + textureID + "\"");
+						}
+					}).onError(promise.error).onProgress(promise.progress);
 
-						promise.complete(bitmapData);
-					}
-					else
-					{
-						promise.error("[Assets] Could not load Image \"" + id + "\"");
-					}
-				}).onError(promise.error).onProgress(promise.progress);
-
-				return promise.future;
+					return promise.future;
+				}
+				else if (Path.extension(id) == "astc")
+				{
+					return cast Future.withError("ASTC is not supported");
+				}
 			}
-
-			if (haxe.io.Path.extension(id) == "astc")
+			else if (Path.extension(id) == "astc")
 			{
-				return null;
+				return cast Future.withError("There is no " + AssetType.BINARY + " asset with an ID of \"" + textureID + "\"");
 			}
 		}
 
@@ -539,7 +553,7 @@ class Assets
 		{
 			if (image != null)
 			{
-				var bitmapData = BitmapData.fromImage(image);
+				var bitmapData = BitmapData.fromImage(image, true, (allowHardwareTextures && Assets.allowHardwareTextures));
 
 				bitmapData.__asset = true;
 
