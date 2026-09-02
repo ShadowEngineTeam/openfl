@@ -1,11 +1,9 @@
 package openfl.utils;
 
-import haxe.io.Path;
 import lime.app.Promise;
 import lime.utils.AssetLibrary as LimeAssetLibrary;
 import lime.utils.Assets as LimeAssets;
 import lime.utils.Log;
-import openfl.Lib;
 import openfl.display.BitmapData;
 import openfl.display.MovieClip;
 import openfl.display.Sprite;
@@ -42,8 +40,6 @@ import openfl.text.Font;
 @:access(openfl.utils.AssetLibrary)
 class Assets
 {
-	public static var allowCompressedTextures:Bool = true;
-
 	public static var allowHardwareTextures:Bool = true;
 
 	public static var cache:IAssetCache = new AssetCache();
@@ -484,14 +480,12 @@ class Assets
 
 		@param	id 		The ID or asset path for the asset
 		@param	useCache		(Optional) Whether to allow use of the asset cache (Default: true)
-		@param  allowCompressedTextures		(Optional) Wether to allow compressed textures to be used to get this bitmap (Default: true)
 		@param	allowHardwareTextures		(Optional) Wether to allow hardware textures to be used (Default: true)
 		@return		Returns a Future<BitmapData>
 
 		@see [Working with bitmap assets](https://books.openfl.org/openfl-developers-guide/working-with-bitmaps/working-with-bitmap-assets.html)
 	**/
-	public static function loadBitmapData(id:String, useCache:Null<Bool> = true, allowCompressedTextures:Bool = true,
-			allowHardwareTextures:Bool = true):Future<BitmapData>
+	public static function loadBitmapData(id:String, useCache:Null<Bool> = true, allowHardwareTextures:Bool = true):Future<BitmapData>
 	{
 		if (useCache == null) useCache = true;
 
@@ -509,45 +503,40 @@ class Assets
 			}
 		}
 
-		if (allowCompressedTextures && Assets.allowCompressedTextures)
+		#if USING_GPU_TEXTURES
+		for (ext in backend.Paths.GPU_IMAGE_EXTS)
 		{
-			final textureID:String = Path.withExtension(id, "astc");
-
-			if (LimeAssets.exists(textureID, BINARY))
+			final textureName:String = haxe.io.Path.withoutExtension(id) + '.$ext';
+			if (Assets.exists('$textureName'))
 			{
-				if (Lib.current.stage.context3D.isASTCSupported())
+				LimeAssets.loadBytes(textureName).onComplete(function(bytes)
 				{
-					LimeAssets.loadBytes(textureID).onComplete(function(bytes)
+					if (bytes != null)
 					{
-						if (bytes != null)
+						final texture = switch (ext)
 						{
-							var bitmapData = BitmapData.fromTexture(Lib.current.stage.context3D.createASTCTexture(bytes), false);
-
-							if (useCache && cache.enabled)
-							{
-								cache.setBitmapData(id, bitmapData);
-							}
-
-							promise.complete(bitmapData);
+							case 'dds': openfl.Lib.current.stage.context3D.createBCTexture(bytes);
+							case 'astc': openfl.Lib.current.stage.context3D.createASTCTexture(bytes);
+							default: null;
 						}
-						else
-						{
-							promise.error("[Assets] Could not load Image \"" + textureID + "\"");
-						}
-					}).onError(promise.error).onProgress(promise.progress);
 
-					return promise.future;
-				}
-				else if (Path.extension(id) == "astc")
-				{
-					return cast Future.withError("ASTC is not supported");
-				}
-			}
-			else if (Path.extension(id) == "astc")
-			{
-				return cast Future.withError("There is no " + AssetType.BINARY + " asset with an ID of \"" + textureID + "\"");
+						final bitmapData:BitmapData = BitmapData.fromTexture(texture);
+
+						if (useCache && cache.enabled)
+							cache.setBitmapData(id, bitmapData);
+
+						promise.complete(bitmapData);
+					}
+					else
+					{
+						promise.error("[Assets] Could not load Image \"" + textureName + "\"");
+					}
+				}).onError(promise.error).onProgress(promise.progress);
+
+				return promise.future;
 			}
 		}
+		#end
 
 		LimeAssets.loadImage(id, false).onComplete(function(image)
 		{
