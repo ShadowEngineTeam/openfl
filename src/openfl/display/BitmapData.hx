@@ -200,6 +200,13 @@ class BitmapData implements IBitmapDrawable
 	@:noCompletion private var __scrollRect:Rectangle;
 	@:noCompletion private var __stencilBuffer:GLRenderbuffer;
 	@:noCompletion private var __surface:CairoSurface;
+	#if lime_cairo
+	// Cached software-render context for draw(), plus the surface it was built against so it can be
+	// invalidated when the surface is replaced or disposed.
+	@:noCompletion private var __cairo:Cairo;
+	@:noCompletion private var __cairoSurface:CairoSurface;
+	@:noCompletion private var __cairoRenderer:CairoRenderer;
+	#end
 	@:noCompletion private var __texture:TextureBase;
 	@:noCompletion private var __textureContext:RenderContext;
 	@:noCompletion private var __textureHeight:Int;
@@ -706,6 +713,11 @@ class BitmapData implements IBitmapDrawable
 		readable = false;
 
 		__surface = null;
+		#if lime_cairo
+		__cairo = null;
+		__cairoSurface = null;
+		__cairoRenderer = null;
+		#end
 
 		__vertexBuffer = null;
 		__framebuffer = null;
@@ -872,7 +884,10 @@ class BitmapData implements IBitmapDrawable
 			clipMatrix.invert();
 		}
 
-		var _colorTransform = new ColorTransform();
+		// Pooled rather than allocated per call - `draw()` is hot (FlxText's OUTLINE border alone
+		// re-draws the text field nine times per regeneration), and the Matrix above already uses
+		// the same pooling pattern.
+		var _colorTransform = ColorTransform.__pool.get();
 		_colorTransform.__copyFrom(source.__worldColorTransform);
 		_colorTransform.__invert();
 
@@ -953,7 +968,26 @@ class BitmapData implements IBitmapDrawable
 				Matrix.__pool.release(boundsMatrix);
 			}
 
-		var renderer = new CairoRenderer(new Cairo(getSurface()));
+			// `new Cairo(...)` is a native cairo_create() and CairoRenderer allocates a Matrix and a
+			// Matrix3 - both were happening on every single draw() call, which for text meant nine
+			// native context creations per re-render. The GL branch above already caches its
+			// renderer; mirror that here, keyed on the surface so a disposed/replaced surface
+			// rebuilds the context. State that a fresh context would have started clean with is
+			// reset explicitly below.
+			var surface = getSurface();
+			if (__cairo == null || __cairoSurface != surface)
+			{
+				__cairo = new Cairo(surface);
+				__cairoSurface = surface;
+				__cairoRenderer = new CairoRenderer(__cairo);
+			}
+			else
+			{
+				__cairo.identityMatrix();
+				__cairo.resetClip();
+			}
+
+			var renderer = __cairoRenderer;
 
 			renderer.__allowSmoothing = smoothing;
 			renderer.__overrideBlendMode = blendMode;
@@ -978,6 +1012,7 @@ class BitmapData implements IBitmapDrawable
 		}
 
 		Matrix.__pool.release(transform);
+		ColorTransform.__pool.release(_colorTransform);
 
 		if (sourceAsDisplayObject != null && !wasVisible)
 		{

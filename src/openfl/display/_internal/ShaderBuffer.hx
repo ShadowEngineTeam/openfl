@@ -20,6 +20,17 @@ class ShaderBuffer
 	public var inputMipFilter:Array<Context3DMipFilter>;
 	public var inputs:Array<BitmapData>;
 	public var inputWrap:Array<Context3DWrapMode>;
+	/**
+		True while every override name added so far starts with `openfl_`.
+
+		`Shader.__updateGLFromBuffer` matches parameters against overrides by name, which means a
+		string compare per parameter per override on every draw call. Parameters already know
+		whether they are `openfl_`-prefixed (`ShaderParameter.__internal`), so when this holds, a
+		non-internal parameter can be skipped without comparing anything. Every override openfl
+		itself adds is `openfl_`-prefixed; the flag exists so an outside caller passing some other
+		name still falls back to the full scan.
+	**/
+	public var overrideAllInternal:Bool;
 	public var overrideBoolCount:Int;
 	public var overrideBoolNames:Array<String>;
 	public var overrideBoolValues:Array<Array<Bool>>;
@@ -72,6 +83,8 @@ class ShaderBuffer
 
 	public function addBoolOverride(name:String, values:Array<Bool>):Void
 	{
+		if (!StringTools.startsWith(name, "openfl_")) overrideAllInternal = false;
+
 		overrideBoolNames[overrideBoolCount] = name;
 		overrideBoolValues[overrideBoolCount] = values;
 		overrideBoolCount++;
@@ -79,6 +92,8 @@ class ShaderBuffer
 
 	public function addFloatOverride(name:String, values:Array<Float>):Void
 	{
+		if (!StringTools.startsWith(name, "openfl_")) overrideAllInternal = false;
+
 		overrideFloatNames[overrideFloatCount] = name;
 		overrideFloatValues[overrideFloatCount] = values;
 		overrideFloatCount++;
@@ -86,6 +101,8 @@ class ShaderBuffer
 
 	public function addIntOverride(name:String, values:Array<Int>):Void
 	{
+		if (!StringTools.startsWith(name, "openfl_")) overrideAllInternal = false;
+
 		overrideIntNames[overrideIntCount] = name;
 		overrideIntValues[overrideIntCount] = values;
 		overrideIntCount++;
@@ -97,6 +114,7 @@ class ShaderBuffer
 		overrideIntCount = 0;
 		overrideFloatCount = 0;
 		overrideBoolCount = 0;
+		overrideAllInternal = true;
 	}
 
 	public function update(shader:GraphicsShader):Void
@@ -106,6 +124,7 @@ class ShaderBuffer
 		overrideIntCount = 0;
 		overrideFloatCount = 0;
 		overrideBoolCount = 0;
+		overrideAllInternal = true;
 		paramBoolCount = 0;
 		paramCount = 0;
 		paramDataLength = 0;

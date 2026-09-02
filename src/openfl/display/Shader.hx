@@ -1068,6 +1068,11 @@ class Shader
 		var floatRef:ShaderParameter<Float>;
 		var intRef:ShaderParameter<Int>;
 		var hasOverride:Bool;
+		// Every override openfl adds is named `openfl_*`, and parameters already carry that
+		// classification from `set_name`. When it holds, a custom shader's own uniforms - which are
+		// most of them in a runtime shader - skip the name scan below entirely instead of running a
+		// string compare against each override on every draw call.
+		var skipNonInternal:Bool = shaderBuffer.overrideAllInternal;
 		var overrideBoolValue:Array<Bool> = null;
 		var overrideFloatValue:Array<Float> = null;
 		var overrideIntValue:Array<Int> = null;
@@ -1080,13 +1085,16 @@ class Shader
 			{
 				boolRef = shaderBuffer.paramRefs_Bool[boolIndex];
 
-				for (j in 0...shaderBuffer.overrideBoolCount)
+				if (!skipNonInternal || boolRef.__internal)
 				{
-					if (boolRef.name == shaderBuffer.overrideBoolNames[j])
+					for (j in 0...shaderBuffer.overrideBoolCount)
 					{
-						overrideBoolValue = shaderBuffer.overrideBoolValues[j];
-						hasOverride = true;
-						break;
+						if (boolRef.name == shaderBuffer.overrideBoolNames[j])
+						{
+							overrideBoolValue = shaderBuffer.overrideBoolValues[j];
+							hasOverride = true;
+							break;
+						}
 					}
 				}
 
@@ -1105,13 +1113,16 @@ class Shader
 			{
 				floatRef = shaderBuffer.paramRefs_Float[floatIndex];
 
-				for (j in 0...shaderBuffer.overrideFloatCount)
+				if (!skipNonInternal || floatRef.__internal)
 				{
-					if (floatRef.name == shaderBuffer.overrideFloatNames[j])
+					for (j in 0...shaderBuffer.overrideFloatCount)
 					{
-						overrideFloatValue = shaderBuffer.overrideFloatValues[j];
-						hasOverride = true;
-						break;
+						if (floatRef.name == shaderBuffer.overrideFloatNames[j])
+						{
+							overrideFloatValue = shaderBuffer.overrideFloatValues[j];
+							hasOverride = true;
+							break;
+						}
 					}
 				}
 
@@ -1130,13 +1141,16 @@ class Shader
 			{
 				intRef = shaderBuffer.paramRefs_Int[intIndex];
 
-				for (j in 0...shaderBuffer.overrideIntCount)
+				if (!skipNonInternal || intRef.__internal)
 				{
-					if (intRef.name == shaderBuffer.overrideIntNames[j])
+					for (j in 0...shaderBuffer.overrideIntCount)
 					{
-						overrideIntValue = cast shaderBuffer.overrideIntValues[j];
-						hasOverride = true;
-						break;
+						if (intRef.name == shaderBuffer.overrideIntNames[j])
+						{
+							overrideIntValue = cast shaderBuffer.overrideIntValues[j];
+							hasOverride = true;
+							break;
+						}
 					}
 				}
 

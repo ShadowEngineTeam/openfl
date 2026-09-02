@@ -84,7 +84,11 @@ import openfl.utils.ObjectPool;
 	@:noCompletion private var __triangleIndexBufferCount:Int;
 	@:noCompletion private var __triangleIndexBufferData:UInt16Array;
 	@:noCompletion private var __tessellatedFillParts:Array<GraphicsTessellatedFillPart>;
-	@:noCompletion private var __usedShaderBuffers:List<ShaderBuffer>;
+	// An unordered bag of the shader buffers checked out this frame. This was a `List`, which
+	// allocates a node per `add()` and an iterator per traversal - and both happen once per
+	// `beginShaderFill()`/`clear()`, i.e. once per draw batch per camera per frame. An Array reused
+	// via `resize(0)` does the same job without the per-frame garbage.
+	@:noCompletion private var __usedShaderBuffers:Array<ShaderBuffer>;
 	@:noCompletion private var __vertexBuffer:VertexBuffer3D;
 	@:noCompletion private var __vertexBufferCount:Int;
 	@:noCompletion private var __vertexBufferCountUVT:Int;
@@ -118,7 +122,7 @@ import openfl.utils.ObjectPool;
 		__bitmapScaleY = 1;
 
 		__shaderBufferPool = new ObjectPool<ShaderBuffer>(function() return new ShaderBuffer());
-		__usedShaderBuffers = new List<ShaderBuffer>();
+		__usedShaderBuffers = [];
 	}
 
 	/**
@@ -391,11 +395,11 @@ import openfl.utils.ObjectPool;
 			if (__shaderBufferPool == null)
 			{
 				__shaderBufferPool = new ObjectPool<ShaderBuffer>(function() return new ShaderBuffer());
-				__usedShaderBuffers = new List<ShaderBuffer>();
+				__usedShaderBuffers = [];
 			}
 
 			var shaderBuffer = __shaderBufferPool.get();
-			__usedShaderBuffers.add(shaderBuffer);
+			__usedShaderBuffers.push(shaderBuffer);
 			shaderBuffer.update(cast shader);
 
 			__commands.beginShaderFill(shaderBuffer);
@@ -411,12 +415,13 @@ import openfl.utils.ObjectPool;
 	{
 		if (__usedShaderBuffers != null)
 		{
-			for (shaderBuffer in __usedShaderBuffers)
+			// Indexed loop so no iterator is allocated; resize(0) keeps the backing storage.
+			for (i in 0...__usedShaderBuffers.length)
 			{
-				__shaderBufferPool.release(shaderBuffer);
+				__shaderBufferPool.release(__usedShaderBuffers[i]);
 			}
 
-			__usedShaderBuffers.clear();
+			__usedShaderBuffers.resize(0);
 		}
 
 		__commands.clear();
