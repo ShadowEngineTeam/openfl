@@ -43,6 +43,9 @@ import openfl.display3D.Context3D;
 
 		var gl = __context.gl;
 
+		__validateHeader(data);
+		if (!supported) return;
+
 		__detectBCFormat(data);
 
 		var dxt1Extension = __getExtension(gl, ["EXT_texture_compression_dxt1"]);
@@ -87,6 +90,9 @@ import openfl.display3D.Context3D;
 
 		__getImageDimensions(data);
 		__computeImageSize();
+
+		__validateImageSize(data);
+		if (!supported) return;
 
 		__format = switch (__bcFormat)
 		{
@@ -148,6 +154,46 @@ import openfl.display3D.Context3D;
 		gl.texParameteri(__textureTarget, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
 
 		__context.__bindGLTexture2D(null);
+	}
+
+	// the block data is handed to `compressedTexImage2D` as a view straight into `bytes`, so the
+	// container has to be checked before that view is built rather than after the driver chokes.
+	private function __validateHeader(bytes:ByteArray):Void
+	{
+		if (bytes.length < DDS_HEADER_SIZE)
+		{
+			trace('[ERROR] Invalid DDS file: ${bytes.length} bytes is shorter than the $DDS_HEADER_SIZE byte header!');
+			supported = false;
+			return;
+		}
+
+		bytes.position = 0;
+
+		if (bytes.readUnsignedInt() != BC_MAGIC_NUMBER)
+		{
+			trace('[ERROR] Invalid DDS file: magic number mismatch!');
+			supported = false;
+			return;
+		}
+
+		var headerSize = bytes.readUnsignedInt();
+
+		if (headerSize != 124)
+		{
+			trace('[ERROR] Invalid DDS file: header size is $headerSize, expected 124!');
+			supported = false;
+		}
+	}
+
+	private function __validateImageSize(bytes:ByteArray):Void
+	{
+		var dataOffset = __isDX10 ? DX10_HEADER_SIZE : DDS_HEADER_SIZE;
+
+		if (dataOffset + imageSize > bytes.length)
+		{
+			trace('[ERROR] Invalid DDS file: $__bcFormat needs $imageSize bytes of blocks at offset $dataOffset, but the file is only ${bytes.length} bytes!');
+			supported = false;
+		}
 	}
 
 	private function __getImageDimensions(bytes:ByteArray):Void
