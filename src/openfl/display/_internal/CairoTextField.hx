@@ -184,7 +184,7 @@ class CairoTextField
 		{
 			options.hintStyle = CairoHintStyle.SLIGHT;
 			options.hintMetrics = CairoHintMetrics.OFF;
-			options.antialias = CairoAntialias.SUBPIXEL;
+			options.antialias = CairoAntialias.GOOD;
 		}
 
 		cairo.fontOptions = options;
