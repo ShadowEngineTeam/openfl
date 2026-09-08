@@ -204,7 +204,7 @@ class BitmapData implements IBitmapDrawable
 	@:noCompletion private var __textureHeight:Int;
 	@:noCompletion private var __textureVersion:Int;
 	@:noCompletion private var __textureWidth:Int;
-	@:noCompletion private var __textureShared:Bool = true;
+	@:noCompletion private var __textureShared:Bool;
 	@:noCompletion private var __transform:Matrix;
 	@:noCompletion private var __uvRect:Rectangle;
 	@:noCompletion private var __vertexBuffer:VertexBuffer3D;
@@ -256,6 +256,7 @@ class BitmapData implements IBitmapDrawable
 
 		__textureWidth = width;
 		__textureHeight = height;
+		__textureShared = true;
 
 		if (width > 0 && height > 0)
 		{
