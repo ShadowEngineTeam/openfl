@@ -152,7 +152,6 @@ class Assets
 			var bitmapData = BitmapData.fromImage(image, true, (allowHardwareTextures && Assets.allowHardwareTextures));
 
 			bitmapData.__asset = true;
-			bitmapData.__textureShared = false;
 
 			if (useCache && cache.enabled)
 			{
@@ -546,7 +545,6 @@ class Assets
 				var bitmapData = BitmapData.fromImage(image, true, (allowHardwareTextures && Assets.allowHardwareTextures));
 
 				bitmapData.__asset = true;
-				bitmapData.__textureShared = false;
 
 				if (useCache && cache.enabled)
 				{
