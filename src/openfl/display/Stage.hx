@@ -261,6 +261,10 @@ class Stage extends DisplayObjectContainer implements IModule
 		resolution is doubled; even if the stage scaling mode is set to
 		`StageScaleMode.NO_SCALE`. `Stage.stageWidth` and `Stage.stageHeight`
 		continue to be reported in classic pixel units.
+
+		Compiling with `openfl_dpi_aware` reports `Stage.stageWidth` and
+		`Stage.stageHeight` in device pixels instead, leaving nothing for this
+		value to describe, so it is always 1.
 	**/
 	public var contentsScaleFactor(get, never):Float;
 
@@ -913,7 +917,7 @@ class Stage extends DisplayObjectContainer implements IModule
 		this.window = window;
 		this.color = color;
 
-		__contentsScaleFactor = window.scale;
+		__contentsScaleFactor = #if openfl_dpi_aware 1.0 #else window.scale #end;
 		__wasFullscreen = window.fullscreen;
 
 		__resize();
@@ -1067,7 +1071,7 @@ class Stage extends DisplayObjectContainer implements IModule
 		{
 			__renderer.__clear();
 			__renderer.__allowSmoothing = (quality != LOW);
-			__renderer.__pixelRatio = #if openfl_disable_hdpi 1 #else window.scale #end;
+			__renderer.__pixelRatio = #if (openfl_disable_hdpi || openfl_dpi_aware) 1 #else window.scale #end;
 			__renderer.__worldTransform = __displayMatrix;
 			__renderer.__stage = this;
 			__renderer.__resize(windowWidth, windowHeight);
@@ -1923,7 +1927,11 @@ class Stage extends DisplayObjectContainer implements IModule
 
 		if (deltaMode == PIXELS)
 		{
+			#if openfl_dpi_aware
 			__onMouseWheel(deltaX * window.scale, deltaY * window.scale, deltaMode);
+			#else
+			__onMouseWheel(deltaX, deltaY, deltaMode);
+			#end
 		}
 		else
 		{
@@ -3641,7 +3649,11 @@ class Stage extends DisplayObjectContainer implements IModule
 
 	@:noCompletion private function get_fullScreenHeight():UInt
 	{
+		#if openfl_dpi_aware
 		return Math.ceil(window.display.currentMode.height * window.scale);
+		#else
+		return window.display.currentMode.height;
+		#end
 	}
 
 	@:noCompletion private function get_fullScreenSourceRect():Rectangle
@@ -3670,7 +3682,11 @@ class Stage extends DisplayObjectContainer implements IModule
 
 	@:noCompletion private function get_fullScreenWidth():UInt
 	{
+		#if openfl_dpi_aware
 		return Math.ceil(window.display.currentMode.width * window.scale);
+		#else
+		return window.display.currentMode.width;
+		#end
 	}
 
 	@:noCompletion private override function set_height(value:Float):Float

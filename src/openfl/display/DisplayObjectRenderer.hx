@@ -356,7 +356,7 @@ class DisplayObjectRenderer extends EventDispatcher
 		}
 		else
 		{
-			var pixelRatio = renderer.__pixelRatio > 0 ? renderer.__pixelRatio : 1;
+			var pixelRatio = glRenderer.__defaultRenderTarget != null ? 1 : (renderer.__pixelRatio > 0 ? renderer.__pixelRatio : 1);
 			clipRect.setTo(glRenderer.__offsetX / pixelRatio, glRenderer.__offsetY / pixelRatio, glRenderer.__displayWidth / pixelRatio,
 				glRenderer.__displayHeight / pixelRatio);
 		}
@@ -698,16 +698,6 @@ class DisplayObjectRenderer extends EventDispatcher
 					displayObject.__cacheBitmapData2 = null;
 					displayObject.__cacheBitmapData3 = null;
 					displayObject.__cacheBitmapRenderer = null;
-
-					if (displayObject.__drawableType == TEXT_FIELD)
-					{
-						var textField:TextField = cast displayObject;
-						if (textField.__cacheBitmap != null)
-						{
-							textField.__cacheBitmap.__renderTransform.tx -= textField.__offsetX * pixelRatio;
-							textField.__cacheBitmap.__renderTransform.ty -= textField.__offsetY * pixelRatio;
-						}
-					}
 
 					return true;
 				}

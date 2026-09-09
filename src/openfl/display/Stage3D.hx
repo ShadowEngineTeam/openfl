@@ -349,7 +349,7 @@ class Stage3D extends EventDispatcher
 				1.0
 			]));
 
-			var pixelRatio = __stage.window.scale;
+			var pixelRatio = #if openfl_dpi_aware 1.0 #else __stage.window.scale #end;
 			__renderTransform.identity();
 			__renderTransform.appendTranslation(__x * pixelRatio, __y * pixelRatio, 0);
 			__renderTransform.append(__projectionTransform);
@@ -374,7 +374,7 @@ class Stage3D extends EventDispatcher
 	{
 		if (__x == value) return value;
 		__x = value;
-		var pixelRatio = __stage.window.scale;
+		var pixelRatio = #if openfl_dpi_aware 1.0 #else __stage.window.scale #end;
 		__renderTransform.identity();
 		__renderTransform.appendTranslation(__x * pixelRatio, __y * pixelRatio, 0);
 		__renderTransform.append(__projectionTransform);
@@ -390,7 +390,7 @@ class Stage3D extends EventDispatcher
 	{
 		if (__y == value) return value;
 		__y = value;
-		var pixelRatio = __stage.window.scale;
+		var pixelRatio = #if openfl_dpi_aware 1.0 #else __stage.window.scale #end;
 		__renderTransform.identity();
 		__renderTransform.appendTranslation(__x * pixelRatio, __y * pixelRatio, 0);
 		__renderTransform.append(__projectionTransform);
