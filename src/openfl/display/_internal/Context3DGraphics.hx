@@ -552,7 +552,7 @@ class Context3DGraphics
 				graphics.__vertexBufferCount = vertexBufferPosition;
 			}
 
-			buffer.uploadFromTypedArray(graphics.__vertexBufferData);
+			buffer.uploadFromTypedArray(graphics.__vertexBufferData, vertexBufferPosition * 4);
 		}
 
 		if (vertexBufferPositionUVT > 0)
@@ -566,7 +566,7 @@ class Context3DGraphics
 				graphics.__vertexBufferCountUVT = vertexBufferPositionUVT;
 			}
 
-			buffer.uploadFromTypedArray(graphics.__vertexBufferDataUVT);
+			buffer.uploadFromTypedArray(graphics.__vertexBufferDataUVT, vertexBufferPositionUVT * 4);
 		}
 
 		Rectangle.__pool.release(tileRect);
