@@ -527,7 +527,9 @@ import sys.io.Process;
 
 	@:noCompletion private static function get_language():String
 	{
-		var language = Locale.currentLocale.language;
+		var locales = System.getPreferredLocales();
+
+		var language = locales[0].language;
 
 		if (language != null)
 		{
@@ -539,11 +541,11 @@ import sys.io.Process;
 					return language;
 
 				case "zh":
-					var region = Locale.currentLocale.region;
+					var region = locales[0].country;
 
 					if (region != null)
 					{
-						switch (region.toUpperCase())
+						switch (region)
 						{
 							case "TW", "HANT":
 								return "zh-TW";
