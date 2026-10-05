@@ -51,6 +51,7 @@ class DisplayObjectRenderer extends EventDispatcher
 	@:noCompletion private var __worldAlpha:Float;
 	@:noCompletion private var __worldColorTransform:ColorTransform;
 	@:noCompletion private var __worldTransform:Matrix;
+	@:noCompletion private var __renderTargetTransform:Matrix;
 
 	@:noCompletion private function new()
 	{
@@ -400,8 +401,8 @@ class DisplayObjectRenderer extends EventDispatcher
 
 	@:noCompletion private inline function __getFilterCacheBounds(rect:Rectangle, pixelRatio:Float, cacheBounds:Rectangle):Void
 	{
-		cacheBounds.x = rect.x > 0 ? Math.ceil(rect.x) : Math.floor(rect.x);
-		cacheBounds.y = rect.y > 0 ? Math.ceil(rect.y) : Math.floor(rect.y);
+		cacheBounds.x = Math.floor(rect.x);
+		cacheBounds.y = Math.floor(rect.y);
 		cacheBounds.width = rect.width > 0 ? Math.ceil((rect.width + 1) * pixelRatio) : 0;
 		cacheBounds.height = rect.height > 0 ? Math.ceil((rect.height + 1) * pixelRatio) : 0;
 	}
@@ -800,6 +801,12 @@ class DisplayObjectRenderer extends EventDispatcher
 
 				displayObject.__cacheBitmapRenderer.__pixelRatio = pixelRatio;
 
+				if (displayObject.__cacheBitmapRenderer.__renderTargetTransform == null)
+				{
+					displayObject.__cacheBitmapRenderer.__renderTargetTransform = new Matrix();
+				}
+
+				displayObject.__cacheBitmapRenderer.__renderTargetTransform.copyFrom(displayObject.__cacheBitmap.__renderTransform);
 				displayObject.__cacheBitmapRenderer.__worldColorTransform.__copyFrom(colorTransform);
 				displayObject.__cacheBitmapRenderer.__worldColorTransform.__invert();
 

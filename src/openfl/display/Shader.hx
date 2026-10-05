@@ -268,6 +268,11 @@ class Shader
 
 	@:noCompletion private var __alpha:ShaderParameter<Float>;
 	@:noCompletion private var __bitmap:ShaderInput<BitmapData>;
+	@:noCompletion private var __blendMode:ShaderParameter<Int>;
+	@:noCompletion private var __blendBitmap:ShaderInput<BitmapData>;
+	@:noCompletion private var __blendBitmapTransform:ShaderParameter<Float>;
+	@:noCompletion private var __blendBitmapMerge:ShaderInput<BitmapData>;
+	@:noCompletion private var __blendBitmapMergeTransform:ShaderParameter<Float>;
 	@:noCompletion private var __colorMultiplier:ShaderParameter<Float>;
 	@:noCompletion private var __colorOffset:ShaderParameter<Float>;
 	@:noCompletion private var __context:Context3D;
@@ -586,29 +591,7 @@ class Shader
 			extensions += "#extension " + ext.name + " : " + ext.behavior + "\n";
 		}
 
-		var complexBlendsSupported = OpenGLRenderer.__complexBlendsSupported && isFragment;
 		var standardDerivativesSupported = OpenGLRenderer.__standardDerivativesSupported && isFragment;
-
-		if (__context.__context.type == OPENGL)
-		{
-			complexBlendsSupported = complexBlendsSupported && (glVersion == "150" || !StringTools.startsWith(glVersion, "1"));
-		}
-		else if (__context.__context.type == OPENGLES)
-		{
-			complexBlendsSupported = complexBlendsSupported && !StringTools.startsWith(glVersion, "1");
-		}
-
-		if (complexBlendsSupported)
-		{
-			extensions += "#extension GL_KHR_blend_equation_advanced : enable\n";
-
-			if (__context.__context.type == OPENGL)
-			{
-				// compiling without this gives the error
-				// 'gl_SampleID' : required extension not requested: GL_ARB_sample_shading
-				extensions += "#extension GL_ARB_sample_shading : enable\n";
-			}
-		}
 
 		if (standardDerivativesSupported)
 		{
@@ -640,11 +623,6 @@ class Shader
 				+ "#endif\n"
 				: "precision lowp float;\n")
 			+ "#endif\n";
-
-		if (complexBlendsSupported)
-		{
-			prefix += "#ifdef GL_KHR_blend_equation_advanced\nlayout (blend_support_all_equations) out;\n#endif\n\n";
-		}
 
 		return prefix;
 	}
@@ -811,6 +789,10 @@ class Shader
 						__texture = input;
 					case "bitmap":
 						__bitmap = input;
+					case "openfl_BlendBitmap":
+						__blendBitmap = input;
+					case "openfl_BlendBitmapMerge":
+						__blendBitmapMerge = input;
 					default:
 				}
 
@@ -911,6 +893,11 @@ class Shader
 						parameter.__length = length;
 						__paramInt.push(parameter);
 
+						if (name == "openfl_BlendMode")
+						{
+							__blendMode = parameter;
+						}
+
 						Reflect.setField(__data, name, parameter);
 
 						try
@@ -946,6 +933,8 @@ class Shader
 								case "openfl_Position": __position = parameter;
 								case "openfl_TextureCoord": __textureCoord = parameter;
 								case "openfl_TextureSize": __textureSize = parameter;
+								case "openfl_BlendBitmapTransform": __blendBitmapTransform = parameter;
+								case "openfl_BlendBitmapMergeTransform": __blendBitmapMergeTransform = parameter;
 								default:
 							}
 						}
@@ -1028,11 +1017,18 @@ class Shader
 			inputMipFilter = shaderBuffer.inputMipFilter[i];
 			inputWrap = shaderBuffer.inputWrap[i];
 
+			if (inputData == null && (input == __blendBitmap || input == __blendBitmapMerge)) inputData = input.input;
+
 			if (inputData != null)
 			{
 				input.__updateGL(__context, textureCount, inputData, inputFilter, inputMipFilter, inputWrap);
-				textureCount++;
 			}
+			else
+			{
+				__context.setTextureAt(textureCount, null);
+			}
+
+			textureCount++;
 		}
 
 		var gl = __context.gl;
