@@ -2001,6 +2001,11 @@ class Stage extends DisplayObjectContainer implements IModule
 			#end
 		}
 
+		#if (cpp && HXCPP_TRACY)
+		// Disable automatic zones for this function. Time stays in Stage.__render
+		var functionZones:Bool = cpp.vm.tracy.TracyProfiler.setFunctionZones(false);
+		#end
+
 		#if openfl_enable_experimental_update_queue
 		__updateQueue(false, true);
 		#else
@@ -2062,6 +2067,11 @@ class Stage extends DisplayObjectContainer implements IModule
 
 			__renderer.__cleared = false;
 		}
+
+		#if (cpp && HXCPP_TRACY)
+		// Revert to function zone functionality when finished.
+		cpp.vm.tracy.TracyProfiler.setFunctionZones(functionZones);
+		#end
 
 		return cancelled;
 	}

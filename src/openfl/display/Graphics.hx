@@ -866,6 +866,11 @@ import openfl.utils.ObjectPool;
 		var length = hasIndices ? indices.length : Math.floor(rects.length / 4);
 		if (length == 0) return;
 
+		#if (cpp && HXCPP_TRACY)
+		// Disable automatic zones for this function. Time stays in Graphics.drawQuads
+		var functionZones:Bool = cpp.vm.tracy.TracyProfiler.setFunctionZones(false);
+		#end
+
 		if (transforms != null)
 		{
 			if (transforms.length >= length * 6)
@@ -945,6 +950,11 @@ import openfl.utils.ObjectPool;
 
 		Rectangle.__pool.release(tileRect);
 		Matrix.__pool.release(tileTransform);
+
+		#if (cpp && HXCPP_TRACY)
+		// Revert to function zone functionality when finished.
+		cpp.vm.tracy.TracyProfiler.setFunctionZones(functionZones);
+		#end
 	}
 
 	/**
