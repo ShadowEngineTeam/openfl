@@ -111,7 +111,6 @@ class Assets
 	**/
 	public static function getBitmapData(id:String, useCache:Bool = true):BitmapData
 	{
-		#if (tools && !display)
 		if (useCache && cache.enabled && cache.hasBitmapData(id))
 		{
 			var bitmapData = cache.getBitmapData(id);
@@ -160,7 +159,6 @@ class Assets
 
 			return bitmapData;
 		}
-		#end
 
 		return null;
 	}
@@ -197,7 +195,6 @@ class Assets
 	**/
 	public static function getFont(id:String, useCache:Bool = true):Font
 	{
-		#if (tools && !display && !macro)
 		if (useCache && cache.enabled && cache.hasFont(id))
 		{
 			return cache.getFont(id);
@@ -218,7 +215,6 @@ class Assets
 
 			return font;
 		}
-		#end
 
 		return new Font();
 	}
@@ -240,7 +236,6 @@ class Assets
 	**/
 	public static function getMovieClip(id:String):MovieClip
 	{
-		#if (tools && !display)
 		var libraryName = id.substring(0, id.indexOf(":"));
 		var symbolName = id.substr(id.indexOf(":") + 1);
 		var limeLibrary = getLibrary(libraryName);
@@ -271,15 +266,8 @@ class Assets
 		{
 			Log.error("There is no asset library named \"" + libraryName + "\"");
 		}
-		#end
 
 		return null;
-	}
-
-	public static function getMusic(id:String, useCache:Bool = true):Sound
-	{
-		// TODO: Streaming sound
-		return getSound(id, useCache);
 	}
 
 	/**
@@ -312,7 +300,6 @@ class Assets
 	**/
 	public static function getSound(id:String, useCache:Bool = true):Sound
 	{
-		#if (tools && !display)
 		if (useCache && cache.enabled && cache.hasSound(id))
 		{
 			var sound = cache.getSound(id);
@@ -336,7 +323,6 @@ class Assets
 
 			return sound;
 		}
-		#end
 
 		return null;
 	}
@@ -410,7 +396,6 @@ class Assets
 	**/
 	public static function isLocal(id:String, type:AssetType = null, useCache:Bool = true):Bool
 	{
-		#if (tools && !display)
 		if (useCache && cache.enabled)
 		{
 			if (type == AssetType.IMAGE || type == null)
@@ -437,28 +422,18 @@ class Assets
 		{
 			return library.isLocal(symbolName, cast type);
 		}
-		#end
 
 		return false;
 	}
 
 	@:analyzer(ignore) private static function isValidBitmapData(bitmapData:BitmapData):Bool
 	{
-		#if (tools && !display)
 		return (bitmapData != null && (bitmapData.image != null || bitmapData.__texture != null));
-		#else
-		return true;
-		#end
 	}
 
 	@:noCompletion private static function isValidSound(sound:Sound):Bool
 	{
-		#if ((tools && !display) && cpp)
 		return true;
-		// return (sound.__handle != null && sound.__handle != 0);
-		#else
-		return true;
-		#end
 	}
 
 	/**
@@ -489,7 +464,6 @@ class Assets
 	{
 		if (useCache == null) useCache = true;
 
-		#if (tools && !display)
 		var promise = new Promise<BitmapData>();
 
 		if (useCache && cache.enabled && cache.hasBitmapData(id))
@@ -560,9 +534,6 @@ class Assets
 		}).onError(promise.error).onProgress(promise.progress);
 
 		return promise.future;
-		#else
-		return Future.withValue(getBitmapData(id, useCache));
-		#end
 	}
 
 	/**
@@ -581,10 +552,10 @@ class Assets
 	{
 		var promise = new Promise<ByteArray>();
 
-		var future = LimeAssets.loadBytes(id);
-		future.onComplete(function(bytes) promise.complete(bytes));
-		future.onProgress(function(progress, total) promise.progress(progress, total));
-		future.onError(function(msg) promise.error(msg));
+		LimeAssets.loadBytes(id)
+			.onComplete(function(bytes) promise.complete(bytes))
+			.onProgress(function(progress, total) promise.progress(progress, total))
+			.onError(function(msg) promise.error(msg));
 
 		return promise.future;
 	}
@@ -606,7 +577,6 @@ class Assets
 	{
 		if (useCache == null) useCache = true;
 
-		#if (tools && !display && !macro)
 		var promise = new Promise<Font>();
 
 		if (useCache && cache.enabled && cache.hasFont(id))
@@ -615,27 +585,24 @@ class Assets
 			return promise.future;
 		}
 
-		var future = LimeAssets.loadFont(id);
-		future.onComplete(function(limeFont)
-		{
-			var font = new Font();
-
-			font.__fromLimeFont(limeFont);
-
-			if (useCache && cache.enabled)
+		LimeAssets.loadFont(id, false)
+			.onComplete(function(limeFont)
 			{
-				cache.setFont(id, font);
-			}
+				var font = new Font();
 
-			promise.complete(font);
-		});
-		future.onError(promise.error);
-		future.onProgress(promise.progress);
+				font.__fromLimeFont(limeFont);
+
+				if (useCache && cache.enabled)
+				{
+					cache.setFont(id, font);
+				}
+
+				promise.complete(font);
+			})
+			.onError(promise.error)
+			.onProgress(promise.progress);
 
 		return promise.future;
-		#else
-		return Future.withValue(getFont(id, useCache));
-		#end
 	}
 
 	/**
@@ -676,53 +643,6 @@ class Assets
 	}
 
 	/**
-		Loads an included music asset asynchronously
-
-		```haxe
-		Assets.loadMusic ("music.ogg").onComplete (handleMusic);
-		```
-
-		@param	id 		The ID or asset path for the asset
-		@param	useCache		(Optional) Whether to allow use of the asset cache (Default: true)
-		@return		Returns a Future<Sound>
-	**/
-	public static function loadMusic(id:String, useCache:Null<Bool> = true):Future<Sound>
-	{
-		if (useCache == null) useCache = true;
-
-		#if !html5
-		var promise = new Promise<Sound>();
-
-		var future = LimeAssets.loadAudioBuffer(id, useCache);
-		future.onComplete(function(buffer)
-		{
-			if (buffer != null)
-			{
-				var sound = Sound.fromAudioBuffer(buffer);
-
-				if (useCache && cache.enabled)
-				{
-					cache.setSound(id, sound);
-				}
-
-				promise.complete(sound);
-			}
-			else
-			{
-				promise.error("[Assets] Could not load Sound \"" + id + "\"");
-			}
-		});
-		future.onError(promise.error);
-		future.onProgress(promise.progress);
-
-		return promise.future;
-		#else
-		var future = new Future<Sound>(function() return getMusic(id, useCache));
-		return future;
-		#end
-	}
-
-	/**
 		Loads an included MovieClip asset asynchronously
 
 		```haxe
@@ -735,7 +655,6 @@ class Assets
 	**/
 	public static function loadMovieClip(id:String):Future<MovieClip>
 	{
-		#if (tools && !display)
 		var promise = new Promise<MovieClip>();
 
 		var libraryName = id.substring(0, id.indexOf(":"));
@@ -763,9 +682,6 @@ class Assets
 		}
 
 		return promise.future;
-		#else
-		return Future.withValue(getMovieClip(id));
-		#end
 	}
 
 	/**
@@ -787,27 +703,35 @@ class Assets
 
 		var promise = new Promise<Sound>();
 
-		LimeAssets.loadAudioBuffer(id, useCache)
-			.onComplete(function(buffer)
+		if (useCache && cache.enabled && cache.hasSound(id))
+		{
+			var sound = cache.getSound(id);
+
+			if (isValidSound(sound))
 			{
-				if (buffer != null)
-				{
-					var sound = Sound.fromAudioBuffer(buffer);
+				promise.complete(sound);
+				return promise.future;
+			}
+		}
 
-					if (useCache && cache.enabled)
-					{
-						cache.setSound(id, sound);
-					}
+		LimeAssets.loadAudioBuffer(id, false).onComplete(function(buffer)
+		{
+			if (buffer != null)
+			{
+				var sound = Sound.fromAudioBuffer(buffer);
 
-					promise.complete(sound);
-				}
-				else
+				if (useCache && cache.enabled)
 				{
-					promise.error("[Assets] Could not load Sound \"" + id + "\"");
+					cache.setSound(id, sound);
 				}
-			})
-			.onError(promise.error)
-			.onProgress(promise.progress);
+
+				promise.complete(sound);
+			}
+			else
+			{
+				promise.error("[Assets] Could not load Sound \"" + id + "\"");
+			}
+		}).onError(promise.error).onProgress(promise.progress);
 
 		return promise.future;
 	}
