@@ -595,9 +595,6 @@ class Shader
 	 */
 	@:noCompletion private function __needsGLES3Source(fragmentSource:String):Bool
 	{
-		#if js
-		if (__glVersion == "100" && __context.__context.version == "2") return true;
-		#end
 		if (__context.__context.type != OPENGLES) return false;
 		if (OpenGLRenderer.__drawBuffersEXT == true) return false;
 		if (Std.parseFloat(__context.__context.version) < 3) return false;
