@@ -26,7 +26,7 @@ import openfl.events.EventDispatcher;
 		The current amplitude (volume) of the left channel, from 0 (silent) to 1
 		(full amplitude).
 	**/
-	public var leftPeak(default, null):Float;
+	public var leftPeak(get, never):Float;
 
 	/**
 		When the sound is playing, the `position` property indicates in
@@ -47,7 +47,7 @@ import openfl.events.EventDispatcher;
 		The current amplitude (volume) of the right channel, from 0 (silent) to 1
 		(full amplitude).
 	**/
-	public var rightPeak(default, null):Float;
+	public var rightPeak(get, never):Float;
 
 	/**
 		The SoundTransform object assigned to the sound channel. A SoundTransform
@@ -66,9 +66,6 @@ import openfl.events.EventDispatcher;
 		super(this);
 
 		__sound = sound;
-
-		leftPeak = 1;
-		rightPeak = 1;
 
 		if (soundTransform != null)
 		{
@@ -131,6 +128,16 @@ import openfl.events.EventDispatcher;
 	}
 
 	// Get & Set Methods
+	@:noCompletion private function get_leftPeak():Float
+	{
+		return __isValid ? __audioSource.getPeak(0) : 0;
+	}
+
+	@:noCompletion private function get_rightPeak():Float
+	{
+		return __isValid ? __audioSource.getPeak(1) : 0;
+	}
+
 	@:noCompletion private function get_position():Float
 	{
 		if (!__isValid) return 0;

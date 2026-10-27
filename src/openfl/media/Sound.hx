@@ -6,6 +6,7 @@ import lime.media.AudioSource;
 import lime.utils.Float32Array;
 import lime.utils.Int16Array;
 import openfl.errors.IOError;
+import openfl.media._internal.AudioMetadata;
 import openfl.events.Event;
 import openfl.events.EventDispatcher;
 import openfl.events.IOErrorEvent;
@@ -232,6 +233,8 @@ class Sound extends EventDispatcher
 	@:noCompletion private var __pendingSoundChannel:SoundChannel;
 	@:noCompletion private var __pendingAudioSource:AudioSource;
 	@:noCompletion private var __buffer:AudioBuffer;
+	@:noCompletion private var __id3:ID3Info;
+	@:noCompletion private var __metadataPath:String;
 
 	/**
 		Creates a new Sound object. If you pass a valid URLRequest object to the
@@ -311,18 +314,21 @@ class Sound extends EventDispatcher
 		which supports asynchronous loading.
 
 		@param	path	A local file path containing a sound
+		@param	stream	Whether to decode the file while it plays instead of all at once
 		@returns	A new Sound if successful, or `null` if unsuccessful
 	**/
-	public static function fromFile(path:String):Sound
+	public static function fromFile(path:String, stream:Bool = false):Sound
 	{
-		var buffer = AudioBuffer.fromFile(path);
+		var buffer = AudioBuffer.fromFile(path, stream);
 
 		if (buffer == null)
 		{
 			throw new IOError("Error loading sound from file: " + path);
 		}
 
-		return fromAudioBuffer(buffer);
+		var sound = fromAudioBuffer(buffer);
+		sound.__metadataPath = path;
+		return sound;
 	}
 
 	/**
@@ -339,7 +345,9 @@ class Sound extends EventDispatcher
 	{
 		return AudioBuffer.loadFromFile(path).then(function(audioBuffer)
 		{
-			return Future.withValue(fromAudioBuffer(audioBuffer));
+			var sound = fromAudioBuffer(audioBuffer);
+			sound.__metadataPath = path;
+			return Future.withValue(sound);
 		});
 	}
 
@@ -354,6 +362,7 @@ class Sound extends EventDispatcher
 		#if lime
 		var sound = new Sound();
 		sound.__buffer = AudioBuffer.fromBytes(bytes);
+		sound.__id3 = AudioMetadata.read(bytes);
 		return sound;
 		#else
 		return null;
@@ -445,6 +454,9 @@ class Sound extends EventDispatcher
 
 		url = stream.url;
 
+		__id3 = null;
+		__metadataPath = url;
+
 		__urlLoading = true;
 
 		#if openfl_pool_events
@@ -492,6 +504,9 @@ class Sound extends EventDispatcher
 			dispatchEvent(new IOErrorEvent(IOErrorEvent.IO_ERROR));
 			return;
 		}
+
+		__id3 = AudioMetadata.read(bytes);
+		__metadataPath = null;
 
 		#if openfl_pool_events
 		var openEvent = Event.__pool.get();
@@ -685,7 +700,14 @@ class Sound extends EventDispatcher
 	// Get & Set Methods
 	@:noCompletion private function get_id3():ID3Info
 	{
-		return new ID3Info();
+		if (__id3 == null)
+		{
+			// read lazily: most sounds never ask for their tags
+			var bytes = __metadataPath != null ? lime.utils.Bytes.fromFile(__metadataPath) : null;
+			__id3 = AudioMetadata.read(bytes);
+		}
+
+		return __id3;
 	}
 
 	@:noCompletion private function get_length():Float
@@ -694,9 +716,8 @@ class Sound extends EventDispatcher
 		{
 			if (__buffer.data != null)
 			{
-				var bytesPerFrame = __buffer.channels * (__buffer.bitsPerSample / 8.0);
-
-				var totalFrames = __buffer.data.length / bytesPerFrame;
+				// data.length counts samples, not bytes
+				var totalFrames = __buffer.data.length / __buffer.channels;
 
 				return (totalFrames / __buffer.sampleRate) * 1000.0;
 			}
