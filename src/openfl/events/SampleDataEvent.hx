@@ -2,10 +2,6 @@ package openfl.events;
 
 import openfl.utils.ByteArray;
 import openfl.utils.Endian;
-#if lime_openal
-import haxe.io.Bytes;
-import openfl.errors.Error;
-#end
 
 /**
 	Dispatched when a Sound object requests new audio data or when a
@@ -119,11 +115,6 @@ class SampleDataEvent extends Event
 		@param theposition The position of the data in the audio stream.
 		@param thedata     A byte array of data.
 	**/
-	#if lime_openal
-	@:noCompletion private var leftChannel:Int;
-	@:noCompletion private var rightChannel:Int;
-	#end
-
 	public function new(type:String, bubbles:Bool = false, cancelable:Bool = false)
 	{
 		super(type, bubbles, cancelable);
@@ -156,43 +147,4 @@ class SampleDataEvent extends Event
 		data.endian = Endian.LITTLE_ENDIAN;
 		position = 0.0;
 	}
-
-	#if lime_openal
-	@:noCompletion private function getBufferSize():Int
-	{
-		var bufferSize:Int = Std.int(data.length / 4 / 2);
-		if (bufferSize > 0)
-		{
-			if (bufferSize >= 2048 && bufferSize <= 8192)
-			{
-				return bufferSize;
-			}
-			else
-			{
-				throw new Error("To be consistent with flash the listener function registered to SampleDataEvent has to provide between 2048 and 8192 samples.");
-			}
-		}
-		return bufferSize;
-	}
-
-	@:noCompletion private function getSamples(outputBuffer:ByteArray):Void
-	{
-		var bytesLength:Int = data.length;
-		var tempFloat:Float;
-		data.position = 0;
-		outputBuffer.position = 0;
-		while (data.position < bytesLength)
-		{
-			tempFloat = data.readFloat();
-			leftChannel = Std.int(tempFloat * 32768);
-			outputBuffer.writeShort(leftChannel);
-			tempFloat = data.readFloat();
-			rightChannel = Std.int(tempFloat * 32768);
-			outputBuffer.writeShort(rightChannel);
-		}
-
-		data.position = 0;
-	}
-	#end
-
 }
