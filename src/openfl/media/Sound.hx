@@ -567,8 +567,22 @@ class Sound extends EventDispatcher
 		audioBuffer.channels = stereo ? 2 : 1;
 		audioBuffer.sampleRate = Std.int(sampleRate);
 		audioBuffer.frames = samples;
-		audioBuffer.format = (format == "float") ? F32 : S16;
-		audioBuffer.data = (format == "float") ? new Float32Array(bytes) : new Int16Array(bytes);
+		audioBuffer.format = F32;
+
+		if (format == "float")
+		{
+			audioBuffer.data = new Float32Array(bytes);
+		}
+		else
+		{
+			var shorts:Int16Array = new Int16Array(bytes);
+			var floats:Float32Array = new Float32Array(shorts.length);
+
+			for (i in 0...shorts.length)
+				floats[i] = shorts[i] / 32768.0;
+
+			audioBuffer.data = floats;
+		}
 		__buffer = audioBuffer;
 
 		#if openfl_pool_events
@@ -678,19 +692,6 @@ class Sound extends EventDispatcher
 	{
 		if (__buffer != null)
 		{
-			#if (js && html5 && lime_howlerjs)
-			if (__buffer.__srcHowlerDefaultSprite != null)
-			{
-				var sprite = untyped __buffer.src._sprite[__buffer.__srcHowlerDefaultSprite];
-
-				if (sprite != null)
-				{
-					return sprite[1];
-				}
-			}
-
-			return __buffer.src.duration() * 1000;
-			#else
 			if (__buffer.data != null)
 			{
 				var bytesPerFrame = __buffer.channels * (__buffer.bitsPerSample / 8.0);
@@ -709,7 +710,6 @@ class Sound extends EventDispatcher
 			{
 				return 0;
 			}
-			#end
 		}
 
 		return 0;
@@ -729,12 +729,10 @@ class Sound extends EventDispatcher
 
 			var byteLength = 1;
 
-			#if (!(js && html5))
 			if (__buffer.data != null)
 			{
 				byteLength = __buffer.data.length;
 			}
-			#end
 
 			#if openfl_pool_events
 			var progressEvent = ProgressEvent.__pool.get();
