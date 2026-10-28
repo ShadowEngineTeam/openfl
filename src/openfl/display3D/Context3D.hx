@@ -2481,6 +2481,22 @@ import openfl.utils.ByteArray;
 		}
 	}
 
+	@:noCompletion private var __nullTexture2D:GLTexture;
+
+	@:noCompletion private function __getNullTexture2D():GLTexture
+	{
+		if (__nullTexture2D == null)
+		{
+			__nullTexture2D = gl.createTexture();
+			__bindGLTexture2D(__nullTexture2D);
+			gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new lime.utils.UInt8Array([0, 0, 0, 255]));
+			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+		}
+
+		return __nullTexture2D;
+	}
+
 	@:noCompletion private function __flushGLTextures():Void
 	{
 		var sampler = 0;
@@ -2527,7 +2543,8 @@ import openfl.utils.ByteArray;
 			}
 			else
 			{
-				__bindGLTexture2D(null);
+				// Core profiles have no usable default texture 0, so bind a 1x1 placeholder on desktop GL.
+				__bindGLTexture2D(__context.type == OPENGL ? __getNullTexture2D() : null);
 			}
 
 			if (__state.program != null && __state.program.__format == AGAL && samplerState.textureAlpha)
