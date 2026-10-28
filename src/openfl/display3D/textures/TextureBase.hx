@@ -316,9 +316,14 @@ class TextureBase extends EventDispatcher
 		var internalFormat:Int;
 		var format:Int;
 
+		// R8 needs GL 3.0+, the alpha swizzle needs 3.3+ (core profiles have no GL_ALPHA textures).
+		var useRedAsAlpha = image.buffer.bitsPerPixel == 1
+			&& __context.__context.type == OPENGL
+			&& Std.parseFloat(__context.__context.version) >= 3.3;
+
 		if (image.buffer.bitsPerPixel == 1)
 		{
-			if (__context.__context.type == OPENGL)
+			if (useRedAsAlpha)
 			{
 				// GL_ALPHA textures don't exist in core profiles; use R8 and swizzle red into alpha.
 				internalFormat = gl.R8;
@@ -340,7 +345,7 @@ class TextureBase extends EventDispatcher
 
 		__uploadTexture2D(__textureTarget, image.buffer.width, image.buffer.height, internalFormat, format, image.data);
 
-		if (image.buffer.bitsPerPixel == 1 && __context.__context.type == OPENGL)
+		if (useRedAsAlpha)
 		{
 			gl.texParameteri(gl.TEXTURE_2D, 0x8E45, gl.RED); // TEXTURE_SWIZZLE_A
 		}
