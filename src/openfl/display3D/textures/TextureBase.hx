@@ -318,8 +318,17 @@ class TextureBase extends EventDispatcher
 
 		if (image.buffer.bitsPerPixel == 1)
 		{
-			internalFormat = gl.ALPHA;
-			format = gl.ALPHA;
+			if (__context.__context.type == OPENGL)
+			{
+				// GL_ALPHA textures don't exist in core profiles; use R8 and swizzle red into alpha.
+				internalFormat = gl.R8;
+				format = gl.RED;
+			}
+			else
+			{
+				internalFormat = gl.ALPHA;
+				format = gl.ALPHA;
+			}
 		}
 		else
 		{
@@ -330,6 +339,11 @@ class TextureBase extends EventDispatcher
 		__context.__bindGLTexture2D(__textureID);
 
 		__uploadTexture2D(__textureTarget, image.buffer.width, image.buffer.height, internalFormat, format, image.data);
+
+		if (image.buffer.bitsPerPixel == 1 && __context.__context.type == OPENGL)
+		{
+			gl.texParameteri(gl.TEXTURE_2D, 0x8E45, gl.RED); // TEXTURE_SWIZZLE_A
+		}
 
 		__context.__bindGLTexture2D(null);
 

@@ -335,6 +335,13 @@ import openfl.utils.ByteArray;
 			{
 				__glDepthStencil = __context.gles3.DEPTH24_STENCIL8;
 			}
+			else if (__context.type == OPENGL && Std.parseFloat(__context.version) >= 3)
+			{
+				// Desktop GL 3.0+ core: packed depth-stencil is built in (DEPTH24_STENCIL8 = 0x88F0).
+				// The extension lookup below returns null on core contexts, and macOS's
+				// Metal-backed GL rejects separate depth/stencil attachments.
+				__glDepthStencil = 0x88F0;
+			}
 			else
 			{
 				var extension = gl.getExtension("OES_packed_depth_stencil");
