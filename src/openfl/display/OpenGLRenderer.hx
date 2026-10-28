@@ -177,6 +177,13 @@ class OpenGLRenderer extends DisplayObjectRenderer
 				__bgraExtension = gl.getExtension("APPLE_texture_format_BGRA8888");
 			}
 
+			if (__bgraExtension == null && context.__context.type == OPENGL)
+			{
+				// Desktop GL has had GL_BGRA built in since 1.2, but core profiles (e.g. macOS)
+				// don't advertise EXT_bgra, so without this BGRA data is uploaded as RGBA.
+				__bgraExtension = {BGRA_EXT: 0x80E1}; // GL_BGRA
+			}
+
 			if (__bgraAsInternalFormat == null)
 			{
 				// Note: Get rid of this when `ANGLE` is added.
