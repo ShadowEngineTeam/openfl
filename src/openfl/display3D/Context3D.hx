@@ -2481,6 +2481,7 @@ import openfl.utils.ByteArray;
 		}
 	}
 
+	#if mac
 	@:noCompletion private var __nullTexture2D:GLTexture;
 
 	@:noCompletion private function __getNullTexture2D():GLTexture
@@ -2496,6 +2497,7 @@ import openfl.utils.ByteArray;
 
 		return __nullTexture2D;
 	}
+	#end
 
 	@:noCompletion private function __flushGLTextures():Void
 	{
@@ -2543,8 +2545,11 @@ import openfl.utils.ByteArray;
 			}
 			else
 			{
-				// Core profiles have no usable default texture 0, so bind a 1x1 placeholder on desktop GL.
-				__bindGLTexture2D(__context.type == OPENGL ? __getNullTexture2D() : null);
+				#if mac
+				__bindGLTexture2D(__getNullTexture2D());
+				#else
+				__bindGLTexture2D(null);
+				#end
 			}
 
 			if (__state.program != null && __state.program.__format == AGAL && samplerState.textureAlpha)
