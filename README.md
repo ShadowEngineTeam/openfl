@@ -108,11 +108,11 @@ Core Components
 
  * [openfl](https://github.com/openfl/openfl)
  * [lime](https://github.com/openfl/lime)
- * [hxcpp](https://github.com/HaxeFoundation/hxcpp)
+ * [hxcpp](https://github.com/ShadowEngineTeam/libhxcpp)
 
 OpenFL relies upon [Lime](https://lime.openfl.org), a foundation for cross-platform project development.
 
-[hxcpp](https://github.com/HaxeFoundation/hxcpp) is used automatically by the Lime tools to manage the C++ compilation process for each platform, and to provide the Haxe standard library for C++ support.
+[hxcpp](https://github.com/ShadowEngineTeam/libhxcpp) is used automatically by the Lime tools to manage the C++ compilation process for each platform, and to provide the Haxe standard library for C++ support.
 
 
 License
