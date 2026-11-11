@@ -1,19 +1,16 @@
-package openfl.display._internal;
+﻿package openfl.display._internal;
 
 import openfl.display.OpenGLRenderer;
 import openfl.display._internal.CairoTextField;
+import openfl.display.Context3DRenderer;
 import openfl.text.TextField;
 
-#if !openfl_debug
-@:fileXml(' tags="haxe,release" ')
-@:noDebug
-#end
 @:access(openfl.display.Graphics)
 @:access(openfl.text.TextField)
 @SuppressWarnings("checkstyle:FieldDocComment")
 class Context3DTextField
 {
-	public static function render(textField:TextField, renderer:OpenGLRenderer):Void
+	public static function render(textField:TextField, renderer:Context3DRenderer):Void
 	{
 		renderer.__softwareRenderer.__pixelRatio = renderer.__pixelRatio;
 
@@ -23,7 +20,7 @@ class Context3DTextField
 		textField.__graphics.__hardwareDirty = false;
 	}
 
-	public static function renderDrawable(textField:TextField, renderer:OpenGLRenderer):Void
+	public static function renderDrawable(textField:TextField, renderer:Context3DRenderer):Void
 	{
 		renderer.__updateCacheBitmap(textField, false);
 
@@ -40,13 +37,13 @@ class Context3DTextField
 		renderer.__renderEvent(textField);
 	}
 
-	public static function renderDrawableMask(textField:TextField, renderer:OpenGLRenderer):Void
+	public static function renderDrawableMask(textField:TextField, renderer:Context3DRenderer):Void
 	{
 		Context3DTextField.renderMask(textField, renderer);
 		Context3DDisplayObject.renderDrawableMask(textField, renderer);
 	}
 
-	public static function renderMask(textField:TextField, renderer:OpenGLRenderer):Void
+	public static function renderMask(textField:TextField, renderer:Context3DRenderer):Void
 	{
 		#if lime_cairo
 		CairoTextField.render(textField, cast renderer.__softwareRenderer, textField.__worldTransform);

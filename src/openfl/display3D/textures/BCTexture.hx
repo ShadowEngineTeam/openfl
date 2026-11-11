@@ -1,7 +1,9 @@
 package openfl.display3D.textures;
 
 #if !flash
+import haxe.Int64;
 import haxe.io.Bytes;
+import lime.graphics.bgfx.BGFXTextureFormat;
 import openfl.utils._internal.UInt8Array;
 import openfl.utils.ByteArray;
 import openfl.Lib;
@@ -41,12 +43,40 @@ import openfl.display3D.Context3D;
 	{
 		super(context);
 
-		var gl = __context.gl;
-
 		__validateHeader(data);
 		if (!supported) return;
 
 		__detectBCFormat(data);
+
+		if (__context.isBGFX)
+		{
+			var bgfx = __context.bgfx;
+			var bgfxFormat:Int = __getBGFXFormat();
+			var required:Int = __isSRGB ? bgfx.CAPS_FORMAT_TEXTURE_2D_SRGB : bgfx.CAPS_FORMAT_TEXTURE_2D;
+
+			if ((bgfx.getCaps().formats[bgfxFormat] & required) == 0)
+			{
+				__showWarning('BC compression for $__bcFormat is not available on this device.');
+				supported = false;
+				return;
+			}
+
+			__getImageDimensions(data);
+			__computeImageSize();
+
+			__validateImageSize(data);
+			if (!supported) return;
+
+			__format = bgfxFormat;
+			__internalFormat = bgfxFormat;
+			__optimizeForRenderToTexture = false;
+			__streamingLevels = 0;
+
+			__uploadBCTextureFromByteArray(data);
+			return;
+		}
+
+		var gl = __context.gl;
 
 		var dxt1Extension = __getExtension(gl, ["EXT_texture_compression_dxt1"]);
 		var dxt3Extension = __getExtension(gl, ["ANGLE_texture_compression_dxt3", "EXT_texture_compression_s3tc"]);
@@ -75,15 +105,7 @@ import openfl.display3D.Context3D;
 
 		if (!extensionSupported)
 		{
-			if (!__warned)
-			{
-				#if USING_SHADOW_ENGINE
-				backend.CoolUtil.showPopUp('BC compression for $__bcFormat is not available on this device.', "Rendering Error!");
-				#else
-				lime.app.Application.current.window.alert('BC compression for $__bcFormat is not available on this device.', "Rendering Error!");
-				#end
-				__warned = true;
-			}
+			__showWarning('BC compression for $__bcFormat is not available on this device.');
 			supported = false;
 			return;
 		}
@@ -139,16 +161,58 @@ import openfl.display3D.Context3D;
 		return null;
 	}
 
+	@:noCompletion private static function __showWarning(message:String):Void
+	{
+		if (__warned) return;
+		__warned = true;
+
+		#if USING_SHADOW_ENGINE
+		backend.CoolUtil.showPopUp(message, "Rendering Error!");
+		#else
+		lime.app.Application.current.window.alert(message, "Rendering Error!");
+		#end
+	}
+
+	@:noCompletion private function __getBGFXFormat():BGFXTextureFormat
+	{
+		return switch (__bcFormat)
+		{
+			case "BC1": BGFXTextureFormat.BC1;
+			case "BC2": BGFXTextureFormat.BC2;
+			case "BC3": BGFXTextureFormat.BC3;
+			case "BC4": __isSigned ? BGFXTextureFormat.BC4S : BGFXTextureFormat.BC4;
+			case "BC5": __isSigned ? BGFXTextureFormat.BC5S : BGFXTextureFormat.BC5;
+			case "BC6H": __isSigned ? BGFXTextureFormat.BC6H : BGFXTextureFormat.BC6HU;
+			default: BGFXTextureFormat.BC7;
+		}
+	}
+
 	private function __uploadBCTextureFromByteArray(data:ByteArray):Void
 	{
+		var bytes:Bytes = cast data;
+		var dataOffset = __isDX10 ? DX10_HEADER_SIZE : DDS_HEADER_SIZE;
+		var textureBytes = new UInt8Array(bytes, dataOffset, imageSize);
+
+		if (__context.isBGFX)
+		{
+			var bgfx = __context.bgfx;
+
+			if (__textureID != null)
+			{
+				bgfx.destroyTexture(__textureID);
+				__textureID = null;
+			}
+
+			__textureFlags = __isSRGB ? bgfx.TEXTURE_SRGB : Int64.make(0, 0);
+			__textureID = bgfx.createTexture2D(__width, __height, false, 1, __internalFormat, __textureFlags, bgfx.copy(textureBytes));
+			return;
+		}
+
 		var gl = __context.gl;
 
 		__textureTarget = gl.TEXTURE_2D;
 		__context.__bindGLTexture2D(__textureID);
 
-		var bytes:Bytes = cast data;
-		var dataOffset = __isDX10 ? DX10_HEADER_SIZE : DDS_HEADER_SIZE;
-		var textureBytes = new UInt8Array(bytes, dataOffset, imageSize);
 		gl.compressedTexImage2D(__textureTarget, 0, __internalFormat, __width, __height, 0, textureBytes);
 		gl.texParameteri(__textureTarget, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
 		gl.texParameteri(__textureTarget, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
@@ -324,6 +388,16 @@ import openfl.display3D.Context3D;
 		return magic == BC_MAGIC_NUMBER;
 	}
 
+	@:noCompletion private override function __getFramebuffer(enableDepthAndStencil:Bool, antiAlias:Int, surfaceSelector:Int):Dynamic
+	{
+		return null;
+	}
+
+	@:noCompletion private override function __uploadFromImage(image:lime.graphics.Image):Void
+	{
+		return;
+	}
+
 	@:noCompletion private override function __setSamplerState(state:SamplerState):Bool
 	{
 		var effectiveState = state;
@@ -342,10 +416,22 @@ import openfl.display3D.Context3D;
 
 		if (super.__setSamplerState(effectiveState))
 		{
-			var gl = __context.gl;
-
-			if (Context3D.__glMaxTextureMaxAnisotropy != 0)
+			if (__context.isBGFX)
 			{
+				var bgfx = __context.bgfx;
+				// bgfx has no per-texture anisotropic filtering
+				// it's defined globally by the reset flags
+				switch (state.filter)
+				{
+					case ANISOTROPIC2X, ANISOTROPIC4X, ANISOTROPIC8X, ANISOTROPIC16X:
+						__samplerStateFlags |= bgfx.SAMPLER_MAG_ANISOTROPIC;
+						__samplerStateFlags |= bgfx.SAMPLER_MIN_ANISOTROPIC;
+					default: // nothing
+				}
+			}
+			else if (__context.__maxTextureMaxAnisotropy != 0)
+			{
+				var gl = __context.gl;
 				var aniso:Float = switch (state.filter)
 				{
 					case ANISOTROPIC2X: 2;
@@ -355,12 +441,12 @@ import openfl.display3D.Context3D;
 					default: 1;
 				}
 
-				if (aniso > Context3D.__glMaxTextureMaxAnisotropy)
+				if (aniso > __context.__maxTextureMaxAnisotropy)
 				{
-					aniso = Context3D.__glMaxTextureMaxAnisotropy;
+					aniso = __context.__maxTextureMaxAnisotropy;
 				}
 
-				gl.texParameterf(gl.TEXTURE_2D, Context3D.__glTextureMaxAnisotropy, aniso);
+				gl.texParameterf(gl.TEXTURE_2D, __context.__textureMaxAnisotropy, aniso);
 			}
 
 			return true;

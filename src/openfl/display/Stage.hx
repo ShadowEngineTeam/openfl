@@ -1047,7 +1047,7 @@ class Stage extends DisplayObjectContainer implements IModule
 
 		switch (window.context.type)
 		{
-			case OPENGL, OPENGLES:
+			case OPENGL, OPENGLES, BGFX:
 				#if !disable_cffi
 				context3D = new Context3D(this);
 				#if openfl_dpi_aware
@@ -1056,7 +1056,7 @@ class Stage extends DisplayObjectContainer implements IModule
 				context3D.configureBackBuffer(stageWidth, stageHeight, 0, true, true, true);
 				#end
 				context3D.present();
-				__renderer = new OpenGLRenderer(context3D);
+				__renderer = new Context3DRenderer(context3D);
 				#end
 
 			case CAIRO:
@@ -1981,7 +1981,10 @@ class Stage extends DisplayObjectContainer implements IModule
 
 		var event:Event = null;
 
-		var shouldRender = #if !openfl_disable_display_render (__renderer != null #if !openfl_always_render && __renderDirty #end) #else false #end;
+		// bgfx has to submit a frame on every tick, so it always renders; which renderer is
+		// in use is only known at run time now that both are compiled in.
+		var shouldRender = #if !openfl_disable_display_render (__renderer != null #if !openfl_always_render
+			&& (__renderDirty || context.type == BGFX) #end) #else false #end;
 
 		if (__invalidated && shouldRender)
 		{

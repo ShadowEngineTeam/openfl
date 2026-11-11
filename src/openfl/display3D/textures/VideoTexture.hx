@@ -56,7 +56,7 @@ import openfl.net.NetStream;
 	{
 		super(context);
 
-		__textureTarget = __context.gl.TEXTURE_2D;
+		if (context.isOpenGL) __textureTarget = __context.gl.TEXTURE_2D;
 	}
 
 	/**
@@ -85,7 +85,7 @@ import openfl.net.NetStream;
 		super.dispose();
 	}
 
-	@:noCompletion private override function __getTexture():GLTexture
+	@:noCompletion private override function __getTexture():Dynamic
 	{
 
 		return __textureID;
