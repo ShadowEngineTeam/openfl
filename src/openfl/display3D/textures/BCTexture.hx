@@ -52,7 +52,9 @@ import openfl.display3D.Context3D;
 		{
 			var bgfx = __context.bgfx;
 			var bgfxFormat:Int = __getBGFXFormat();
-			var required:Int = __isSRGB ? bgfx.CAPS_FORMAT_TEXTURE_2D_SRGB : bgfx.CAPS_FORMAT_TEXTURE_2D;
+			// A format the device lacks is still usable when bgfx can decode it on upload
+			// (EMULATED): the texture then costs its uncompressed size, but it draws.
+			var required:Int = (__isSRGB ? bgfx.CAPS_FORMAT_TEXTURE_2D_SRGB : bgfx.CAPS_FORMAT_TEXTURE_2D) | bgfx.CAPS_FORMAT_TEXTURE_2D_EMULATED;
 
 			if ((bgfx.getCaps().formats[bgfxFormat] & required) == 0)
 			{
