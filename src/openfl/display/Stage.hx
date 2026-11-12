@@ -1981,8 +1981,7 @@ class Stage extends DisplayObjectContainer implements IModule
 
 		var event:Event = null;
 
-		// bgfx has to submit a frame on every tick, so it always renders; which renderer is
-		// in use is only known at run time now that both are compiled in.
+		// bgfx has to submit a frame on every tick, so it always renders
 		var shouldRender = #if !openfl_disable_display_render (__renderer != null #if !openfl_always_render
 			&& (__renderDirty || context.type == BGFX) #end) #else false #end;
 
