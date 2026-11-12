@@ -116,6 +116,11 @@ class ShaderCConverter
 	var usedGlobalMacro:Bool = false;
 	var uniformRemaps:Array<String> = [];
 
+	// Names the source also uses after a dot (`color.r`), and the uniforms that had to take
+	// another macro name because of it. See `remapUniform`.
+	var fieldNames:Array<String> = [];
+	var aliasedUniforms:Map<String, String> = new Map<String, String>();
+
 	public function new()
 	{
 		mappedUniforms = new Map<String, String>();
@@ -172,12 +177,15 @@ class ShaderCConverter
 		usedConstMacro = false;
 		usedGlobalMacro = false;
 		uniformRemaps = [];
+		aliasedUniforms = new Map<String, String>();
 
 		source = normalize(source);
 		source = renameReservedIdentifiers(source);
 		source = rewriteMethodsCalls(source);
+		fieldNames = findFieldNames(source);
 		source = remapDeclarations(source, isVertex);
 		source = renameShadowedUniforms(source);
+		source = renameAliasedUniforms(source);
 		source = checkMacroRedefinitions(source);
 		source = fixConstInitializers(source);
 		source = applyGlobalQualifiers(source);
@@ -513,7 +521,52 @@ class ShaderCConverter
 
 		mappedUniforms.set(name, type);
 
-		return 'uniform vec4 $internal;\n#define $name $unpacked';
+		// The uniform is reached through a macro, and the preprocessor does not know a variable
+		// from a field: with `uniform vec3 r;` a plain `#define r ...` would also rewrite the
+		// swizzle in `color.r`. Such a uniform gets a macro under another name instead, and its
+		// uses are renamed to match (`renameAliasedUniforms`).
+		var macroName:String = name;
+
+		if (fieldNames.contains(name))
+		{
+			macroName = uniformAlias(name);
+			aliasedUniforms.set(name, macroName);
+		}
+
+		return 'uniform vec4 $internal;\n#define $macroName $unpacked';
+	}
+
+	inline function uniformAlias(name:String):String
+	{
+		return '${name}_uniform';
+	}
+
+	function findFieldNames(source:String):Array<String>
+	{
+		final names:Array<String> = [];
+
+		for (token in tokenize(source))
+		{
+			if (token.type == FIELD_SELECTION && !names.contains(token.data)) names.push(token.data);
+		}
+
+		return names;
+	}
+
+	function renameAliasedUniforms(source:String):String
+	{
+		if (!aliasedUniforms.keys().hasNext()) return source;
+
+		final edits:Array<SourceEdit> = [];
+
+		for (token in tokenize(source))
+		{
+			if (token.type != IDENTIFIER || !aliasedUniforms.exists(token.data)) continue;
+
+			edits.push({start: tokenStart(token), end: tokenEnd(token), text: uniformAlias(token.data)});
+		}
+
+		return applyEdits(source, edits);
 	}
 
 	function unpackUniform(internal:String, type:String):String
