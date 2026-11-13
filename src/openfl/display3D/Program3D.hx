@@ -926,10 +926,6 @@ import openfl.utils.ByteArray;
 				message += "\n" + bgfx.getLastShaderMessage();
 				message += "\n\nSource:\n" + source;
 				message += "\n\nConverted:\n" + [for (i => line in converted.split("\n")) '${i + 1}: $line'].join("\n");
-
-				var path = ShaderCache.saveSource(key, isVertex, converted, varyingDef);
-				if (path != null) message += '\n\nConverted shader saved to $path';
-
 				Log.error(message);
 				return null;
 			}

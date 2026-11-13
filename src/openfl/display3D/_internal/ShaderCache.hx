@@ -99,36 +99,6 @@ class ShaderCache
 		#end
 	}
 
-	/**
-	 * Save a converted shader source and its varying def to disk, for shaders that failed to compile
-	 * @return the path of the saved source, or `null` if it could not be saved
-	 */
-	public static function saveSource(key:String, isVertex:Bool, source:String, varyingDef:String):Null<String>
-	{
-		#if sys
-		try
-		{
-			var root = System.applicationStorageDirectory;
-			if (root == null) return null;
-
-			var directory = haxe.io.Path.join([root, "shader-errors"]);
-			FileSystem.createDirectory(directory);
-
-			var path = haxe.io.Path.join([directory, '${isVertex ? "vs" : "fs"}_$key.sc']);
-			File.saveContent(path, source);
-			File.saveContent(haxe.io.Path.join([directory, '${isVertex ? "vs" : "fs"}_$key.varying.def.sc']), varyingDef);
-
-			return path;
-		}
-		catch (e:Dynamic)
-		{
-			Log.warn('Could not save shader source: $e');
-		}
-		#end
-
-		return null;
-	}
-
 	@:noCompletion private static function __readMemory(memory:BGFXMemoryRef):Null<Bytes>
 	{
 		#if cpp
