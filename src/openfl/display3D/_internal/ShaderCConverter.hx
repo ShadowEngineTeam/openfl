@@ -181,6 +181,7 @@ class ShaderCConverter
 		aliasedUniforms = new Map<String, String>();
 
 		source = normalize(source);
+		source = rewriteStructConstructors(source);
 		source = renameReservedIdentifiers(source);
 		definesTexture = ~/^\s*#\s*define\s+texture\b/m.match(source);
 		source = rewriteMethodsCalls(source);
@@ -782,6 +783,76 @@ class ShaderCConverter
 		}
 
 		return null;
+	}
+
+	// GLSL builds a struct by calling its name, HLSL has no such constructor, so every struct gets a function that builds it
+	function rewriteStructConstructors(source:String):String
+	{
+		final tokens:Array<Token> = tokenize(source);
+		final edits:Array<SourceEdit> = [];
+		final structs:Map<String, Bool> = new Map<String, Bool>();
+
+		for (i in 0...tokens.length - 1)
+		{
+			if (tokens[i].type != STRUCT) continue;
+
+			final name:String = tokens[i + 1].data;
+
+			var open:Int = i + 1;
+			while (open < tokens.length && tokens[open].type != LEFT_BRACE)
+				open++;
+
+			final close:Int = findBlockEnd(tokens, open + 1);
+			if (close >= tokens.length - 1 || tokens[close + 1].type != SEMICOLON) continue;
+
+			final params:Array<String> = [];
+			final fields:Array<String> = [];
+			var type:Null<String> = null;
+			var j:Int = open + 1;
+
+			while (j < close)
+			{
+				final token:Token = tokens[j];
+
+				switch (token.type)
+				{
+					case SEMICOLON:
+						type = null;
+					case COMMA, CONST, HIGH_PRECISION, MEDIUM_PRECISION, LOW_PRECISION:
+					case IDENTIFIER if (type != null):
+						var array:String = "";
+						if (j + 1 < close && tokens[j + 1].type == LEFT_BRACKET)
+						{
+							final end:Int = findInitializerEnd(tokens, j + 2);
+							array = sourceRange(source, tokens, j + 1, end);
+							j = end;
+						}
+						params.push('$type _${params.length}$array');
+						fields.push('_s.${token.data} = _${fields.length};');
+					default:
+						if (type == null) type = token.data;
+				}
+
+				j++;
+			}
+
+			if (params.length == 0) continue;
+
+			structs.set(name, true);
+			edits.push({
+				start: tokenEnd(tokens[close + 1]),
+				end: tokenEnd(tokens[close + 1]),
+				text: '\n$name openfl_$name(${params.join(", ")}) { $name _s; ${fields.join(" ")} return _s; }'
+			});
+		}
+
+		for (i in 0...tokens.length - 1)
+		{
+			if (structs.exists(tokens[i].data) && tokens[i + 1].type == LEFT_PAREN && (i == 0 || tokens[i - 1].type != STRUCT))
+				edits.push({start: tokenStart(tokens[i]), end: tokenEnd(tokens[i]), text: 'openfl_${tokens[i].data}'});
+		}
+
+		return applyEdits(source, edits);
 	}
 
 	// GLSL multiplies vectors and matrices with `*`, HLSL needs mul(), which bgfx gives every backend
