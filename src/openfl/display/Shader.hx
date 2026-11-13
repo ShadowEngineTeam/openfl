@@ -650,6 +650,8 @@ class Shader
 	{
 		// We replace the original main with a new one that calls it
 		src = ~/\bvoid\s+main\s*\(/g.replace(src, "void openfl_main(");
+		// ShaderToy ports often name it through a macro: #define mainImage main
+		src = ~/^(\s*#\s*define\s+\w+\s+)main(\s*(\/\/.*)?)$/gm.replace(src, "$1openfl_main$2");
 
 		// replace gl_FragColor with custom global new vector
 		src = ~/\bgl_FragColor\b/g.replace(src, "openfl_FragColorMain");
