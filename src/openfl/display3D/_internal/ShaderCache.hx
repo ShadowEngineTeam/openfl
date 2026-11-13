@@ -21,7 +21,7 @@ import sys.io.File;
  */
 class ShaderCache
 {
-	public static inline var CACHE_VERSION:Int = 4;
+	public static inline var CACHE_VERSION:Int = 5;
 
 	public static var enabled:Bool = #if openfl_no_shader_cache false #else true #end;
 
