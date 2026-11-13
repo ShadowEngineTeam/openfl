@@ -1398,6 +1398,13 @@ class BGFXContext3D implements openfl.display3D.IContext3D
 		}
 
 		__backBufferTexture = null;
+
+		if (__emptyTexture != null)
+		{
+			bgfx.destroyTexture(__emptyTexture);
+			__emptyTexture = null;
+		}
+
 		parent.__context = null;
 		__renderStage3DProgram = null;
 		__presentProgram = null;
@@ -1589,6 +1596,10 @@ class BGFXContext3D implements openfl.display3D.IContext3D
 	@:noCompletion
 	private var setTextures:Array<BGFXTexture> = [];
 
+	// What a sampler without a texture reads: transparent black, as on Direct3D. OpenGL and Vulkan would keep the
+	// texture of an earlier draw in the slot
+	@:noCompletion private var __emptyTexture:Null<BGFXTexture> = null;
+
 	@:noCompletion private function __flushTextures():Void
 	{
 		var samplers = parent.__state.program.__bgfxSamplersList;
@@ -1601,8 +1612,11 @@ class BGFXContext3D implements openfl.display3D.IContext3D
 				var texture = parent.__state.textures[samplerID];
 				if (texture == null || texture.__textureID == null)
 				{
+					if (__emptyTexture == null)
+						__emptyTexture = bgfx.createTexture2D(1, 1, false, 1, BGFXTextureFormat.RGBA8, Int64.make(0, 0), bgfx.copy(new UInt8Array(4)));
+
 					setTextures[samplerID] = null;
-					bgfx.setTexture(samplerID, sampler.uniform, null);
+					bgfx.setTexture(samplerID, sampler.uniform, __emptyTexture);
 					continue;
 				}
 
