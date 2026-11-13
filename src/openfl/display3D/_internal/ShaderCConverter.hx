@@ -182,6 +182,7 @@ class ShaderCConverter
 
 		source = normalize(source);
 		source = rewriteStructConstructors(source);
+		source = rewriteSwizzles(source);
 		source = renameReservedIdentifiers(source);
 		definesTexture = ~/^\s*#\s*define\s+texture\b/m.match(source);
 		source = rewriteMethodsCalls(source);
@@ -783,6 +784,26 @@ class ShaderCConverter
 		}
 
 		return null;
+	}
+
+	// HLSL only swizzles with xyzw and rgba, not GLSL's texture coordinate letters stpq
+	function rewriteSwizzles(source:String):String
+	{
+		final tokens:Array<Token> = tokenize(source);
+		final members:Map<Int, Bool> = findStructMembers(tokens);
+		final memberNames:Map<String, Bool> = [for (i in members.keys()) tokens[i].data => true];
+		final edits:Array<SourceEdit> = [];
+		final swizzle:EReg = ~/^[stpq]{1,4}$/;
+
+		for (token in tokens)
+		{
+			if (token.type != FIELD_SELECTION || !swizzle.match(token.data) || memberNames.exists(token.data)) continue;
+
+			final text:String = [for (i in 0...token.data.length) "xyzw".charAt("stpq".indexOf(token.data.charAt(i)))].join("");
+			edits.push({start: tokenStart(token), end: tokenEnd(token), text: text});
+		}
+
+		return applyEdits(source, edits);
 	}
 
 	// GLSL builds a struct by calling its name, HLSL has no such constructor, so every struct gets a function that builds it
