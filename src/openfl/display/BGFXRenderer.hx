@@ -31,8 +31,7 @@ class BGFXRenderer implements IContext3DRenderer
 
 		if (Graphics.maxTextureWidth == null)
 		{
-			// TODO: query bgfx caps instead of hardcoding
-			Graphics.maxTextureWidth = Graphics.maxTextureHeight = 4096;
+			Graphics.maxTextureWidth = Graphics.maxTextureHeight = parent.__context3D.bgfx.getCaps().limits.maxTextureSize;
 		}
 
 		if (Context3DRenderer.__sRGBWriteControlSupported == null) Context3DRenderer.__sRGBWriteControlSupported = false;
