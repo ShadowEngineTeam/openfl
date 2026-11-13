@@ -400,9 +400,10 @@ class ShaderCConverter
 
 	function renameShadowedUniforms(source:String):String
 	{
-		if (!mappedUniforms.keys().hasNext()) return source;
+		if (!mappedUniforms.keys().hasNext() && !samplersIDs.keys().hasNext()) return source;
 
 		final tokens:Array<Token> = tokenize(source);
+		final members:Map<Int, Bool> = findStructMembers(tokens);
 		final edits:Array<SourceEdit> = [];
 
 		var depth:Int = 0;
@@ -420,7 +421,10 @@ class ShaderCConverter
 				default:
 			}
 
-			if (token.type != IDENTIFIER || !mappedUniforms.exists(token.data)) continue;
+			if (token.type != IDENTIFIER || members.exists(i)) continue;
+
+			// A local named like a sampler hides it in its own initializer once bgfx turns the sampler into a variable
+			if (!mappedUniforms.exists(token.data) && !(depth > 0 && samplersIDs.exists(token.data))) continue;
 			if (i == 0 || i + 1 >= tokens.length || !isTypeToken(tokens[i - 1])) continue;
 
 			final scopeEnd:Int = switch (tokens[i + 1].type)
@@ -432,7 +436,12 @@ class ShaderCConverter
 
 			if (scopeEnd == -1) continue;
 
-			for (j in i...scopeEnd)
+			// The declaration's own initializer still sees the outer name
+			final scopeStart:Int = tokens[i + 1].type == EQUAL ? findInitializerEnd(tokens, i + 2) : i + 1;
+
+			edits.push({start: tokenStart(token), end: tokenEnd(token), text: '${token.data}_local'});
+
+			for (j in scopeStart...scopeEnd)
 			{
 				if (tokens[j].type == IDENTIFIER && tokens[j].data == token.data) edits.push({
 					start: tokenStart(tokens[j]),
@@ -443,6 +452,52 @@ class ShaderCConverter
 		}
 
 		return applyEdits(source, edits);
+	}
+
+	function findInitializerEnd(tokens:Array<Token>, start:Int):Int
+	{
+		var depth:Int = 0;
+
+		for (i in start...tokens.length)
+		{
+			switch (tokens[i].type)
+			{
+				case LEFT_PAREN, LEFT_BRACKET, LEFT_BRACE:
+					depth++;
+				case RIGHT_PAREN, RIGHT_BRACKET, RIGHT_BRACE:
+					if (depth == 0) return i;
+					depth--;
+				case COMMA, SEMICOLON if (depth == 0):
+					return i;
+				default:
+			}
+		}
+
+		return tokens.length;
+	}
+
+	// Struct members are only reached through field selections, so a member named like a uniform keeps its name
+	function findStructMembers(tokens:Array<Token>):Map<Int, Bool>
+	{
+		final members:Map<Int, Bool> = new Map<Int, Bool>();
+
+		for (i in 0...tokens.length)
+		{
+			if (tokens[i].type != STRUCT) continue;
+
+			var open:Int = i + 1;
+			while (open < tokens.length && tokens[open].type != LEFT_BRACE)
+				open++;
+
+			final close:Int = findBlockEnd(tokens, open + 1);
+
+			for (j in open + 1...close)
+			{
+				if (tokens[j].type == IDENTIFIER) members.set(j, true);
+			}
+		}
+
+		return members;
 	}
 
 	function isTypeToken(token:Token):Bool
@@ -557,11 +612,15 @@ class ShaderCConverter
 	{
 		if (!aliasedUniforms.keys().hasNext()) return source;
 
+		final tokens:Array<Token> = tokenize(source);
+		final members:Map<Int, Bool> = findStructMembers(tokens);
 		final edits:Array<SourceEdit> = [];
 
-		for (token in tokenize(source))
+		for (i in 0...tokens.length)
 		{
-			if (token.type != IDENTIFIER || !aliasedUniforms.exists(token.data)) continue;
+			final token:Token = tokens[i];
+
+			if (token.type != IDENTIFIER || !aliasedUniforms.exists(token.data) || members.exists(i)) continue;
 
 			edits.push({start: tokenStart(token), end: tokenEnd(token), text: uniformAlias(token.data)});
 		}
@@ -695,6 +754,9 @@ class ShaderCConverter
 	function rewriteCall(name:String, arguments:Int):Null<String>
 	{
 		if (name == "atan") return arguments == 2 ? "atan2" : null;
+
+		// GLSL 1.30's texture() is not in bgfx_shader.sh
+		if (name == "texture") return arguments == 2 ? "texture2D" : arguments == 3 ? "texture2DBias" : null;
 
 		if (MATRIX_SIZES.exists(name))
 		{
