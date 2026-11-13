@@ -924,7 +924,12 @@ import openfl.utils.ByteArray;
 			{
 				var message = 'Error compiling ${isVertex ? "vertex" : "fragment"} shader';
 				message += "\n" + bgfx.getLastShaderMessage();
-				message += "\n" + converted;
+				message += "\n\nSource:\n" + source;
+				message += "\n\nConverted:\n" + [for (i => line in converted.split("\n")) '${i + 1}: $line'].join("\n");
+
+				var path = ShaderCache.saveSource(key, isVertex, converted, varyingDef);
+				if (path != null) message += '\n\nConverted shader saved to $path';
+
 				Log.error(message);
 				return null;
 			}
