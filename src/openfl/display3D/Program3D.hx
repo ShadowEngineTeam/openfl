@@ -924,7 +924,7 @@ import openfl.utils.ByteArray;
 			{
 				var message = 'Error compiling ${isVertex ? "vertex" : "fragment"} shader';
 				message += "\n" + bgfx.getLastShaderMessage();
-				message += "\n" + source;
+				message += "\n" + converted;
 				Log.error(message);
 				return null;
 			}

@@ -787,7 +787,13 @@ class ShaderCConverter
 				diagonal.push(row == column ? "v" : "0.0");
 		}
 
-		var results:String = '$name openfl_$name(float v) { return $name(${diagonal.join(", ")}); }\n'
+		var results:String = '';
+
+		// bgfx_shader.sh only has mtxFromCols for mat3 and mat4
+		if (size == 2)
+			results += 'mat2 mtxFromCols(vec2 _0, vec2 _1)\n{\n#if BGFX_SHADER_MATRIX_COLUMN_MAJOR\n\treturn mat2(_0, _1);\n#else\n\treturn transpose(mat2(_0, _1) );\n#endif\n}\n';
+
+		results += '$name openfl_$name(float v) { return $name(${diagonal.join(", ")}); }\n'
 			+ '$name openfl_$name(int v) { return openfl_$name(float(v)); }\n'
 			+ '$name openfl_$name($name v) { return v; }\n';
 
