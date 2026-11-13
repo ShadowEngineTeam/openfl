@@ -184,6 +184,7 @@ class ShaderCConverter
 		source = renameReservedIdentifiers(source);
 		definesTexture = ~/^\s*#\s*define\s+texture\b/m.match(source);
 		source = rewriteMethodsCalls(source);
+		source = rewriteMatrixProducts(source);
 		fieldNames = findFieldNames(source);
 		source = remapDeclarations(source, isVertex);
 		source = renameShadowedUniforms(source);
@@ -781,6 +782,237 @@ class ShaderCConverter
 		}
 
 		return null;
+	}
+
+	// GLSL multiplies vectors and matrices with `*`, HLSL needs mul(), which bgfx gives every backend
+	function rewriteMatrixProducts(source:String):String
+	{
+		var tokens:Array<Token> = tokenize(source);
+		final matrices:Map<String, Bool> = new Map<String, Bool>();
+		final matrixFunctions:Map<String, Bool> = new Map<String, Bool>();
+
+		for (i in 0...tokens.length - 1)
+		{
+			switch (tokens[i].type)
+			{
+				case MAT2, MAT3, MAT4 if (tokens[i + 1].type == IDENTIFIER):
+					if (i + 2 < tokens.length && tokens[i + 2].type == LEFT_PAREN) matrixFunctions.set(tokens[i + 1].data, true);
+					else matrices.set(tokens[i + 1].data, true);
+				default:
+			}
+		}
+
+		var rewritten:Bool = true;
+
+		while (rewritten)
+		{
+			rewritten = false;
+
+			for (i in 1...tokens.length - 1)
+			{
+				final type:TokenType = tokens[i].type;
+				if (type != STAR && type != MUL_ASSIGN) continue;
+
+				final left:Int = primaryStart(tokens, i - 1);
+				if (left == -1) continue;
+
+				if (type == MUL_ASSIGN)
+				{
+					final rightEnd:Int = findInitializerEnd(tokens, i + 1) - 1;
+					if (rightEnd <= i || !isMatrixExpression(tokens, i + 1, rightEnd, matrices, matrixFunctions)) continue;
+
+					final target:String = sourceRange(source, tokens, left, i - 1);
+					source = replaceRange(source, tokens, left, rightEnd, '$target = mul($target, ${sourceRange(source, tokens, i + 1, rightEnd)})');
+				}
+				else
+				{
+					final rightEnd:Int = primaryEnd(tokens, i + 1);
+					if (rightEnd == -1) continue;
+
+					if (!isMatrixExpression(tokens, left, i - 1, matrices, matrixFunctions)
+						&& !isMatrixExpression(tokens, i + 1, rightEnd, matrices, matrixFunctions)) continue;
+
+					// `*` and `/` group from the left, so the whole chain before this `*` is its left operand
+					var start:Int = left;
+					while (start > 1 && (tokens[start - 1].type == STAR || tokens[start - 1].type == SLASH))
+					{
+						final previous:Int = primaryStart(tokens, start - 2);
+						if (previous == -1) break;
+						start = previous;
+					}
+
+					source = replaceRange(source, tokens, start, rightEnd,
+						'mul(${sourceRange(source, tokens, start, i - 1)}, ${sourceRange(source, tokens, i + 1, rightEnd)})');
+				}
+
+				tokens = tokenize(source);
+				rewritten = true;
+				break;
+			}
+		}
+
+		return source;
+	}
+
+	function isMatrixExpression(tokens:Array<Token>, start:Int, end:Int, matrices:Map<String, Bool>, matrixFunctions:Map<String, Bool>):Bool
+	{
+		while (start < end && (tokens[start].type == DASH || tokens[start].type == PLUS))
+			start++;
+
+		final token:Token = tokens[start];
+
+		if (start == end) return token.type == IDENTIFIER && matrices.exists(token.data);
+
+		if (token.type == LEFT_PAREN && findClosing(tokens, start) == end)
+		{
+			return primaryEnd(tokens, start + 1) == end - 1 && isMatrixExpression(tokens, start + 1, end - 1, matrices, matrixFunctions);
+		}
+
+		if (!isCallable(token) || tokens[start + 1].type != LEFT_PAREN || findClosing(tokens, start + 1) != end) return false;
+
+		return switch (token.data)
+		{
+			case "mat2", "mat3", "mat4", "openfl_mat2", "openfl_mat3", "openfl_mat4", "mtxFromCols", "transpose": true;
+			case "mul":
+				final comma:Int = findArgumentSeparator(tokens, start + 1, end);
+				if (comma == -1) return false;
+				final a:Bool = isMatrixExpression(tokens, start + 2, comma - 1, matrices, matrixFunctions);
+				final b:Bool = isMatrixExpression(tokens, comma + 1, end - 1, matrices, matrixFunctions);
+				(a && b) || (a && isScalarLiteral(tokens, comma + 1, end - 1)) || (b && isScalarLiteral(tokens, start + 2, comma - 1));
+			default: matrixFunctions.exists(token.data);
+		}
+	}
+
+	function isScalarLiteral(tokens:Array<Token>, start:Int, end:Int):Bool
+	{
+		return start == end && (tokens[start].type == FLOATCONSTANT || tokens[start].type == INTCONSTANT);
+	}
+
+	function findArgumentSeparator(tokens:Array<Token>, open:Int, close:Int):Int
+	{
+		var depth:Int = 0;
+
+		for (i in open + 1...close)
+		{
+			switch (tokens[i].type)
+			{
+				case LEFT_PAREN, LEFT_BRACKET:
+					depth++;
+				case RIGHT_PAREN, RIGHT_BRACKET:
+					depth--;
+				case COMMA if (depth == 0):
+					return i;
+				default:
+			}
+		}
+
+		return -1;
+	}
+
+	// The first token of the operand that ends at `end`: a name, a constant, a call or a parenthesis, with its fields and indices
+	function primaryStart(tokens:Array<Token>, end:Int):Int
+	{
+		var i:Int = end;
+
+		while (i >= 0)
+		{
+			var base:Int = switch (tokens[i].type)
+			{
+				case IDENTIFIER, FIELD_SELECTION, INTCONSTANT, FLOATCONSTANT, BOOLCONSTANT: i;
+				case RIGHT_PAREN | RIGHT_BRACKET:
+					final open:Int = findOpening(tokens, i);
+					if (open == -1) return -1;
+					if (tokens[i].type == RIGHT_BRACKET)
+					{
+						i = open - 1;
+						continue;
+					}
+					open > 0 && isCallable(tokens[open - 1]) ? open - 1 : open;
+				default: -1;
+			}
+
+			if (base == -1) return -1;
+			if (base < 2 || tokens[base - 1].type != DOT) return base;
+
+			i = base - 2;
+		}
+
+		return -1;
+	}
+
+	// The last token of the operand that starts at `start`, see primaryStart
+	function primaryEnd(tokens:Array<Token>, start:Int):Int
+	{
+		var i:Int = start;
+
+		while (i < tokens.length && (tokens[i].type == DASH || tokens[i].type == PLUS))
+			i++;
+
+		if (i >= tokens.length) return -1;
+
+		if (tokens[i].type == LEFT_PAREN || (isCallable(tokens[i]) && i + 1 < tokens.length && tokens[i + 1].type == LEFT_PAREN))
+		{
+			i = findClosing(tokens, tokens[i].type == LEFT_PAREN ? i : i + 1);
+			if (i == -1) return -1;
+		}
+		else
+		{
+			switch (tokens[i].type)
+			{
+				case IDENTIFIER, INTCONSTANT, FLOATCONSTANT, BOOLCONSTANT:
+				default: return -1;
+			}
+		}
+
+		while (i + 1 < tokens.length)
+		{
+			switch (tokens[i + 1].type)
+			{
+				case LEFT_BRACKET:
+					final close:Int = findInitializerEnd(tokens, i + 2);
+					if (close >= tokens.length || tokens[close].type != RIGHT_BRACKET) return -1;
+					i = close;
+				case DOT if (i + 2 < tokens.length):
+					i += 2;
+				default:
+					break;
+			}
+		}
+
+		return i;
+	}
+
+	function findOpening(tokens:Array<Token>, close:Int):Int
+	{
+		var depth:Int = 0;
+		var i:Int = close;
+
+		while (i >= 0)
+		{
+			switch (tokens[i].type)
+			{
+				case RIGHT_PAREN, RIGHT_BRACKET:
+					depth++;
+				case LEFT_PAREN, LEFT_BRACKET:
+					depth--;
+					if (depth == 0) return i;
+				default:
+			}
+
+			i--;
+		}
+
+		return -1;
+	}
+
+	inline function sourceRange(source:String, tokens:Array<Token>, start:Int, end:Int):String
+	{
+		return source.substring(tokenStart(tokens[start]), tokenEnd(tokens[end]));
+	}
+
+	inline function replaceRange(source:String, tokens:Array<Token>, start:Int, end:Int, text:String):String
+	{
+		return source.substring(0, tokenStart(tokens[start])) + text + source.substring(tokenEnd(tokens[end]));
 	}
 
 	function countArguments(tokens:Array<Token>, open:Int, close:Int):Int
