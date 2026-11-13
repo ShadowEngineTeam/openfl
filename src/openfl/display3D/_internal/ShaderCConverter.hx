@@ -120,6 +120,7 @@ class ShaderCConverter
 	// another macro name because of it. See `remapUniform`.
 	var fieldNames:Array<String> = [];
 	var aliasedUniforms:Map<String, String> = new Map<String, String>();
+	var definesTexture:Bool = false;
 
 	public function new()
 	{
@@ -181,6 +182,7 @@ class ShaderCConverter
 
 		source = normalize(source);
 		source = renameReservedIdentifiers(source);
+		definesTexture = ~/^\s*#\s*define\s+texture\b/m.match(source);
 		source = rewriteMethodsCalls(source);
 		fieldNames = findFieldNames(source);
 		source = remapDeclarations(source, isVertex);
@@ -755,8 +757,8 @@ class ShaderCConverter
 	{
 		if (name == "atan") return arguments == 2 ? "atan2" : null;
 
-		// GLSL 1.30's texture() is not in bgfx_shader.sh
-		if (name == "texture") return arguments == 2 ? "texture2D" : arguments == 3 ? "texture2DBias" : null;
+		// GLSL 1.30's texture() is not in bgfx_shader.sh, unless the shader defines it itself
+		if (name == "texture" && !definesTexture) return arguments == 2 ? "texture2D" : arguments == 3 ? "texture2DBias" : null;
 
 		if (MATRIX_SIZES.exists(name))
 		{
