@@ -3,7 +3,6 @@ package openfl.display3D.textures;
 import haxe.Int64;
 import lime.graphics.Image;
 import lime.graphics.RenderContext;
-import lime.graphics.bgfx.BGFXMemoryRef;
 import lime.graphics.bgfx.BGFXTexture;
 import lime.graphics.bgfx.BGFXTextureFormat;
 import lime.graphics.opengl.GLFramebuffer;
@@ -11,7 +10,6 @@ import lime.graphics.opengl.GLRenderbuffer;
 import lime.graphics.opengl.GLTexture;
 import lime.utils.ArrayBufferView;
 import lime.utils.Log;
-import lime.utils.UInt8Array;
 import openfl.display.BitmapData;
 import openfl.display.OpenGLRenderer;
 import openfl.display._internal.SamplerState;
@@ -58,8 +56,7 @@ class TextureBase extends EventDispatcher
 	@:noCompletion private var __textureTarget:Int;
 	@:noCompletion private var __samplerStateFlags:Int;
 	@:noCompletion private var __textureFlags:Int64;
-
-	@:noCompletion private static var __bgfxZeroData:UInt8Array;
+	@:noCompletion private var __bgfxUndefined:Bool = false;
 
 	@:noCompletion private function new(context:Context3D, ?format:Context3DTextureFormat)
 	{
@@ -246,7 +243,8 @@ class TextureBase extends EventDispatcher
 
 					__textureFlags = bgfx.TEXTURE_RT | bgfx.TEXTURE_BLIT_DST;
 
-					__textureID = bgfx.createTexture2D(__width, __height, false, 1, __internalFormat, __textureFlags, __bgfxEmptyData(__width, __height, __internalFormat));
+					__textureID = bgfx.createTexture2D(__width, __height, false, 1, __internalFormat, __textureFlags, null);
+					__bgfxUndefined = true;
 				}
 
 				if (__textureID == null)
@@ -581,11 +579,12 @@ class TextureBase extends EventDispatcher
 				&& __textureID != null)
 			{
 				bgfx.updateTexture2D(__textureID, 0, 0, 0, 0, width, height, bgfx.copy(data));
+				__bgfxUndefined = false;
 			}
 			else
 			{
-				__textureID = bgfx.createTexture2D(width, height, false, 1, format, __textureFlags,
-					data != null ? bgfx.copy(data) : (__textureFlags & bgfx.TEXTURE_RT != 0 ? __bgfxEmptyData(width, height, format) : null));
+				__textureID = bgfx.createTexture2D(width, height, false, 1, format, __textureFlags, data == null ? null : bgfx.copy(data));
+				__bgfxUndefined = data == null;
 
 				__memoryWidth = width;
 				__memoryHeight = height;
@@ -614,18 +613,6 @@ class TextureBase extends EventDispatcher
 				__memoryInternalFormat = internalFormat;
 			}
 		}
-	}
-
-	// bgfx leaves a texture created without data undefined, and Vulkan hands it reused memory.
-	@:noCompletion private function __bgfxEmptyData(width:Int, height:Int, format:BGFXTextureFormat):BGFXMemoryRef
-	{
-		var bgfx = __context.bgfx;
-		var info = bgfx.calcTextureSize(width, height, 1, false, false, 1, format);
-		if (info == null || info.storageSize <= 0) return null;
-
-		if (__bgfxZeroData == null || __bgfxZeroData.length < info.storageSize) __bgfxZeroData = new UInt8Array(info.storageSize);
-
-		return bgfx.copy(__bgfxZeroData, info.storageSize);
 	}
 
 	@:noCompletion private function __limeBufferFormatToGLFormat(pixelFormat:lime.graphics.PixelFormat):Int

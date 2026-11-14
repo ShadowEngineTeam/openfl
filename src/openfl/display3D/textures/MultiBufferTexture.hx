@@ -35,11 +35,12 @@ class MultiBufferTexture extends TextureBase
 			}
 
 			__textureFlags = bgfx.TEXTURE_RT;
+			__bgfxUndefined = true;
 
 			for (i => format in formats)
 			{
 				final bgfxFormat = context3DFormatToBGFXFormat(format);
-				final texture = bgfx.createTexture2D(__width, __height, false, 1, bgfxFormat, bgfx.TEXTURE_RT, __bgfxEmptyData(__width, __height, bgfxFormat));
+				final texture = bgfx.createTexture2D(__width, __height, false, 1, bgfxFormat, bgfx.TEXTURE_RT, null);
 
 				textures.push(texture);
 
