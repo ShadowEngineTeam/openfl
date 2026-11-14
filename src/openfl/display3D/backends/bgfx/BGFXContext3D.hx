@@ -1038,33 +1038,10 @@ class BGFXContext3D implements openfl.display3D.IContext3D
 		var framebuffer = target.__getFramebuffer(false, 0, 0);
 		if (framebuffer == null) return false;
 
-		if (target.__bgfxUndefined)
-		{
-			var clearView = __getFreeViewID();
-			bgfx.setViewMode(clearView, SEQUENTIAL);
-			bgfx.setViewFrameBuffer(clearView, framebuffer);
-			__clearUndefined(target, clearView);
-		}
-
 		if (!__drawCopyTo(framebuffer, width, height, source, width / source.__width, height / source.__height)) return false;
 
 		__viewBusy = true;
 		__refreshView();
-
-		return true;
-	}
-
-	// A texture created without data holds whatever its memory held before.
-	@:noCompletion private function __clearUndefined(texture:TextureBase, view:Int):Bool
-	{
-		if (!texture.__bgfxUndefined) return false;
-
-		texture.__bgfxUndefined = false;
-		bgfx.setViewRect(view, 0, 0, texture.__width, texture.__height);
-		bgfx.setViewClear(view, bgfx.CLEAR_COLOR, 0, 1.0, 0);
-		bgfx.touch(view);
-		BGFXUniformCache.reset();
-		setTextures.resize(0);
 
 		return true;
 	}
@@ -1279,12 +1256,6 @@ class BGFXContext3D implements openfl.display3D.IContext3D
 		__setViewId(__getFreeViewID());
 		bgfx.setViewFrameBuffer(__currentViewId, texture.__getFramebuffer(enableDepthAndStencil, antiAlias, surfaceSelector));
 		bgfx.setViewClear(__currentViewId, 0, 0, 1.0, 0);
-
-		if (__clearUndefined(texture, __currentViewId))
-		{
-			__viewBusy = true;
-			__refreshView();
-		}
 	}
 
 	public function setSamplerStateAt(sampler:Int, wrap:Context3DWrapMode, filter:Context3DTextureFilter, mipfilter:Context3DMipFilter):Void
