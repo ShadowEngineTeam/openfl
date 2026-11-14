@@ -312,20 +312,12 @@ class BGFXContext3D implements openfl.display3D.IContext3D
 	{
 		if (!__viewBusy) return;
 
-		__setViewId(__getFreeViewID());
-
 		final target = parent.__state.renderToTexture;
+		final framebuffer = target != null ? target.__getFramebuffer(parent.__state.renderToTextureDepthStencil, parent.__state.renderToTextureAntiAlias,
+			parent.__state.renderToTextureSurfaceSelector) : parent.__state.__primaryBGFXFramebuffer;
 
-		if (target != null)
-		{
-			bgfx.setViewFrameBuffer(__currentViewId,
-				target.__getFramebuffer(parent.__state.renderToTextureDepthStencil, parent.__state.renderToTextureAntiAlias,
-					parent.__state.renderToTextureSurfaceSelector));
-		}
-		else
-		{
-			bgfx.setViewFrameBuffer(__currentViewId, parent.__state.__primaryBGFXFramebuffer);
-		}
+		__setViewId(__getFreeViewID());
+		bgfx.setViewFrameBuffer(__currentViewId, framebuffer);
 
 		bgfx.setViewClear(__currentViewId, 0, 0, 1.0, 0);
 	}
@@ -333,7 +325,6 @@ class BGFXContext3D implements openfl.display3D.IContext3D
 	@:noCompletion private function __getFreeViewID():Int
 	{
 		// Workaround for if we ran out of views.
-		// Allow BGFX process the submits
 		// Store the current frame's work in our back buffer texture, not the screen.
 		// The views are now reset so we continue the other half and slap it ontop of out backbuffer texture then onto screen.
 		if (__nextViewId >= __maxViews - 1 && !__flushingFrame) __flushFrame();
@@ -346,6 +337,17 @@ class BGFXContext3D implements openfl.display3D.IContext3D
 		__flushingFrame = true;
 		__endFrame(bgfx.FRAME_FLUSH);
 		__flushingFrame = false;
+
+		__submitProgramUniforms();
+	}
+
+	@:noCompletion private function __submitProgramUniforms():Void
+	{
+		var program = parent.__state.program;
+		if (program == null || program.__bgfxUniforms == null) return;
+
+		for (uniform in program.__bgfxUniforms)
+			uniform.submit(bgfx);
 	}
 
 	@:noCompletion private function __endFrame(flags:Int):Void
@@ -617,6 +619,8 @@ class BGFXContext3D implements openfl.display3D.IContext3D
 
 		var count = (numTriangles == -1) ? indexBuffer.__numIndices : (numTriangles * 3);
 
+		__flush();
+
 		__bindVertexStreams(-1);
 
 		indexBuffer.__prepareForDraw();
@@ -630,8 +634,6 @@ class BGFXContext3D implements openfl.display3D.IContext3D
 			case Transient(ib, _):
 				bgfx.setTransientIndexBufferIndices(ib, firstIndex, count);
 		}
-
-		__flush();
 
 		bgfx.setState(__buildState(), 0);
 
@@ -1038,7 +1040,7 @@ class BGFXContext3D implements openfl.display3D.IContext3D
 		var framebuffer = target.__getFramebuffer(false, 0, 0);
 		if (framebuffer == null) return false;
 
-		if (!__drawCopyTo(framebuffer, width, height, source, width / source.__width, height / source.__height)) return false;
+		if (!__drawCopyTo(framebuffer, width, height, source.__textureID, width / source.__width, height / source.__height)) return false;
 
 		__viewBusy = true;
 		__refreshView();
@@ -1046,7 +1048,7 @@ class BGFXContext3D implements openfl.display3D.IContext3D
 		return true;
 	}
 
-	@:noCompletion private function __drawCopyTo(framebuffer:Dynamic, width:Int, height:Int, source:TextureBase, scaleX:Float, scaleY:Float):Bool
+	@:noCompletion private function __drawCopyTo(framebuffer:Dynamic, width:Int, height:Int, source:BGFXTexture, scaleX:Float, scaleY:Float):Bool
 	{
 		if (__copyProgram == null)
 		{
@@ -1089,13 +1091,14 @@ class BGFXContext3D implements openfl.display3D.IContext3D
 		__copyScale[1] = scaleY;
 
 		bgfx.setVertexBuffer(0, __copyVertexBuffer);
-		bgfx.setTexture(sampler.samplerID, sampler.uniform, source.__textureID, bgfx.SAMPLER_POINT | bgfx.SAMPLER_UVW_CLAMP);
+		bgfx.setTexture(sampler.samplerID, sampler.uniform, source, bgfx.SAMPLER_POINT | bgfx.SAMPLER_UVW_CLAMP);
 		bgfx.setUniform(scale.uniform, __copyScale);
 		bgfx.setState(bgfx.STATE_WRITE_RGB | bgfx.STATE_WRITE_A, 0);
 		bgfx.submit(copyView, __copyProgram.__shaderProgram, 0, bgfx.DISCARD_ALL);
 
 		BGFXUniformCache.reset();
 		setTextures.resize(0);
+		__submitProgramUniforms();
 
 		return true;
 	}
@@ -1253,8 +1256,10 @@ class BGFXContext3D implements openfl.display3D.IContext3D
 			return;
 		}
 
+		var framebuffer = texture.__getFramebuffer(enableDepthAndStencil, antiAlias, surfaceSelector);
+
 		__setViewId(__getFreeViewID());
-		bgfx.setViewFrameBuffer(__currentViewId, texture.__getFramebuffer(enableDepthAndStencil, antiAlias, surfaceSelector));
+		bgfx.setViewFrameBuffer(__currentViewId, framebuffer);
 		bgfx.setViewClear(__currentViewId, 0, 0, 1.0, 0);
 	}
 
@@ -1432,9 +1437,9 @@ class BGFXContext3D implements openfl.display3D.IContext3D
 			if (!parent.__cleared) clear(0, 0, 0, 0, 1, 0, Context3DClearMask.COLOR);
 		}
 
-		__bindVertexStreams(count);
-
 		__flush();
+
+		__bindVertexStreams(count);
 
 		bgfx.setState(__buildState(), 0);
 

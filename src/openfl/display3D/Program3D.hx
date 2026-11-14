@@ -907,17 +907,23 @@ import openfl.utils.ByteArray;
 		];
 	}
 
-	@:noCompletion private function __compileBGFXShader(isVertex:Bool, source:String, varyingDef:String):Null<BGFXShader>
+	@:noCompletion private function __compileBGFXShader(isVertex:Bool, varyingDef:String):Null<BGFXShader>
 	{
 		var bgfx = __context.bgfx;
+		var source = isVertex ? __vertexSource : __fragmentSource;
 
-		var converted = __scc.convertShaderSource(source, isVertex);
+		var key = ShaderCache.getKey(bgfx, __vertexSource, __fragmentSource, isVertex);
+		var samplers = ShaderCache.loadSamplers(key);
+		var shaderMem = samplers != null ? ShaderCache.load(bgfx, key) : null;
 
-		var key = ShaderCache.getKey(bgfx, converted, varyingDef, isVertex);
-		var shaderMem = ShaderCache.load(bgfx, key);
-
-		if (shaderMem == null)
+		if (shaderMem != null)
 		{
+			for (name in samplers.keys())
+				__scc.samplersIDs.set(name, samplers.get(name));
+		}
+		else
+		{
+			var converted = __scc.convertShaderSource(source, isVertex);
 			shaderMem = bgfx.compileShaderString(isVertex ? VERTEX : FRAGMENT, converted, varyingDef);
 
 			if (shaderMem == null)
@@ -930,7 +936,7 @@ import openfl.utils.ByteArray;
 				return null;
 			}
 
-			ShaderCache.save(key, shaderMem);
+			ShaderCache.save(key, shaderMem, __scc.samplersIDs);
 		}
 
 		return bgfx.createShader(shaderMem);
@@ -946,10 +952,10 @@ import openfl.utils.ByteArray;
 
 			var varyingDef = __scc.generateVaryingDef(__vertexSource, __fragmentSource);
 
-			__vertexShader = __compileBGFXShader(true, __vertexSource, varyingDef);
+			__vertexShader = __compileBGFXShader(true, varyingDef);
 			if (__vertexShader == null) return;
 
-			__fragmentShader = __compileBGFXShader(false, __fragmentSource, varyingDef);
+			__fragmentShader = __compileBGFXShader(false, varyingDef);
 			if (__fragmentShader == null) return;
 
 			__shaderProgram = bgfx.createProgram(__vertexShader, __fragmentShader, false);
@@ -1223,6 +1229,11 @@ class BGFXUniformData
 		__state.set(data);
 		bgfx.setUniform(uniform, data, num);
 	}
+
+	public function submit(bgfx:BGFXRenderContext):Void
+	{
+		__state.submit(bgfx, uniform, num);
+	}
 }
 
 @:noCompletion
@@ -1277,6 +1288,14 @@ class BGFXUniformCache
 
 		__length = data.length;
 		__reset = false;
+	}
+
+	public function submit(bgfx:BGFXRenderContext, uniform:BGFXUniform, num:Int):Void
+	{
+		if (__length == 0) return;
+
+		__reset = false;
+		bgfx.setUniform(uniform, __data, num);
 	}
 }
 

@@ -28,17 +28,17 @@ class ShaderCache
 	@:noCompletion private static var __directory:Null<String> = null;
 
 	/**
-	 * Generate a special hash key for a shader source
-	 * @param bgfx The bgfx context used to build this shader source
-	 * @param source The shader source
-	 * @param varyingDef The varyinf def of this source
-	 * @param isVertex Wether this shader source is a vertex
-	 * @return a hash key `String` for this source
+	 * Generate a special hash key for a shader stage
+	 * @param bgfx The bgfx context used to build this shader
+	 * @param vertexSource The original vertex shader source
+	 * @param fragmentSource The original fragment shader source
+	 * @param isVertex Wether the key is for the vertex stage
+	 * @return a hash key `String` for this stage
 	 */
-	public static function getKey(bgfx:BGFXRenderContext, source:String, varyingDef:String, isVertex:Bool):String
+	public static function getKey(bgfx:BGFXRenderContext, vertexSource:String, fragmentSource:String, isVertex:Bool):String
 	{
 		var renderer:Int = bgfx.getCaps().rendererType;
-		return Md5.encode('$renderer|${isVertex ? "v" : "f"}|$varyingDef|$source');
+		return Md5.encode('$renderer|${isVertex ? "v" : "f"}|$vertexSource|$fragmentSource');
 	}
 
 	/**
@@ -77,7 +77,48 @@ class ShaderCache
 		#end
 	}
 
-	public static function save(key:String, memory:BGFXMemoryRef):Void
+	/**
+	 * Load the sampler slots of a compiled shader from disk
+	 * @param key The hash key for this shader
+	 * @return a `Map` of sampler names to slots if found on the disk, otherwise `null`
+	 */
+	public static function loadSamplers(key:String):Null<Map<String, Int>>
+	{
+		#if sys
+		if (!enabled) return null;
+
+		var path = __getPath(key, "samplers");
+		if (path == null) return null;
+
+		try
+		{
+			if (!FileSystem.exists(path)) return null;
+
+			var samplers = new Map<String, Int>();
+
+			for (line in File.getContent(path).split("\n"))
+			{
+				var parts = line.split(" ");
+				if (parts.length != 2) continue;
+
+				var slot:Null<Int> = Std.parseInt(parts[1]);
+				if (slot == null) return null;
+
+				samplers.set(parts[0], slot);
+			}
+
+			return samplers;
+		}
+		catch (e:Dynamic)
+		{
+			return null;
+		}
+		#else
+		return null;
+		#end
+	}
+
+	public static function save(key:String, memory:BGFXMemoryRef, samplers:Map<String, Int>):Void
 	{
 		#if sys
 		if (!enabled || memory == null) return;
@@ -86,11 +127,13 @@ class ShaderCache
 		if (bytes == null || bytes.length == 0) return;
 
 		var path = __getPath(key);
-		if (path == null) return;
+		var samplersPath = __getPath(key, "samplers");
+		if (path == null || samplersPath == null) return;
 
 		try
 		{
 			File.saveBytes(path, bytes);
+			File.saveContent(samplersPath, [for (name in samplers.keys()) '$name ${samplers.get(name)}'].join("\n"));
 		}
 		catch (e:Dynamic)
 		{
@@ -121,7 +164,7 @@ class ShaderCache
 		#end
 	}
 
-	@:noCompletion private static function __getPath(key:String):Null<String>
+	@:noCompletion private static function __getPath(key:String, extension:String = "bin"):Null<String>
 	{
 		#if sys
 		if (__directory == null)
@@ -132,7 +175,8 @@ class ShaderCache
 
 				if (root != null)
 				{
-					var directory = haxe.io.Path.join([root, "shader-cache", 'v$CACHE_VERSION']);
+					var cacheRoot = haxe.io.Path.join([root, "shader-cache"]);
+					var directory = haxe.io.Path.join([cacheRoot, 'v$CACHE_VERSION']);
 					FileSystem.createDirectory(directory);
 					__directory = directory;
 				}
@@ -145,7 +189,9 @@ class ShaderCache
 			}
 		}
 
-		return haxe.io.Path.join([__directory, '$key.bin']);
+		if (__directory == null) return null;
+
+		return haxe.io.Path.join([__directory, '$key.$extension']);
 		#else
 		return null;
 		#end
