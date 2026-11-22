@@ -2,6 +2,7 @@ package openfl.display3D.textures;
 
 import haxe.Int64;
 import lime.graphics.Image;
+import lime.graphics.ImageBuffer;
 import lime.graphics.RenderContext;
 import lime.graphics.bgfx.BGFXMemoryRef;
 import lime.graphics.bgfx.BGFXTexture;
@@ -12,6 +13,7 @@ import lime.graphics.opengl.GLTexture;
 import lime.utils.ArrayBufferView;
 import lime.utils.Log;
 import lime.utils.UInt8Array;
+import openfl.utils.ByteArray;
 import openfl.display.BitmapData;
 import openfl.display.OpenGLRenderer;
 import openfl.display._internal.SamplerState;
@@ -482,6 +484,28 @@ class TextureBase extends EventDispatcher
 		}
 
 		return false;
+	}
+
+	/**
+		Decodes the pixels of a compressed texture from the file it was made from, for reading them on the CPU.
+		@return The pixels, or null if this texture is not compressed or `data` does not hold them
+	**/
+	@:noCompletion private function __decodeToImage(data:ByteArray):Image
+	{
+		return null;
+	}
+
+	@:noCompletion private function __decodeBlocksToImage(data:ByteArray, offset:Int, size:Int, format:BGFXTextureFormat):Image
+	{
+		if (!__context.isBGFX || data == null || __width <= 0 || __height <= 0 || offset + size > data.length) return null;
+
+		var pixels = new UInt8Array(__width * __height * 4);
+		var bytes:haxe.io.Bytes = cast data;
+		if (!__context.bgfx.decodeToRGBA8(new UInt8Array(bytes, offset, size), __width, __height, format, pixels)) return null;
+
+		var image = new Image(new ImageBuffer(pixels, __width, __height, 32, RGBA32));
+		image.transparent = true;
+		return image;
 	}
 
 	@:noCompletion private function __uploadFromImage(image:Image):Void

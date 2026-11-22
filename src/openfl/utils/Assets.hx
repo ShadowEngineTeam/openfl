@@ -137,6 +137,7 @@ class Assets
 				}
 
 				final bitmapData:BitmapData = BitmapData.fromTexture(texture);
+				bitmapData.compressedSource = () -> Assets.getBytes(textureName);
 
 				if (useCache && cache.enabled)
 					cache.setBitmapData(id, bitmapData);
@@ -527,6 +528,7 @@ class Assets
 						}
 
 						final bitmapData:BitmapData = BitmapData.fromTexture(texture);
+						bitmapData.compressedSource = () -> Assets.getBytes(textureName);
 
 						if (useCache && cache.enabled)
 							cache.setBitmapData(id, bitmapData);

@@ -224,6 +224,16 @@ import openfl.display3D.Context3D;
 
 	// the block data is handed to `compressedTexImage2D` as a view straight into `bytes`, so the
 	// container has to be checked before that view is built rather than after the driver chokes.
+	@:noCompletion private override function __decodeToImage(data:ByteArray):lime.graphics.Image
+	{
+		if (!supported || data == null || data.length < DDS_HEADER_SIZE) return null;
+
+		data.position = 0;
+		if (data.readUnsignedInt() != BC_MAGIC_NUMBER) return null;
+
+		return __decodeBlocksToImage(data, __isDX10 ? DX10_HEADER_SIZE : DDS_HEADER_SIZE, imageSize, __getBGFXFormat());
+	}
+
 	private function __validateHeader(bytes:ByteArray):Void
 	{
 		if (bytes.length < DDS_HEADER_SIZE)

@@ -162,6 +162,17 @@ class BitmapData implements IBitmapDrawable
 	@:beta public var readable(default, null):Bool;
 
 	/**
+		For a bitmap made from a compressed GPU texture (ASTC or BC), returns the bytes of the file it was
+		made from, so that reading its pixels (`getPixel32()`, `getPixels()`, `copyPixels()` from it and
+		the like) can decode them on the CPU. `fromFile()` and `openfl.utils.Assets` set it; set it for a
+		bitmap made with `fromBytes()` or `fromTexture()` to read its pixels, as the bytes are not kept.
+
+		The pixels are decoded the first time they are read and kept until `dispose()`. The bitmap stays
+		non-readable: its texture is not replaced, and writing pixels still does nothing.
+	**/
+	public var compressedSource:Void->ByteArray;
+
+	/**
 	 * Defines wether the GPU texture of this Bitmap will be a render target.
 	 * Enabling this will make the texture get owned by a frame buffer.
 	 */
@@ -217,6 +228,7 @@ class BitmapData implements IBitmapDrawable
 	@:noCompletion private var __textureContext:RenderContext;
 	@:noCompletion private var __textureHeight:Int;
 	@:noCompletion private var __textureVersion:Int;
+	@:noCompletion private var __compressedDecoded:Bool = false;
 	@:noCompletion private var __textureWidth:Int;
 	@:noCompletion private var __textureShared:Bool = true;
 	@:noCompletion private var __transform:Matrix;
@@ -340,7 +352,7 @@ class BitmapData implements IBitmapDrawable
 	**/
 	public function applyFilter(sourceBitmapData:BitmapData, sourceRect:Rectangle, destPoint:Point, filter:BitmapFilter):Void
 	{
-		if (!readable || sourceBitmapData == null || !sourceBitmapData.readable) return;
+		if (!readable || sourceBitmapData == null || !sourceBitmapData.__canRead()) return;
 
 		// TODO: Ways to optimize this?
 
@@ -405,9 +417,10 @@ class BitmapData implements IBitmapDrawable
 			bitmapData = BitmapData.fromTexture(__gpuClone, false);
 			__gpuClone = null;
 		}
-		else if (!readable && image == null)
+		else if (!readable && (image == null || __compressedDecoded))
 		{
 			bitmapData = new BitmapData(0, 0, transparent, 0);
+			bitmapData.compressedSource = compressedSource;
 
 			bitmapData.width = width;
 			bitmapData.height = height;
@@ -467,7 +480,7 @@ class BitmapData implements IBitmapDrawable
 		{
 			return -1;
 		}
-		else if (readable == false || otherBitmapData.readable == false)
+		else if (!__canRead() || !otherBitmapData.__canRead())
 		{
 			return -2;
 		}
@@ -618,7 +631,7 @@ class BitmapData implements IBitmapDrawable
 	public function copyChannel(sourceBitmapData:BitmapData, sourceRect:Rectangle, destPoint:Point, sourceChannel:BitmapDataChannel,
 			destChannel:BitmapDataChannel):Void
 	{
-		if (!readable || sourceBitmapData == null || !sourceBitmapData.readable) return;
+		if (!readable || sourceBitmapData == null || !sourceBitmapData.__canRead()) return;
 
 		var sourceChannel = switch (sourceChannel)
 		{
@@ -685,7 +698,7 @@ class BitmapData implements IBitmapDrawable
 	public function copyPixels(sourceBitmapData:BitmapData, sourceRect:Rectangle, destPoint:Point, alphaBitmapData:BitmapData = null, alphaPoint:Point = null,
 			mergeAlpha:Bool = false):Void
 	{
-		if (!readable || sourceBitmapData == null || !sourceBitmapData.readable) return;
+		if (!readable || sourceBitmapData == null || !sourceBitmapData.__canRead()) return;
 
 		if (alphaPoint != null)
 		{
@@ -781,6 +794,12 @@ class BitmapData implements IBitmapDrawable
 	@:beta public function disposeImage():Void
 	{
 		readable = false;
+
+		if (__compressedDecoded)
+		{
+			image = null;
+			__compressedDecoded = false;
+		}
 	}
 
 	/**
@@ -1157,7 +1176,7 @@ class BitmapData implements IBitmapDrawable
 	**/
 	public function encode(rect:Rectangle, compressor:Object, byteArray:ByteArray = null):ByteArray
 	{
-		if (!readable || rect == null) return byteArray = null;
+		if (!__canRead() || rect == null) return byteArray = null;
 		if (byteArray == null) byteArray = new ByteArray();
 
 		var image = this.image;
@@ -1290,6 +1309,20 @@ class BitmapData implements IBitmapDrawable
 	**/
 	public static function fromFile(path:String, hardware:Bool = false):BitmapData
 	{
+		#if sys
+		var ext = haxe.io.Path.extension(path).toLowerCase();
+		if ((ext == "astc" || ext == "dds") && sys.FileSystem.exists(path))
+		{
+			var bytes:ByteArray = sys.io.File.getBytes(path);
+			if (ASTCTexture.isBytesASTC(bytes) || BCTexture.isBytesBC(bytes))
+			{
+				var bitmapData = fromBytes(bytes);
+				if (bitmapData != null) bitmapData.compressedSource = () -> sys.io.File.getBytes(path);
+				return bitmapData;
+			}
+		}
+		#end
+
 		var bitmapData = new BitmapData(0, 0, true, 0);
 		bitmapData.__fromFile(path, hardware);
 		return bitmapData.image != null ? bitmapData : null;
@@ -2005,7 +2038,7 @@ class BitmapData implements IBitmapDrawable
 	**/
 	public function getColorBoundsRect(mask:Int, color:Int, findColor:Bool = true):Rectangle
 	{
-		if (!readable) return new Rectangle(0, 0, width, height);
+		if (!__canRead()) return new Rectangle(0, 0, width, height);
 
 		if (!transparent || ((mask >> 24) & 0xFF) > 0)
 		{
@@ -2045,7 +2078,7 @@ class BitmapData implements IBitmapDrawable
 	**/
 	public function getPixel(x:Int, y:Int):Int
 	{
-		if (!readable) return 0;
+		if (!__canRead()) return 0;
 
 		return image.getPixel(x, y, ARGB32);
 	}
@@ -2076,7 +2109,7 @@ class BitmapData implements IBitmapDrawable
 	**/
 	public function getPixel32(x:Int, y:Int):Int
 	{
-		if (!readable) return 0;
+		if (!__canRead()) return 0;
 
 		return image.getPixel32(x, y, ARGB32);
 	}
@@ -2092,7 +2125,7 @@ class BitmapData implements IBitmapDrawable
 	**/
 	public function getPixels(rect:Rectangle):ByteArray
 	{
-		if (!readable) return null;
+		if (!__canRead()) return null;
 		if (rect == null) rect = this.rect;
 		var byteArray = ByteArray.fromBytes(image.getPixels(rect.__toLimeRectangle(), ARGB32));
 		// TODO: System endian order
@@ -2173,7 +2206,7 @@ class BitmapData implements IBitmapDrawable
 			__textureHeight = textureImage.buffer.height;
 		}
 
-		if (!readable && image != null)
+		if (!readable && image != null && !__compressedDecoded)
 		{
 			__surface = null;
 			image = null;
@@ -2261,7 +2294,7 @@ class BitmapData implements IBitmapDrawable
 	public function hitTest(firstPoint:Point, firstAlphaThreshold:Int, secondObject:Object, secondBitmapDataPoint:Point = null,
 			secondAlphaThreshold:Int = 1):Bool
 	{
-		if (!readable) return false;
+		if (!__canRead()) return false;
 
 		if ((secondObject is Bitmap))
 		{
@@ -2499,7 +2532,7 @@ class BitmapData implements IBitmapDrawable
 	public function merge(sourceBitmapData:BitmapData, sourceRect:Rectangle, destPoint:Point, redMultiplier:UInt, greenMultiplier:UInt, blueMultiplier:UInt,
 			alphaMultiplier:UInt):Void
 	{
-		if (!readable || sourceBitmapData == null || !sourceBitmapData.readable || sourceRect == null || destPoint == null) return;
+		if (!readable || sourceBitmapData == null || !sourceBitmapData.__canRead() || sourceRect == null || destPoint == null) return;
 		image.merge(sourceBitmapData.image, sourceRect.__toLimeRectangle(), destPoint.__toLimeVector2(), redMultiplier, greenMultiplier, blueMultiplier,
 			alphaMultiplier);
 	}
@@ -2924,7 +2957,7 @@ class BitmapData implements IBitmapDrawable
 	{
 		if (!readable
 			|| sourceBitmapData == null
-			|| !sourceBitmapData.readable
+			|| !sourceBitmapData.__canRead()
 			|| sourceRect == null
 			|| destPoint == null
 			|| sourceRect.x > sourceBitmapData.width
@@ -3118,6 +3151,32 @@ class BitmapData implements IBitmapDrawable
 	@:noCompletion private function __fromFile(path:String, hardware:Bool = false):Void
 	{
 		__fromImage(Image.fromFile(path), hardware);
+	}
+
+	// Pixels can be read from a readable bitmap, and from a compressed texture once decoded from its compressedSource.
+	@:noCompletion private function __canRead():Bool
+	{
+		if (readable) return true;
+		if (__compressedDecoded) return image != null;
+		if (compressedSource == null || __texture == null || !__isValid) return false;
+
+		// Only tried once: a source that fails would fail again.
+		__compressedDecoded = true;
+
+		var data:ByteArray = null;
+		try
+		{
+			data = compressedSource();
+		}
+		catch (e:Dynamic) {}
+
+		var decoded = data != null ? __texture.__decodeToImage(data) : null;
+		if (decoded == null) return false;
+
+		image = decoded;
+		// The texture already holds these pixels.
+		__textureVersion = image.version;
+		return true;
 	}
 
 	@:noCompletion private function __fromImage(image:Image, hardware:Bool = false):Void

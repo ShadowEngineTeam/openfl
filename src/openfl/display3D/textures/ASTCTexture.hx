@@ -148,6 +148,16 @@ import openfl.display3D.Context3D;
 		__context.__bindGLTexture2D(null);
 	}
 
+	@:noCompletion private override function __decodeToImage(data:ByteArray):lime.graphics.Image
+	{
+		if (!supported || data == null || data.length < IMAGE_DATA_OFFSET) return null;
+
+		data.position = 0;
+		if (data.readUnsignedInt() != ASTC_MAGIC_NUMBER) return null;
+
+		return __decodeBlocksToImage(data, IMAGE_DATA_OFFSET, imageSize, __getASTCFormat(blockDimX, blockDimY));
+	}
+
 	@:noCompletion private function __getImageDimensions(bytes:ByteArray):Void
 	{
 		bytes.position = 7;
