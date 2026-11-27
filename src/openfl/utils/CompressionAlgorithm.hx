@@ -14,7 +14,6 @@ enum abstract CompressionAlgorithm(Null<Int>)
 	public var DEFLATE = 0;
 
 	// GZIP;
-	public var LZMA = 1;
 
 	/**
 		Defines the string to use for the zlib compression algorithm.
@@ -26,7 +25,6 @@ enum abstract CompressionAlgorithm(Null<Int>)
 		return switch (value)
 		{
 			case "deflate": DEFLATE;
-			case "lzma": LZMA;
 			case "zlib": ZLIB;
 			default: null;
 		}
@@ -37,7 +35,6 @@ enum abstract CompressionAlgorithm(Null<Int>)
 		return switch (cast this : CompressionAlgorithm)
 		{
 			case CompressionAlgorithm.DEFLATE: "deflate";
-			case CompressionAlgorithm.LZMA: "lzma";
 			case CompressionAlgorithm.ZLIB: "zlib";
 			default: null;
 		}

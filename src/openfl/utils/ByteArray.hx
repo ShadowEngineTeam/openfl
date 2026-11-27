@@ -1082,7 +1082,6 @@ abstract ByteArray(ByteArrayData) from ByteArrayData to ByteArrayData
 		var bytes = switch (algorithm)
 		{
 			case CompressionAlgorithm.DEFLATE: limeBytes.compress(DEFLATE);
-			case CompressionAlgorithm.LZMA: limeBytes.compress(LZMA);
 			default: limeBytes.compress(ZLIB);
 		}
 
@@ -1371,7 +1370,6 @@ abstract ByteArray(ByteArrayData) from ByteArrayData to ByteArrayData
 		var bytes = switch (algorithm)
 		{
 			case CompressionAlgorithm.DEFLATE: limeBytes.decompress(DEFLATE);
-			case CompressionAlgorithm.LZMA: limeBytes.decompress(LZMA);
 			default: limeBytes.decompress(ZLIB);
 		};
 
