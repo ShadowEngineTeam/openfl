@@ -1420,7 +1420,7 @@ class ShaderCConverter
 		if (usedConstMacro) header += '#if BGFX_SHADER_LANGUAGE_HLSL\n#define OPENFL_CONST static const\n#else\n#define OPENFL_CONST const\n#endif\n';
 
 		if (usedGlobalMacro)
-			header += '#if BGFX_SHADER_LANGUAGE_HLSL || BGFX_SHADER_LANGUAGE_PSSL || BGFX_SHADER_LANGUAGE_SPIRV || BGFX_SHADER_LANGUAGE_METAL\n#define OPENFL_G static\n#else\n#define OPENFL_G\n#endif\n';
+			header += '#if BGFX_SHADER_LANGUAGE_HLSL || BGFX_SHADER_LANGUAGE_PSSL || BGFX_SHADER_LANGUAGE_SPIRV || BGFX_SHADER_LANGUAGE_WGSL || BGFX_SHADER_LANGUAGE_METAL\n#define OPENFL_G static\n#else\n#define OPENFL_G\n#endif\n';
 
 		header += constructorHelperDefs();
 
